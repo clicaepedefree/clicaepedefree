@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,36 @@ import { ArrowLeft, ChefHat } from "lucide-react";
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Verificar se o usuário já está logado
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          navigate("/admin");
+        }
+      } catch (error) {
+        console.error("Erro ao verificar autenticação:", error);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+
+    // Escutar mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        navigate("/admin");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,7 +58,7 @@ export default function Auth() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/admin`,
           data: {
             restaurant_name: restaurantName,
             whatsapp: whatsapp
@@ -36,17 +66,30 @@ export default function Auth() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("User already registered")) {
+          toast({
+            title: "Erro",
+            description: "Este email já está cadastrado. Tente fazer login.",
+            variant: "destructive"
+          });
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar a conta.",
+        description: "Verifique seu email para confirmar a conta e faça login.",
       });
+
+      // Limpar formulário
+      (e.target as HTMLFormElement).reset();
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro ao criar conta",
-        description: error.message,
+        description: error.message || "Ocorreu um erro inesperado",
       });
     } finally {
       setIsLoading(false);
@@ -67,22 +110,53 @@ export default function Auth() {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast({
+            title: "Erro",
+            description: "Email ou senha incorretos",
+            variant: "destructive"
+          });
+          return;
+        }
+        if (error.message.includes("Email not confirmed")) {
+          toast({
+            title: "Email não confirmado",
+            description: "Verifique seu email e confirme sua conta antes de fazer login",
+            variant: "destructive"
+          });
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: "Login realizado com sucesso!",
         description: "Redirecionando para o painel...",
       });
+
+      // A navegação será feita pelo useEffect que escuta mudanças de auth
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: error.message,
+        description: error.message || "Ocorreu um erro inesperado",
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Verificando autenticação...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
