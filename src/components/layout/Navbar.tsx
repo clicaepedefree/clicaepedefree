@@ -26,7 +26,7 @@ export function Navbar() {
           <Button variant="outline" size="sm" asChild>
             <Link to="/admin">
               <User className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Área do</span> Restaurante
+              <span className="hidden sm:inline">Entrar</span> Admin
             </Link>
           </Button>
 
