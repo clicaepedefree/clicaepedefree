@@ -8,12 +8,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { DollarSign, Plus } from "lucide-react";
+import { numberToCurrency } from "@/components/ui/currency-input";
 
 interface AddonGroup {
   id: string;
   name: string;
   selection_type: string;
   is_required: boolean;
+  min_selections: number;
+  max_selections: number | null;
 }
 
 interface AddonOption {
@@ -63,7 +66,9 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
             id,
             name,
             selection_type,
-            is_required
+            is_required,
+            min_selections,
+            max_selections
           )
         `)
         .eq('product_id', product.id);
@@ -112,11 +117,15 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
         // Seleção única - substitui a seleção anterior
         newSelections[groupId] = [optionId];
       } else {
-        // Múltipla seleção - adiciona ou remove
+        // Múltipla seleção - adiciona ou remove com validação de max
         const currentSelections = newSelections[groupId] || [];
         if (currentSelections.includes(optionId)) {
           newSelections[groupId] = currentSelections.filter(id => id !== optionId);
         } else {
+          // Verificar se já atingiu o máximo
+          if (group.max_selections && currentSelections.length >= group.max_selections) {
+            return prev; // Não adiciona se já atingiu o máximo
+          }
           newSelections[groupId] = [...currentSelections, optionId];
         }
       }
@@ -139,11 +148,19 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
   };
 
   const isValidSelection = () => {
-    // Verificar se todos os grupos obrigatórios têm seleção
+    // Verificar se todos os grupos obrigatórios têm seleção adequada
     return addonGroups.every(group => {
-      if (!group.is_required) return true;
       const selections = selectedAddons[group.id] || [];
-      return selections.length > 0;
+      
+      if (group.is_required && selections.length < group.min_selections) {
+        return false;
+      }
+      
+      if (group.max_selections && selections.length > group.max_selections) {
+        return false;
+      }
+      
+      return true;
     });
   };
 
@@ -204,8 +221,7 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Preço base:</span>
                   <div className="flex items-center">
-                    <DollarSign className="h-4 w-4 mr-1" />
-                    <span className="font-bold">{product.price.toFixed(2)}</span>
+                    <span className="font-bold">R$ {numberToCurrency(product.price)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -221,7 +237,10 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                       <Badge variant="destructive" className="text-xs">Obrigatório</Badge>
                     )}
                     <Badge variant="outline" className="text-xs">
-                      {group.selection_type === 'single' ? 'Escolha 1' : 'Escolha vários'}
+                      {group.selection_type === 'single' 
+                        ? 'Escolha 1' 
+                        : `${group.min_selections}-${group.max_selections || '∞'} escolhas`
+                      }
                     </Badge>
                   </div>
                 </div>
@@ -243,8 +262,7 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                           {option.price > 0 && (
                             <div className="flex items-center text-sm text-muted-foreground">
                               <Plus className="h-3 w-3 mr-1" />
-                              <DollarSign className="h-3 w-3" />
-                              {option.price.toFixed(2)}
+                              R$ {numberToCurrency(option.price)}
                             </div>
                           )}
                         </div>
@@ -259,6 +277,11 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                               id={option.id}
                               checked={selectedAddons[group.id]?.includes(option.id) || false}
                               onCheckedChange={() => handleOptionChange(group.id, option.id, group)}
+                              disabled={
+                                !selectedAddons[group.id]?.includes(option.id) &&
+                                group.max_selections &&
+                                (selectedAddons[group.id]?.length || 0) >= group.max_selections
+                              }
                             />
                             <Label htmlFor={option.id} className="font-normal cursor-pointer">
                               {option.name}
@@ -267,8 +290,7 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                           {option.price > 0 && (
                             <div className="flex items-center text-sm text-muted-foreground">
                               <Plus className="h-3 w-3 mr-1" />
-                              <DollarSign className="h-3 w-3" />
-                              {option.price.toFixed(2)}
+                              R$ {numberToCurrency(option.price)}
                             </div>
                           )}
                         </div>
@@ -284,8 +306,10 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-medium">Total:</span>
                 <div className="flex items-center text-lg font-bold">
-                  <DollarSign className="h-5 w-5 mr-1" />
-                  {calculateTotalPrice().toFixed(2)}
+                  R$ {calculateTotalPrice().toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
                 </div>
               </div>
               
@@ -299,7 +323,7 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
               
               {!isValidSelection() && (
                 <p className="text-sm text-destructive text-center mt-2">
-                  Selecione todas as opções obrigatórias
+                  Verifique as seleções obrigatórias e limites de cada grupo
                 </p>
               )}
             </div>

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Phone, DollarSign, ExternalLink } from "lucide-react";
 import { ProductAddonSelector } from "@/components/menu/ProductAddonSelector";
+import { numberToCurrency } from "@/components/ui/currency-input";
 
 interface Restaurant {
   id: string;
@@ -237,9 +238,8 @@ export default function Menu() {
                             
                             <div className="flex items-center justify-between">
                               <div className="flex items-center">
-                                <DollarSign className="h-4 w-4 mr-1" />
                                 <span className="text-lg font-bold">
-                                  {product.price.toFixed(2)}
+                                  R$ {numberToCurrency(product.price)}
                                 </span>
                               </div>
                               
@@ -301,9 +301,12 @@ export default function Menu() {
               <Badge variant="secondary" className="text-lg px-3 py-1">
                 {cartItemsCount} {cartItemsCount === 1 ? 'item' : 'itens'}
               </Badge>
-              <div className="text-lg font-bold">
-                Total: R$ {getCartTotal().toFixed(2)}
-              </div>
+            <div className="text-lg font-bold">
+              Total: R$ {getCartTotal().toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              })}
+            </div>
             </div>
             
             <Button onClick={sendWhatsAppOrder} className="flex items-center space-x-2">

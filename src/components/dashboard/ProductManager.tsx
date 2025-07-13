@@ -11,7 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2, DollarSign, Settings2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CurrencyInput, currencyToNumber, numberToCurrency } from "@/components/ui/currency-input";
 
 interface ProductManagerProps {
   restaurant: any;
@@ -35,12 +38,23 @@ interface Category {
   name: string;
 }
 
+interface AddonGroup {
+  id: string;
+  name: string;
+  selection_type: string;
+  is_required: boolean;
+}
+
 export function ProductManager({ restaurant }: ProductManagerProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [addonGroups, setAddonGroups] = useState<AddonGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [addonDialogOpen, setAddonDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedAddonGroups, setSelectedAddonGroups] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -56,6 +70,7 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
     if (restaurant?.id) {
       fetchProducts();
       fetchCategories();
+      fetchAddonGroups();
     }
   }, [restaurant?.id]);
 
@@ -77,6 +92,21 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAddonGroups = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('addon_groups')
+        .select('id, name, selection_type, is_required')
+        .eq('restaurant_id', restaurant.id)
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setAddonGroups(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar grupos de addon:", error);
     }
   };
 
@@ -113,13 +143,35 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
     setFormData({
       name: product.name,
       description: product.description || "",
-      price: product.price.toString(),
+      price: numberToCurrency(product.price),
       category_id: product.category_id,
       image_url: product.image_url || "",
       is_active: product.is_active,
       display_order: product.display_order.toString()
     });
     setDialogOpen(true);
+  };
+
+  const openAddonDialog = async (product: Product) => {
+    setSelectedProduct(product);
+    
+    // Buscar grupos já associados ao produto
+    try {
+      const { data, error } = await supabase
+        .from('product_addon_groups')
+        .select('addon_group_id')
+        .eq('product_id', product.id);
+
+      if (error) throw error;
+      
+      const associatedGroups = data?.map(item => item.addon_group_id) || [];
+      setSelectedAddonGroups(associatedGroups);
+    } catch (error) {
+      console.error("Erro ao carregar grupos associados:", error);
+      setSelectedAddonGroups([]);
+    }
+    
+    setAddonDialogOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,7 +190,7 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
       const productData = {
         name: formData.name,
         description: formData.description || null,
-        price: parseFloat(formData.price),
+        price: currencyToNumber(formData.price),
         category_id: formData.category_id,
         image_url: formData.image_url || null,
         is_active: formData.is_active,
@@ -178,6 +230,47 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
       toast({
         title: "Erro ao salvar produto",
         description: "Não foi possível salvar o produto",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddonSubmit = async () => {
+    if (!selectedProduct) return;
+
+    try {
+      // Primeiro, remover todas as associações existentes
+      await supabase
+        .from('product_addon_groups')
+        .delete()
+        .eq('product_id', selectedProduct.id);
+
+      // Depois, adicionar as novas associações
+      if (selectedAddonGroups.length > 0) {
+        const associations = selectedAddonGroups.map(groupId => ({
+          product_id: selectedProduct.id,
+          addon_group_id: groupId
+        }));
+
+        const { error } = await supabase
+          .from('product_addon_groups')
+          .insert(associations);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Addons atualizados",
+        description: "Grupos de addon associados ao produto com sucesso"
+      });
+
+      setAddonDialogOpen(false);
+      setSelectedProduct(null);
+      setSelectedAddonGroups([]);
+    } catch (error) {
+      toast({
+        title: "Erro ao associar addons",
+        description: "Não foi possível associar os grupos de addon",
         variant: "destructive"
       });
     }
@@ -297,19 +390,15 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
                 />
               </div>
               
-              <div>
-                <Label htmlFor="price">Preço *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.00"
-                  required
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="price">Preço *</Label>
+                    <CurrencyInput
+                      id="price"
+                      value={formData.price}
+                      onChange={(value) => setFormData({ ...formData, price: value })}
+                      required
+                    />
+                  </div>
               
               <div>
                 <Label htmlFor="category">Categoria *</Label>
@@ -379,6 +468,70 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
         </Dialog>
       </div>
 
+      {/* Dialog para gerenciar addons do produto */}
+      <Dialog open={addonDialogOpen} onOpenChange={setAddonDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Gerenciar Addons</DialogTitle>
+            <DialogDescription>
+              Selecione os grupos de addon para: {selectedProduct?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {addonGroups.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                Nenhum grupo de addon disponível. Crie grupos na aba "Adicionais" primeiro.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {addonGroups.map((group) => (
+                  <div key={group.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={group.id}
+                      checked={selectedAddonGroups.includes(group.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedAddonGroups([...selectedAddonGroups, group.id]);
+                        } else {
+                          setSelectedAddonGroups(selectedAddonGroups.filter(id => id !== group.id));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={group.id} className="flex-1 cursor-pointer">
+                      <div>
+                        <span className="font-medium">{group.name}</span>
+                        <div className="flex gap-1 mt-1">
+                          <Badge variant={group.selection_type === 'single' ? 'default' : 'secondary'} className="text-xs">
+                            {group.selection_type === 'single' ? 'Único' : 'Múltiplo'}
+                          </Badge>
+                          {group.is_required && (
+                            <Badge variant="outline" className="text-xs">Obrigatório</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAddonDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleAddonSubmit}>
+              Salvar Addons
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {categories.length === 0 ? (
         <Card>
           <CardContent className="text-center p-8">
@@ -427,8 +580,7 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
                     <TableCell>{getCategoryName(product.category_id)}</TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        <DollarSign className="h-4 w-4 mr-1" />
-                        {product.price.toFixed(2)}
+                        R$ {numberToCurrency(product.price)}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -438,6 +590,14 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openAddonDialog(product)}
+                          title="Gerenciar Addons"
+                        >
+                          <Settings2 className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"

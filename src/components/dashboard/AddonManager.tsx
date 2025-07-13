@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, DollarSign, Settings, ChefHat } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CurrencyInput, currencyToNumber, numberToCurrency } from "@/components/ui/currency-input";
 
 interface AddonManagerProps {
   restaurant: any;
@@ -22,6 +23,8 @@ interface AddonGroup {
   name: string;
   selection_type: string;
   is_required: boolean;
+  min_selections: number;
+  max_selections: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,7 +55,9 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
   const [groupFormData, setGroupFormData] = useState({
     name: "",
     selection_type: "single",
-    is_required: false
+    is_required: false,
+    min_selections: "0",
+    max_selections: ""
   });
   const [optionFormData, setOptionFormData] = useState({
     name: "",
@@ -126,7 +131,9 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
     setGroupFormData({
       name: "",
       selection_type: "single",
-      is_required: false
+      is_required: false,
+      min_selections: "0",
+      max_selections: ""
     });
     setEditingGroup(null);
   };
@@ -145,7 +152,9 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
     setGroupFormData({
       name: group.name,
       selection_type: group.selection_type,
-      is_required: group.is_required
+      is_required: group.is_required,
+      min_selections: group.min_selections.toString(),
+      max_selections: group.max_selections?.toString() || ""
     });
     setDialogOpen(true);
   };
@@ -154,7 +163,7 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
     setEditingOption(option);
     setOptionFormData({
       name: option.name,
-      price: option.price.toString(),
+      price: numberToCurrency(option.price),
       addon_group_id: option.addon_group_id
     });
     setOptionDialogOpen(true);
@@ -177,6 +186,8 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
         name: groupFormData.name,
         selection_type: groupFormData.selection_type,
         is_required: groupFormData.is_required,
+        min_selections: parseInt(groupFormData.min_selections) || 0,
+        max_selections: groupFormData.max_selections ? parseInt(groupFormData.max_selections) : null,
         restaurant_id: restaurant.id
       };
 
@@ -232,7 +243,7 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
     try {
       const optionData = {
         name: optionFormData.name,
-        price: parseFloat(optionFormData.price) || 0,
+        price: currencyToNumber(optionFormData.price),
         addon_group_id: optionFormData.addon_group_id
       };
 
@@ -406,7 +417,14 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                     <Label htmlFor="selection-type">Tipo de Seleção</Label>
                     <Select
                       value={groupFormData.selection_type}
-                      onValueChange={(value) => setGroupFormData({ ...groupFormData, selection_type: value })}
+                      onValueChange={(value) => {
+                        setGroupFormData({ 
+                          ...groupFormData, 
+                          selection_type: value,
+                          min_selections: value === 'single' ? "1" : "0",
+                          max_selections: value === 'single' ? "1" : ""
+                        });
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -417,6 +435,35 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {groupFormData.selection_type === 'multiple' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="min-selections">Mínimo de Seleções</Label>
+                          <Input
+                            id="min-selections"
+                            type="number"
+                            min="0"
+                            value={groupFormData.min_selections}
+                            onChange={(e) => setGroupFormData({ ...groupFormData, min_selections: e.target.value })}
+                            placeholder="0"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="max-selections">Máximo de Seleções</Label>
+                          <Input
+                            id="max-selections"
+                            type="number"
+                            min="1"
+                            value={groupFormData.max_selections}
+                            onChange={(e) => setGroupFormData({ ...groupFormData, max_selections: e.target.value })}
+                            placeholder="Ilimitado"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                   
                   <div className="flex items-center space-x-2">
                     <Switch
@@ -466,6 +513,11 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                           </Badge>
                           {group.is_required && (
                             <Badge variant="outline">Obrigatório</Badge>
+                          )}
+                          {group.selection_type === 'multiple' && (
+                            <Badge variant="outline">
+                              {group.min_selections}-{group.max_selections || '∞'} seleções
+                            </Badge>
                           )}
                         </div>
                       </div>
@@ -572,14 +624,10 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                   
                   <div>
                     <Label htmlFor="option-price">Preço Adicional</Label>
-                    <Input
+                    <CurrencyInput
                       id="option-price"
-                      type="number"
-                      step="0.01"
-                      min="0"
                       value={optionFormData.price}
-                      onChange={(e) => setOptionFormData({ ...optionFormData, price: e.target.value })}
-                      placeholder="0.00"
+                      onChange={(value) => setOptionFormData({ ...optionFormData, price: value })}
                     />
                   </div>
                   
@@ -640,8 +688,7 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                           <div className="flex items-center">
                             {option.price > 0 ? (
                               <>
-                                <DollarSign className="h-4 w-4 mr-1" />
-                                +{option.price.toFixed(2)}
+                                +R$ {numberToCurrency(option.price)}
                               </>
                             ) : (
                               "Gratuito"

@@ -19,6 +19,8 @@ export type Database = {
           created_at: string
           id: string
           is_required: boolean | null
+          max_selections: number | null
+          min_selections: number | null
           name: string
           restaurant_id: string
           selection_type: string
@@ -28,6 +30,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_required?: boolean | null
+          max_selections?: number | null
+          min_selections?: number | null
           name: string
           restaurant_id: string
           selection_type: string
@@ -37,6 +41,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_required?: boolean | null
+          max_selections?: number | null
+          min_selections?: number | null
           name?: string
           restaurant_id?: string
           selection_type?: string
