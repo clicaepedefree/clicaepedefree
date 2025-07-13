@@ -189,7 +189,7 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
     }).filter(Boolean);
   };
 
-  if (addonGroups.length === 0) {
+  if (addonGroups.length === 0 && !loading) {
     // Se não há addons, adicionar diretamente
     if (open) {
       onAddToCart(product, [], product.price);

@@ -139,16 +139,18 @@ export default function Menu() {
       if (product) {
         message += `${item.quantity}x ${product.name}`;
         
-        if (item.addons.length > 0) {
-          const addonNames = item.addons.map(a => a.option?.name).join(', ');
-          message += ` (${addonNames})`;
+        if (item.addons && item.addons.length > 0) {
+          const addonNames = item.addons.map(a => a.option?.name).filter(Boolean).join(', ');
+          if (addonNames) {
+            message += ` (${addonNames})`;
+          }
         }
         
-        message += ` - R$ ${(item.unitPrice * item.quantity).toFixed(2)}\n`;
+        message += ` - R$ ${numberToCurrency(item.unitPrice * item.quantity)}\n`;
       }
     });
 
-    message += `\n*Total: R$ ${getCartTotal().toFixed(2)}*`;
+    message += `\n*Total: R$ ${numberToCurrency(getCartTotal())}*`;
     return encodeURIComponent(message);
   };
 
