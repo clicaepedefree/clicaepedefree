@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Phone, DollarSign, ExternalLink } from "lucide-react";
+import { ProductAddonSelector } from "@/components/menu/ProductAddonSelector";
 
 interface Restaurant {
   id: string;
@@ -36,7 +37,9 @@ export default function Menu() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState<{ [key: string]: number }>({});
+  const [cart, setCart] = useState<{ [key: string]: { quantity: number; addons: any[]; unitPrice: number } }>({});
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [addonSelectorOpen, setAddonSelectorOpen] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -88,29 +91,39 @@ export default function Menu() {
     }
   };
 
-  const addToCart = (productId: string) => {
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+    setAddonSelectorOpen(true);
+  };
+
+  const addToCart = (product: Product, selectedAddons: any[], totalPrice: number) => {
+    const cartKey = `${product.id}-${JSON.stringify(selectedAddons.map(a => a.option?.id).sort())}`;
+    
     setCart(prev => ({
       ...prev,
-      [productId]: (prev[productId] || 0) + 1
+      [cartKey]: {
+        quantity: (prev[cartKey]?.quantity || 0) + 1,
+        addons: selectedAddons,
+        unitPrice: totalPrice
+      }
     }));
   };
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = (cartKey: string) => {
     setCart(prev => {
       const newCart = { ...prev };
-      if (newCart[productId] > 1) {
-        newCart[productId]--;
+      if (newCart[cartKey].quantity > 1) {
+        newCart[cartKey].quantity--;
       } else {
-        delete newCart[productId];
+        delete newCart[cartKey];
       }
       return newCart;
     });
   };
 
   const getCartTotal = () => {
-    return Object.entries(cart).reduce((total, [productId, quantity]) => {
-      const product = products.find(p => p.id === productId);
-      return total + (product ? product.price * quantity : 0);
+    return Object.values(cart).reduce((total, item) => {
+      return total + (item.unitPrice * item.quantity);
     }, 0);
   };
 
@@ -119,10 +132,18 @@ export default function Menu() {
 
     let message = `*Pedido - ${restaurant?.name}*\n\n`;
     
-    Object.entries(cart).forEach(([productId, quantity]) => {
+    Object.entries(cart).forEach(([cartKey, item]) => {
+      const productId = cartKey.split('-')[0];
       const product = products.find(p => p.id === productId);
       if (product) {
-        message += `${quantity}x ${product.name} - R$ ${(product.price * quantity).toFixed(2)}\n`;
+        message += `${item.quantity}x ${product.name}`;
+        
+        if (item.addons.length > 0) {
+          const addonNames = item.addons.map(a => a.option?.name).join(', ');
+          message += ` (${addonNames})`;
+        }
+        
+        message += ` - R$ ${(item.unitPrice * item.quantity).toFixed(2)}\n`;
       }
     });
 
@@ -164,7 +185,7 @@ export default function Menu() {
     );
   }
 
-  const cartItemsCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
+  const cartItemsCount = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -223,20 +244,27 @@ export default function Menu() {
                               </div>
                               
                               <div className="flex items-center space-x-2">
-                                {cart[product.id] ? (
+                                {Object.entries(cart).find(([key]) => key.startsWith(product.id)) ? (
                                   <>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => removeFromCart(product.id)}
+                                      onClick={() => {
+                                        const cartKey = Object.keys(cart).find(key => key.startsWith(product.id));
+                                        if (cartKey) removeFromCart(cartKey);
+                                      }}
                                     >
                                       -
                                     </Button>
-                                    <Badge variant="secondary">{cart[product.id]}</Badge>
+                                    <Badge variant="secondary">
+                                      {Object.entries(cart)
+                                        .filter(([key]) => key.startsWith(product.id))
+                                        .reduce((sum, [, item]) => sum + item.quantity, 0)}
+                                    </Badge>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => addToCart(product.id)}
+                                      onClick={() => handleProductClick(product)}
                                     >
                                       +
                                     </Button>
@@ -245,7 +273,7 @@ export default function Menu() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => addToCart(product.id)}
+                                    onClick={() => handleProductClick(product)}
                                   >
                                     <ShoppingCart className="h-4 w-4 mr-1" />
                                     Adicionar
@@ -289,6 +317,16 @@ export default function Menu() {
 
       {/* Padding para o carrinho fixo */}
       {cartItemsCount > 0 && <div className="h-20"></div>}
+
+      {/* Seletor de Addons */}
+      {selectedProduct && (
+        <ProductAddonSelector
+          product={selectedProduct}
+          open={addonSelectorOpen}
+          onOpenChange={setAddonSelectorOpen}
+          onAddToCart={addToCart}
+        />
+      )}
     </div>
   );
 }
