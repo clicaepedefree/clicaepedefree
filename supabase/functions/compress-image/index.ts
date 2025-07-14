@@ -9,6 +9,7 @@ Deno.serve(async (req) => {
 
   try {
     if (!TINIFY_API_KEY) {
+      console.error('TinyPNG API key not configured');
       throw new Error('TinyPNG API key not configured');
     }
 
@@ -16,11 +17,16 @@ Deno.serve(async (req) => {
     const file = formData.get('file') as File;
     
     if (!file) {
+      console.error('No file provided in request');
       throw new Error('No file provided');
     }
 
+    console.log(`Processing file: ${file.name}, size: ${file.size}, type: ${file.type}`);
+
     // Convert file to array buffer
     const arrayBuffer = await file.arrayBuffer();
+    
+    console.log('Sending to TinyPNG API...');
     
     // Compress with TinyPNG
     const response = await fetch('https://api.tinify.com/shrink', {
@@ -32,14 +38,22 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`TinyPNG API error: ${response.status} ${response.statusText}`, errorText);
       throw new Error(`TinyPNG API error: ${response.statusText}`);
     }
 
     const result = await response.json();
+    console.log('TinyPNG response:', result);
     
     // Download compressed image
     const compressedResponse = await fetch(result.output.url);
+    if (!compressedResponse.ok) {
+      throw new Error('Failed to download compressed image');
+    }
+    
     const compressedBuffer = await compressedResponse.arrayBuffer();
+    console.log(`Compressed image size: ${compressedBuffer.byteLength}`);
 
     return new Response(compressedBuffer, {
       headers: {

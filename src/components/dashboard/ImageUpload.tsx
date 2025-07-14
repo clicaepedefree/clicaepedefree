@@ -42,47 +42,51 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
     setUploading(true);
 
     try {
-      // Compress image using TinyPNG edge function
-      const formData = new FormData();
-      formData.append('file', file);
+      // Try to compress image using TinyPNG edge function, but continue if it fails
+      let fileToUpload = file;
+      let compressionWorked = false;
 
-      const compressResponse = await fetch('/functions/v1/compress-image', {
-        method: 'POST',
-        body: formData,
-      });
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
 
-      if (!compressResponse.ok) {
-        throw new Error('Falha na compressão da imagem');
+        const { data: compressedData, error: compressError } = await supabase.functions.invoke('compress-image', {
+          body: formData,
+        });
+
+        if (!compressError && compressedData) {
+          fileToUpload = new File([compressedData], file.name, { type: file.type });
+          compressionWorked = true;
+        }
+      } catch (compressionError) {
+        console.warn('Compression failed, using original file:', compressionError);
       }
-
-      const compressedBlob = await compressResponse.blob();
-      const compressedFile = new File([compressedBlob], file.name, { type: file.type });
 
       // Upload to Supabase Storage
       const fileName = `${restaurantId}/${type}_${Date.now()}.${file.name.split('.').pop()}`;
       
-      const { data, error } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('restaurant-images')
-        .upload(fileName, compressedFile, {
+        .upload(fileName, fileToUpload, {
           cacheControl: '3600',
           upsert: true,
         });
 
-      if (error) throw error;
+      if (uploadError) throw uploadError;
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('restaurant-images')
-        .getPublicUrl(data.path);
+        .getPublicUrl(uploadData.path);
 
       onImageUploaded(publicUrl);
 
       toast({
         title: "Sucesso",
-        description: "Imagem carregada e comprimida com sucesso!",
+        description: compressionWorked ? "Imagem carregada e comprimida com sucesso!" : "Imagem carregada com sucesso!",
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading image:', error);
       toast({
         title: "Erro",
