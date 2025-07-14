@@ -58,7 +58,8 @@ export function OrderConfirmationModal({
   
   // Debug específico dos produtos
   cartEntries.forEach(([cartKey, item]) => {
-    const productId = cartKey.split('-')[0];
+    const lastHyphenIndex = cartKey.lastIndexOf('-[');
+    const productId = lastHyphenIndex !== -1 ? cartKey.substring(0, lastHyphenIndex) : cartKey.split('-').slice(0, 5).join('-');
     const product = products.find(p => p.id === productId);
     console.log(`Cart key: ${cartKey}`);
     console.log(`Product ID: ${productId}`);
@@ -93,9 +94,11 @@ export function OrderConfirmationModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          {cartEntries.map(([cartKey, item]) => {
-            const productId = cartKey.split('-')[0];
-            const product = products.find(p => p.id === productId);
+        {cartEntries.map(([cartKey, item]) => {
+          // O productId é toda a parte antes do último hífen que precede o JSON dos addons
+          const lastHyphenIndex = cartKey.lastIndexOf('-[');
+          const productId = lastHyphenIndex !== -1 ? cartKey.substring(0, lastHyphenIndex) : cartKey.split('-').slice(0, 5).join('-');
+          const product = products.find(p => p.id === productId);
             
             if (!product) return null;
 

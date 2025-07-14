@@ -82,7 +82,8 @@ export function useCart() {
     let message = `*Pedido - ${restaurant?.name}*\n\n`;
     
     Object.entries(cart).forEach(([cartKey, item]) => {
-      const productId = cartKey.split('-')[0];
+      const lastHyphenIndex = cartKey.lastIndexOf('-[');
+      const productId = lastHyphenIndex !== -1 ? cartKey.substring(0, lastHyphenIndex) : cartKey.split('-').slice(0, 5).join('-');
       const product = products.find(p => p.id === productId);
       console.log('Processing cart item:', { cartKey, item, productId, product });
       
