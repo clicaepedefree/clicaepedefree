@@ -30,66 +30,68 @@ export function ProductCard({ product, cart, onProductClick, onRemoveFromCart }:
 
   return (
     <Card className="overflow-hidden">
-      {product.image_url && (
-        <div className="aspect-video overflow-hidden">
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
-      
       <CardContent className="p-4">
-        <div className="space-y-2">
-          <h3 className="font-semibold text-lg">{product.name}</h3>
-          {product.description && (
-            <p className="text-muted-foreground text-sm">{product.description}</p>
-          )}
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <span className="text-lg font-bold">
-                R$ {numberToCurrency(product.price)}
-              </span>
-            </div>
+        <div className="flex gap-3">
+          <div className="flex-1 space-y-2">
+            <h3 className="font-semibold text-lg">{product.name}</h3>
+            {product.description && (
+              <p className="text-muted-foreground text-sm">{product.description}</p>
+            )}
             
-            <div className="flex items-center space-x-2">
-              {productInCart ? (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const cartKey = Object.keys(cart).find(key => key.startsWith(product.id));
-                      if (cartKey) onRemoveFromCart(cartKey);
-                    }}
-                  >
-                    -
-                  </Button>
-                  <Badge variant="secondary">
-                    {totalQuantity}
-                  </Badge>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <span className="text-lg font-bold">
+                  R$ {numberToCurrency(product.price)}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                {productInCart ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const cartKey = Object.keys(cart).find(key => key.startsWith(product.id));
+                        if (cartKey) onRemoveFromCart(cartKey);
+                      }}
+                    >
+                      -
+                    </Button>
+                    <Badge variant="secondary">
+                      {totalQuantity}
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onProductClick(product)}
+                    >
+                      +
+                    </Button>
+                  </>
+                ) : (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onProductClick(product)}
                   >
-                    +
+                    <ShoppingCart className="h-4 w-4 mr-1" />
+                    Adicionar
                   </Button>
-                </>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onProductClick(product)}
-                >
-                  <ShoppingCart className="h-4 w-4 mr-1" />
-                  Adicionar
-                </Button>
-              )}
+                )}
+              </div>
             </div>
           </div>
+          
+          {product.image_url && (
+            <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+              <img
+                src={product.image_url}
+                alt={product.name}
+                className="w-full h-full object-cover rounded-md"
+              />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

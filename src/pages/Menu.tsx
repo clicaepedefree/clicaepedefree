@@ -82,7 +82,7 @@ export default function Menu() {
         restaurant={restaurant}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeItem}
-        onSendWhatsApp={(address) => sendWhatsAppOrder(restaurant, products, address)}
+        onSendWhatsApp={(address, payment) => sendWhatsAppOrder(restaurant, products, address, payment)}
         getCartTotal={getCartTotal}
       />
 

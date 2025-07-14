@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Phone, ExternalLink, Plus, Minus, Trash2, MapPin } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Phone, ExternalLink, Plus, Minus, Trash2, MapPin, CreditCard, Banknote } from "lucide-react";
 import { numberToCurrency } from "@/components/ui/currency-input";
 import { useState } from "react";
 
@@ -33,6 +34,11 @@ interface DeliveryAddress {
   neighborhood: string;
 }
 
+interface PaymentMethod {
+  type: 'debit' | 'credit' | 'pix' | 'cash';
+  changeAmount?: number;
+}
+
 interface OrderConfirmationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,7 +47,7 @@ interface OrderConfirmationModalProps {
   restaurant: Restaurant | null;
   onUpdateQuantity: (cartKey: string, newQuantity: number) => void;
   onRemoveItem: (cartKey: string) => void;
-  onSendWhatsApp: (address?: DeliveryAddress) => void;
+  onSendWhatsApp: (address?: DeliveryAddress, payment?: PaymentMethod) => void;
   getCartTotal: () => number;
 }
 
@@ -65,8 +71,18 @@ export function OrderConfirmationModal({
     neighborhood: ''
   });
   
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>({
+    type: 'pix'
+  });
+  
+  const [changeAmount, setChangeAmount] = useState('');
+  
   const handleSendOrder = () => {
-    onSendWhatsApp(deliveryAddress);
+    const payment: PaymentMethod = {
+      type: paymentMethod.type,
+      changeAmount: paymentMethod.type === 'cash' && changeAmount ? parseFloat(changeAmount) : undefined
+    };
+    onSendWhatsApp(deliveryAddress, payment);
     onOpenChange(false);
   };
 
@@ -230,6 +246,51 @@ export function OrderConfirmationModal({
                 />
               </div>
             </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Forma de Pagamento</h3>
+            </div>
+            
+            <RadioGroup 
+              value={paymentMethod.type} 
+              onValueChange={(value) => setPaymentMethod({ type: value as PaymentMethod['type'] })}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="debit" id="debit" />
+                <Label htmlFor="debit">Cartão de Débito</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="credit" id="credit" />
+                <Label htmlFor="credit">Cartão de Crédito</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="pix" id="pix" />
+                <Label htmlFor="pix">PIX</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="cash" id="cash" />
+                <Label htmlFor="cash">Dinheiro</Label>
+              </div>
+            </RadioGroup>
+            
+            {paymentMethod.type === 'cash' && (
+              <div className="ml-6">
+                <Label htmlFor="change">Troco para (opcional)</Label>
+                <Input
+                  id="change"
+                  type="number"
+                  placeholder="50.00"
+                  value={changeAmount}
+                  onChange={(e) => setChangeAmount(e.target.value)}
+                  className="w-32"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-3">

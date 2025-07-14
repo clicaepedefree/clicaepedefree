@@ -71,7 +71,7 @@ export function useCart() {
     }, 0);
   };
 
-  const generateWhatsAppMessage = (restaurant: Restaurant | null, products: Product[], address?: any) => {
+  const generateWhatsAppMessage = (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }) => {
     console.log('generateWhatsAppMessage called with:', { cart, restaurant, products, address });
     
     if (Object.keys(cart).length === 0) {
@@ -111,14 +111,35 @@ export function useCart() {
       }
       message += `\n${address.neighborhood}`;
     }
+
+    if (payment) {
+      message += `\n\n💳 *Forma de Pagamento:* `;
+      switch (payment.type) {
+        case 'debit':
+          message += 'Cartão de Débito';
+          break;
+        case 'credit':
+          message += 'Cartão de Crédito';
+          break;
+        case 'pix':
+          message += 'PIX';
+          break;
+        case 'cash':
+          message += 'Dinheiro';
+          if (payment.changeAmount) {
+            message += ` (Troco para R$ ${payment.changeAmount.toFixed(2).replace('.', ',')})`;
+          }
+          break;
+      }
+    }
     
     return encodeURIComponent(message);
   };
 
-  const sendWhatsAppOrder = (restaurant: Restaurant | null, products: Product[], address?: any) => {
+  const sendWhatsAppOrder = (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }) => {
     if (!restaurant?.whatsapp || Object.keys(cart).length === 0) return;
     
-    const message = generateWhatsAppMessage(restaurant, products, address);
+    const message = generateWhatsAppMessage(restaurant, products, address, payment);
     const whatsappUrl = `https://wa.me/${restaurant.whatsapp.replace(/\D/g, '')}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
