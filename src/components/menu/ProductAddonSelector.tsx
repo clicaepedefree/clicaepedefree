@@ -116,6 +116,18 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
       if (group.selection_type === 'single') {
         // Seleção única - substitui a seleção anterior
         newSelections[groupId] = [optionId];
+      } else if (group.selection_type === 'fractional_highest' || group.selection_type === 'fractional_average') {
+        // Fracionado - múltipla seleção com lógica de preço especial
+        const currentSelections = newSelections[groupId] || [];
+        if (currentSelections.includes(optionId)) {
+          newSelections[groupId] = currentSelections.filter(id => id !== optionId);
+        } else {
+          // Verificar se já atingiu o máximo
+          if (group.max_selections && currentSelections.length >= group.max_selections) {
+            return prev; // Não adiciona se já atingiu o máximo
+          }
+          newSelections[groupId] = [...currentSelections, optionId];
+        }
       } else {
         // Múltipla seleção - adiciona ou remove com validação de max
         const currentSelections = newSelections[groupId] || [];
@@ -137,10 +149,28 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
   const calculateTotalPrice = () => {
     let total = product.price;
     
-    Object.values(selectedAddons).flat().forEach(optionId => {
-      const option = addonOptions.find(o => o.id === optionId);
-      if (option) {
-        total += option.price;
+    // Calcular preço para cada grupo considerando o tipo de seleção
+    Object.entries(selectedAddons).forEach(([groupId, optionIds]) => {
+      if (optionIds.length === 0) return;
+      
+      const group = addonGroups.find(g => g.id === groupId);
+      if (!group) return;
+      
+      const selectedOptions = optionIds.map(id => addonOptions.find(o => o.id === id)).filter(Boolean);
+      
+      if (group.selection_type === 'fractional_highest') {
+        // Fracionado - cobra pelo maior valor
+        const highestPrice = Math.max(...selectedOptions.map(o => o.price));
+        total += highestPrice;
+      } else if (group.selection_type === 'fractional_average') {
+        // Fracionado - cobra pela média
+        const averagePrice = selectedOptions.reduce((sum, o) => sum + o.price, 0) / selectedOptions.length;
+        total += averagePrice;
+      } else {
+        // Múltipla seleção ou única - soma todos os preços
+        selectedOptions.forEach(option => {
+          total += option.price;
+        });
       }
     });
     
@@ -239,6 +269,10 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                     <Badge variant="outline" className="text-xs">
                       {group.selection_type === 'single' 
                         ? 'Escolha 1' 
+                        : group.selection_type === 'fractional_highest'
+                        ? 'Fracionado (maior valor)'
+                        : group.selection_type === 'fractional_average'
+                        ? 'Fracionado (média)'
                         : `${group.min_selections}-${group.max_selections || '∞'} escolhas`
                       }
                     </Badge>

@@ -432,11 +432,13 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                       <SelectContent>
                         <SelectItem value="single">Seleção única</SelectItem>
                         <SelectItem value="multiple">Múltipla seleção</SelectItem>
+                        <SelectItem value="fractional_highest">Fracionado (maior valor)</SelectItem>
+                        <SelectItem value="fractional_average">Fracionado (média)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {groupFormData.selection_type === 'multiple' && (
+                  {(groupFormData.selection_type === 'multiple' || groupFormData.selection_type === 'fractional_highest' || groupFormData.selection_type === 'fractional_average') && (
                     <>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
