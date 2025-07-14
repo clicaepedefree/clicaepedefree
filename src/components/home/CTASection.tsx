@@ -33,7 +33,7 @@ export function CTASection() {
               </Link>
             </Button>
             
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6 border-white text-white hover:bg-white/10" asChild>
+            <Button variant="outline" size="lg" className="text-lg px-8 py-6 border-white/70 text-white hover:bg-white/20 hover:border-white" asChild>
               <Link to="/cardapio/demo">
                 Ver Exemplo de Cardápio
               </Link>

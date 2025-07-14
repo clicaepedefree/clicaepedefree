@@ -16,21 +16,21 @@
     --popover: 0 0% 100%;
     --popover-foreground: 20 14% 15%;
 
-    /* Vibrant orange - main brand color for food apps */
-    --primary: 18 100% 62%;
+    /* Clic brand dark blue - main brand color */
+    --primary: 208 55% 35%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 25 100% 75%;
+    --primary-glow: 204 71% 63%;
 
-    /* Fresh green - secondary color */
-    --secondary: 142 76% 36%;
+    /* Clic light blue - secondary color */
+    --secondary: 204 71% 63%;
     --secondary-foreground: 0 0% 100%;
 
     /* Warm neutrals */
     --muted: 20 14% 96%;
     --muted-foreground: 20 10% 50%;
 
-    --accent: 35 100% 96%;
-    --accent-foreground: 20 14% 15%;
+    --accent: 204 71% 63%;
+    --accent-foreground: 0 0% 100%;
 
     /* Food red for deals/offers */
     --destructive: 0 84% 60%;
@@ -38,17 +38,17 @@
 
     --border: 20 6% 90%;
     --input: 20 6% 90%;
-    --ring: 18 100% 62%;
+    --ring: 208 55% 35%;
 
-    /* Custom food delivery design tokens */
-    --gradient-hero: linear-gradient(135deg, hsl(18 100% 62%), hsl(0 84% 60%));
+    /* Custom Clic design tokens */
+    --gradient-hero: linear-gradient(135deg, hsl(208 55% 35%), hsl(204 71% 63%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(20 6% 98%));
-    --gradient-accent: linear-gradient(90deg, hsl(25 100% 75%), hsl(18 100% 62%));
+    --gradient-accent: linear-gradient(90deg, hsl(204 71% 63%), hsl(208 55% 35%));
     
     /* Shadows with brand color */
-    --shadow-brand: 0 10px 30px -10px hsl(18 100% 62% / 0.3);
+    --shadow-brand: 0 10px 30px -10px hsl(208 55% 35% / 0.3);
     --shadow-card: 0 4px 20px -4px hsl(20 14% 15% / 0.1);
-    --shadow-glow: 0 0 40px hsl(25 100% 75% / 0.4);
+    --shadow-glow: 0 0 40px hsl(204 71% 63% / 0.4);
     
     /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

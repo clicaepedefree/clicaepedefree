@@ -29,6 +29,7 @@ import { CategoryManager } from "./CategoryManager";
 import { ProductManager } from "./ProductManager";
 import { AddonManager } from "./AddonManager";
 import { RestaurantSettings } from "./RestaurantSettings";
+import { CTABanner } from "./CTABanner";
 
 interface DashboardLayoutProps {
   restaurant: any;
@@ -91,6 +92,8 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
           </header>
 
           <div className="p-6">
+            <CTABanner />
+            
             {activeSection === "categories" && <CategoryManager restaurant={restaurant} />}
             {activeSection === "products" && <ProductManager restaurant={restaurant} />}
             {activeSection === "addons" && <AddonManager restaurant={restaurant} />}
