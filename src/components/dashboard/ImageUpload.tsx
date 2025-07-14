@@ -42,48 +42,39 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
     setUploading(true);
 
     try {
-      // Try to compress image using TinyPNG edge function, but continue if it fails
-      let fileToUpload = file;
-      let compressionWorked = false;
+      console.log('Starting image upload process...');
+      console.log('File details:', { name: file.name, size: file.size, type: file.type });
 
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const { data: compressedData, error: compressError } = await supabase.functions.invoke('compress-image', {
-          body: formData,
-        });
-
-        if (!compressError && compressedData) {
-          fileToUpload = new File([compressedData], file.name, { type: file.type });
-          compressionWorked = true;
-        }
-      } catch (compressionError) {
-        console.warn('Compression failed, using original file:', compressionError);
-      }
-
-      // Upload to Supabase Storage
+      // For now, upload directly without compression to isolate the issue
       const fileName = `${restaurantId}/${type}_${Date.now()}.${file.name.split('.').pop()}`;
+      console.log('Upload fileName:', fileName);
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('restaurant-images')
-        .upload(fileName, fileToUpload, {
+        .upload(fileName, file, {
           cacheControl: '3600',
           upsert: true,
         });
 
-      if (uploadError) throw uploadError;
+      console.log('Upload result:', { uploadData, uploadError });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('restaurant-images')
         .getPublicUrl(uploadData.path);
 
+      console.log('Public URL:', publicUrl);
+
       onImageUploaded(publicUrl);
 
       toast({
         title: "Sucesso",
-        description: compressionWorked ? "Imagem carregada e comprimida com sucesso!" : "Imagem carregada com sucesso!",
+        description: "Imagem carregada com sucesso!",
       });
 
     } catch (error: any) {
@@ -149,7 +140,7 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
                 {uploading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Comprimindo...
+                    Carregando...
                   </>
                 ) : (
                   <>
@@ -169,7 +160,7 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
           : 'Recomendado: 1200x300px, formato retangular'
         }
         <br />
-        Máximo 5MB. A imagem será comprimida automaticamente.
+        Máximo 5MB.
       </p>
     </div>
   );
