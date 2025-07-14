@@ -48,6 +48,10 @@ export function OrderConfirmationModal({
 }: OrderConfirmationModalProps) {
   const cartEntries = Object.entries(cart);
   
+  console.log('OrderConfirmationModal - cart:', cart);
+  console.log('OrderConfirmationModal - products:', products);
+  console.log('OrderConfirmationModal - cartEntries:', cartEntries);
+  
   const handleSendOrder = () => {
     onSendWhatsApp();
     onOpenChange(false);
