@@ -36,7 +36,7 @@ export function HeroSection() {
                 </Link>
               </Button>
               
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-primary" asChild>
+              <Button variant="accent" size="lg" className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-primary" asChild>
                 <Link to="/demo">
                   Ver Demonstração
                 </Link>
