@@ -54,13 +54,20 @@ export function useCart() {
   };
 
   const generateWhatsAppMessage = (restaurant: Restaurant | null, products: Product[]) => {
-    if (Object.keys(cart).length === 0) return "";
+    console.log('generateWhatsAppMessage called with:', { cart, restaurant, products });
+    
+    if (Object.keys(cart).length === 0) {
+      console.log('Cart is empty');
+      return "";
+    }
 
     let message = `*Pedido - ${restaurant?.name}*\n\n`;
     
     Object.entries(cart).forEach(([cartKey, item]) => {
       const productId = cartKey.split('-')[0];
       const product = products.find(p => p.id === productId);
+      console.log('Processing cart item:', { cartKey, item, productId, product });
+      
       if (product) {
         message += `${item.quantity}x ${product.name}`;
         
