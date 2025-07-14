@@ -47,6 +47,24 @@ export function useCart() {
     });
   };
 
+  const updateQuantity = (cartKey: string, newQuantity: number) => {
+    setCart(prev => ({
+      ...prev,
+      [cartKey]: {
+        ...prev[cartKey],
+        quantity: newQuantity
+      }
+    }));
+  };
+
+  const removeItem = (cartKey: string) => {
+    setCart(prev => {
+      const newCart = { ...prev };
+      delete newCart[cartKey];
+      return newCart;
+    });
+  };
+
   const getCartTotal = () => {
     return Object.values(cart).reduce((total, item) => {
       return total + (item.unitPrice * item.quantity);
@@ -102,6 +120,8 @@ export function useCart() {
     cart,
     addToCart,
     removeFromCart,
+    updateQuantity,
+    removeItem,
     getCartTotal,
     sendWhatsAppOrder,
     getCartItemsCount

@@ -1,14 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, ExternalLink } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 
 interface CartSummaryProps {
   cartItemsCount: number;
   cartTotal: number;
-  onSendOrder: () => void;
+  onOpenConfirmation: () => void;
 }
 
-export function CartSummary({ cartItemsCount, cartTotal, onSendOrder }: CartSummaryProps) {
+export function CartSummary({ cartItemsCount, cartTotal, onOpenConfirmation }: CartSummaryProps) {
   if (cartItemsCount === 0) return null;
 
   return (
@@ -27,10 +27,9 @@ export function CartSummary({ cartItemsCount, cartTotal, onSendOrder }: CartSumm
             </div>
           </div>
           
-          <Button onClick={onSendOrder} className="flex items-center space-x-2">
-            <Phone className="h-4 w-4" />
-            <span>Enviar Pedido</span>
-            <ExternalLink className="h-4 w-4" />
+          <Button onClick={onOpenConfirmation} className="flex items-center space-x-2">
+            <ShoppingCart className="h-4 w-4" />
+            <span>Confirmar Pedido</span>
           </Button>
         </div>
       </div>

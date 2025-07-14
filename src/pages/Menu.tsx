@@ -7,6 +7,7 @@ import { MenuNotFound } from "@/components/menu/MenuNotFound";
 import { MenuEmptyState } from "@/components/menu/MenuEmptyState";
 import { MenuCategories } from "@/components/menu/MenuCategories";
 import { CartSummary } from "@/components/menu/CartSummary";
+import { OrderConfirmationModal } from "@/components/menu/OrderConfirmationModal";
 import { useMenuData } from "@/hooks/useMenuData";
 import { useCart } from "@/hooks/useCart";
 
@@ -24,10 +25,11 @@ interface Product {
 export default function Menu() {
   const { slug } = useParams<{ slug: string }>();
   const { restaurant, categories, products, loading, getProductsByCategory } = useMenuData(slug);
-  const { cart, addToCart, removeFromCart, getCartTotal, sendWhatsAppOrder, getCartItemsCount } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, removeItem, getCartTotal, sendWhatsAppOrder, getCartItemsCount } = useCart();
   
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [addonSelectorOpen, setAddonSelectorOpen] = useState(false);
+  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -69,7 +71,19 @@ export default function Menu() {
       <CartSummary
         cartItemsCount={cartItemsCount}
         cartTotal={getCartTotal()}
-        onSendOrder={handleSendOrder}
+        onOpenConfirmation={() => setConfirmationModalOpen(true)}
+      />
+
+      <OrderConfirmationModal
+        open={confirmationModalOpen}
+        onOpenChange={setConfirmationModalOpen}
+        cart={cart}
+        products={products}
+        restaurant={restaurant}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeItem}
+        onSendWhatsApp={() => sendWhatsAppOrder(restaurant, products)}
+        getCartTotal={getCartTotal}
       />
 
       {selectedProduct && (
