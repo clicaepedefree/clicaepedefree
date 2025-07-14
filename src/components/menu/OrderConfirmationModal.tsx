@@ -48,9 +48,14 @@ export function OrderConfirmationModal({
 }: OrderConfirmationModalProps) {
   const cartEntries = Object.entries(cart);
   
-  console.log('OrderConfirmationModal - cart:', cart);
-  console.log('OrderConfirmationModal - products:', products);
-  console.log('OrderConfirmationModal - cartEntries:', cartEntries);
+  console.log('=== MODAL DEBUG ===');
+  console.log('Modal open:', open);
+  console.log('Cart object:', cart);
+  console.log('Cart entries:', cartEntries);
+  console.log('Cart entries length:', cartEntries.length);
+  console.log('Products array:', products);
+  console.log('Products length:', products?.length);
+  console.log('=== END DEBUG ===');
   
   const handleSendOrder = () => {
     onSendWhatsApp();
