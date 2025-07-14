@@ -55,6 +55,16 @@ export function OrderConfirmationModal({
   console.log('Cart entries length:', cartEntries.length);
   console.log('Products array:', products);
   console.log('Products length:', products?.length);
+  
+  // Debug específico dos produtos
+  cartEntries.forEach(([cartKey, item]) => {
+    const productId = cartKey.split('-')[0];
+    const product = products.find(p => p.id === productId);
+    console.log(`Cart key: ${cartKey}`);
+    console.log(`Product ID: ${productId}`);
+    console.log(`Found product:`, product);
+    console.log(`Product name:`, product?.name);
+  });
   console.log('=== END DEBUG ===');
   
   const handleSendOrder = () => {
