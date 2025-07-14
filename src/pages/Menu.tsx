@@ -52,7 +52,11 @@ export default function Menu() {
 
   return (
     <div className="min-h-screen bg-background">
-      <MenuHeader restaurantName={restaurant.name} />
+      <MenuHeader 
+        restaurantName={restaurant.name} 
+        logoUrl={restaurant.logo_url}
+        bannerUrl={restaurant.banner_url}
+      />
 
       <div className="container mx-auto px-4 py-8">
         {categories.length === 0 ? (

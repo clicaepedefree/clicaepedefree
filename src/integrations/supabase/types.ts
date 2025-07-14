@@ -217,6 +217,7 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          banner_url: string | null
           created_at: string
           id: string
           logo_url: string | null
@@ -227,6 +228,7 @@ export type Database = {
           whatsapp: string
         }
         Insert: {
+          banner_url?: string | null
           created_at?: string
           id?: string
           logo_url?: string | null
@@ -237,6 +239,7 @@ export type Database = {
           whatsapp: string
         }
         Update: {
+          banner_url?: string | null
           created_at?: string
           id?: string
           logo_url?: string | null

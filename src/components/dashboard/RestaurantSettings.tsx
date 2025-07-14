@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ImageUpload } from "./ImageUpload";
 
 interface RestaurantSettingsProps {
   restaurant: any;
@@ -14,6 +15,32 @@ interface RestaurantSettingsProps {
 export function RestaurantSettings({ restaurant, onUpdate }: RestaurantSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const handleImageUpdate = async (field: 'logo_url' | 'banner_url', url: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .update({ [field]: url })
+        .eq('id', restaurant.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Imagem atualizada!",
+        description: `${field === 'logo_url' ? 'Logo' : 'Banner'} ${url ? 'carregado' : 'removido'} com sucesso.`,
+      });
+
+      onUpdate(data);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar imagem",
+        description: error.message,
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -58,6 +85,42 @@ export function RestaurantSettings({ restaurant, onUpdate }: RestaurantSettingsP
       </div>
 
       <div className="grid gap-6 max-w-2xl">
+        <Card>
+          <CardHeader>
+            <CardTitle>Imagens do Restaurante</CardTitle>
+            <CardDescription>
+              Faça upload da logo e banner do seu restaurante
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <Label className="text-base font-medium">Logo do Restaurante</Label>
+              <p className="text-sm text-muted-foreground mb-3">
+                Aparecerá no lado esquerdo do cardápio, ao lado do nome
+              </p>
+              <ImageUpload
+                currentUrl={restaurant.logo_url}
+                onImageUploaded={(url) => handleImageUpdate('logo_url', url)}
+                type="logo"
+                restaurantId={restaurant.id}
+              />
+            </div>
+            
+            <div>
+              <Label className="text-base font-medium">Banner do Restaurante</Label>
+              <p className="text-sm text-muted-foreground mb-3">
+                Aparecerá no topo do cardápio, acima da logo e nome
+              </p>
+              <ImageUpload
+                currentUrl={restaurant.banner_url}
+                onImageUploaded={(url) => handleImageUpdate('banner_url', url)}
+                type="banner"
+                restaurantId={restaurant.id}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Informações Básicas</CardTitle>
