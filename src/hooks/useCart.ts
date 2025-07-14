@@ -71,8 +71,8 @@ export function useCart() {
     }, 0);
   };
 
-  const generateWhatsAppMessage = (restaurant: Restaurant | null, products: Product[]) => {
-    console.log('generateWhatsAppMessage called with:', { cart, restaurant, products });
+  const generateWhatsAppMessage = (restaurant: Restaurant | null, products: Product[], address?: any) => {
+    console.log('generateWhatsAppMessage called with:', { cart, restaurant, products, address });
     
     if (Object.keys(cart).length === 0) {
       console.log('Cart is empty');
@@ -102,13 +102,23 @@ export function useCart() {
     });
 
     message += `\n*Total: R$ ${numberToCurrency(getCartTotal())}*`;
+    
+    if (address && address.street && address.number && address.neighborhood) {
+      message += `\n\n📍 *Endereço de Entrega:*\n`;
+      message += `${address.street}, ${address.number}`;
+      if (address.complement) {
+        message += ` - ${address.complement}`;
+      }
+      message += `\n${address.neighborhood}`;
+    }
+    
     return encodeURIComponent(message);
   };
 
-  const sendWhatsAppOrder = (restaurant: Restaurant | null, products: Product[]) => {
+  const sendWhatsAppOrder = (restaurant: Restaurant | null, products: Product[], address?: any) => {
     if (!restaurant?.whatsapp || Object.keys(cart).length === 0) return;
     
-    const message = generateWhatsAppMessage(restaurant, products);
+    const message = generateWhatsAppMessage(restaurant, products, address);
     const whatsappUrl = `https://wa.me/${restaurant.whatsapp.replace(/\D/g, '')}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };

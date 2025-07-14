@@ -2,8 +2,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Phone, ExternalLink, Plus, Minus, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Phone, ExternalLink, Plus, Minus, Trash2, MapPin } from "lucide-react";
 import { numberToCurrency } from "@/components/ui/currency-input";
+import { useState } from "react";
 
 interface Product {
   id: string;
@@ -23,6 +26,13 @@ interface Restaurant {
   slug: string;
 }
 
+interface DeliveryAddress {
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+}
+
 interface OrderConfirmationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,7 +41,7 @@ interface OrderConfirmationModalProps {
   restaurant: Restaurant | null;
   onUpdateQuantity: (cartKey: string, newQuantity: number) => void;
   onRemoveItem: (cartKey: string) => void;
-  onSendWhatsApp: () => void;
+  onSendWhatsApp: (address?: DeliveryAddress) => void;
   getCartTotal: () => number;
 }
 
@@ -48,30 +58,19 @@ export function OrderConfirmationModal({
 }: OrderConfirmationModalProps) {
   const cartEntries = Object.entries(cart);
   
-  console.log('=== MODAL DEBUG ===');
-  console.log('Modal open:', open);
-  console.log('Cart object:', cart);
-  console.log('Cart entries:', cartEntries);
-  console.log('Cart entries length:', cartEntries.length);
-  console.log('Products array:', products);
-  console.log('Products length:', products?.length);
-  
-  // Debug específico dos produtos
-  cartEntries.forEach(([cartKey, item]) => {
-    const lastHyphenIndex = cartKey.lastIndexOf('-[');
-    const productId = lastHyphenIndex !== -1 ? cartKey.substring(0, lastHyphenIndex) : cartKey.split('-').slice(0, 5).join('-');
-    const product = products.find(p => p.id === productId);
-    console.log(`Cart key: ${cartKey}`);
-    console.log(`Product ID: ${productId}`);
-    console.log(`Found product:`, product);
-    console.log(`Product name:`, product?.name);
+  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
+    street: '',
+    number: '',
+    complement: '',
+    neighborhood: ''
   });
-  console.log('=== END DEBUG ===');
   
   const handleSendOrder = () => {
-    onSendWhatsApp();
+    onSendWhatsApp(deliveryAddress);
     onOpenChange(false);
   };
+
+  const isAddressValid = deliveryAddress.street && deliveryAddress.number && deliveryAddress.neighborhood;
 
   const updateQuantity = (cartKey: string, delta: number) => {
     const currentQuantity = cart[cartKey]?.quantity || 0;
@@ -182,6 +181,57 @@ export function OrderConfirmationModal({
             <span>R$ {numberToCurrency(getCartTotal())}</span>
           </div>
 
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Endereço de Entrega</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <Label htmlFor="street">Endereço *</Label>
+                <Input
+                  id="street"
+                  placeholder="Rua, Avenida..."
+                  value={deliveryAddress.street}
+                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, street: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="number">Número *</Label>
+                <Input
+                  id="number"
+                  placeholder="123"
+                  value={deliveryAddress.number}
+                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, number: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="complement">Complemento</Label>
+                <Input
+                  id="complement"
+                  placeholder="Apto, Bloco, Sala..."
+                  value={deliveryAddress.complement}
+                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, complement: e.target.value }))}
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <Label htmlFor="neighborhood">Bairro *</Label>
+                <Input
+                  id="neighborhood"
+                  placeholder="Nome do bairro"
+                  value={deliveryAddress.neighborhood}
+                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, neighborhood: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="flex space-x-3">
             <Button 
               variant="outline" 
@@ -193,7 +243,7 @@ export function OrderConfirmationModal({
             <Button 
               onClick={handleSendOrder}
               className="flex-1 flex items-center space-x-2"
-              disabled={cartEntries.length === 0}
+              disabled={cartEntries.length === 0 || !isAddressValid}
             >
               <Phone className="h-4 w-4" />
               <span>Enviar para WhatsApp</span>
