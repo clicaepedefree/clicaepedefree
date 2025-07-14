@@ -17,7 +17,7 @@ export function CTASection() {
           </div>
 
           <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-            Pronto para aumentar suas vendas?
+            Comece agora grátis
           </h2>
           
           <p className="text-xl text-white/90 mb-8 leading-relaxed max-w-2xl mx-auto">

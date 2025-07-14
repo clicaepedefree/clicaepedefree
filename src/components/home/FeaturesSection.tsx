@@ -55,10 +55,10 @@ export function FeaturesSection() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-foreground mb-4">
-            Tudo que você precisa para vender online
+            Como funciona?
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Uma solução completa e gratuita para transformar seu restaurante em um negócio digital
+            Monte seu cardápio digital em minutos. O cliente escolhe os produtos e o pedido é enviado automaticamente pelo WhatsApp com todos os dados organizados: itens, preço, descrição e endereço.
           </p>
         </div>
 
@@ -83,9 +83,9 @@ export function FeaturesSection() {
         {/* Benefits Section */}
         <div className="bg-white rounded-2xl p-8 shadow-card">
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-foreground mb-2">
-              Por que escolher o Clica e Pede FREE?
-            </h3>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Sem mensalidade, sem comissão, sem pegadinha
+            </h2>
             <p className="text-muted-foreground">
               Mais do que um cardápio digital, uma solução completa
             </p>
@@ -93,10 +93,10 @@ export function FeaturesSection() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              "Configuração em 5 minutos",
-              "Sem limite de produtos",
-              "Atualizações em tempo real",
-              "Suporte via WhatsApp"
+              "Totalmente gratuito, para sempre",
+              "Ideal para delivery, salão, food trucks e eventos", 
+              "Compatível com celular, tablet e computador",
+              "Sem limite de produtos"
             ].map((benefit, index) => (
               <div key={index} className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-secondary flex-shrink-0" />

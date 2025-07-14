@@ -19,12 +19,16 @@ export function HeroSection() {
           <div className="text-white space-y-8">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold leading-tight">
-                Seu Cardápio
-                <span className="block text-primary-glow">Digital Gratuito</span>
+                Cardápio Digital Grátis para Restaurantes, Delivery e Lanchonetes
               </h1>
-              <p className="text-xl text-white/90 leading-relaxed">
-                Crie seu cardápio online em minutos e receba pedidos diretamente no WhatsApp. 
-                <strong> Totalmente gratuito!</strong>
+              <h2 className="text-3xl md:text-4xl font-semibold text-primary-glow">
+                Clica e Pede FREE – Crie seu cardápio online 100% gratuito
+              </h2>
+              <h3 className="text-xl text-white/90 leading-relaxed">
+                Pedidos vão direto para o WhatsApp do seu negócio
+              </h3>
+              <p className="text-lg text-white/80 leading-relaxed">
+                Monte seu cardápio digital em minutos. O cliente escolhe os produtos e o pedido é enviado automaticamente pelo WhatsApp com todos os dados organizados: itens, preço, descrição e endereço.
               </p>
             </div>
 
