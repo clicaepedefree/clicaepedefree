@@ -45,8 +45,14 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
       console.log('Starting image upload process...');
       console.log('File details:', { name: file.name, size: file.size, type: file.type });
 
-      // For now, upload directly without compression to isolate the issue
-      const fileName = `${restaurantId}/${type}_${Date.now()}.${file.name.split('.').pop()}`;
+      // Get the current user's auth ID for the folder name (required by RLS policy)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Use user's auth ID as folder name to comply with RLS policy
+      const fileName = `${user.id}/${type}_${Date.now()}.${file.name.split('.').pop()}`;
       console.log('Upload fileName:', fileName);
       
       const { data: uploadData, error: uploadError } = await supabase.storage
