@@ -94,6 +94,24 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
           <div className="p-6">
             <CTABanner />
             
+            {/* Mini Banner Tutorial */}
+            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <Button 
+                variant="default"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                asChild
+              >
+                <a 
+                  href="https://www.youtube.com/watch?v=XHJScS_YEMo" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  📺 Veja como configurar o sistema
+                </a>
+              </Button>
+            </div>
+            
             {activeSection === "categories" && <CategoryManager restaurant={restaurant} />}
             {activeSection === "products" && <ProductManager restaurant={restaurant} />}
             {activeSection === "addons" && <AddonManager restaurant={restaurant} />}
