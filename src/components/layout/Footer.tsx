@@ -1,10 +1,8 @@
 import { Link } from "react-router-dom";
 import { Phone, Mail, MessageSquare, Heart } from "lucide-react";
 import logo from "@/assets/logo.png";
-
 export function Footer() {
-  return (
-    <footer className="bg-foreground text-white py-16">
+  return <footer className="bg-foreground text-white py-16">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
           {/* Brand */}
@@ -68,12 +66,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a 
-                  href="https://wa.me/5511999999999" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-white/80 hover:text-primary-glow transition-colors"
-                >
+                <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:text-primary-glow transition-colors">
                   WhatsApp Suporte
                 </a>
               </li>
@@ -86,7 +79,7 @@ export function Footer() {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <MessageSquare className="h-4 w-4 text-primary-glow" />
-                <span className="text-white/80 text-sm">WhatsApp: (11) 99999-9999</span>
+                <span className="text-white/80 text-sm">WhatsApp: (11) 96192-4490</span>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-primary-glow" />
@@ -105,6 +98,5 @@ export function Footer() {
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 }
