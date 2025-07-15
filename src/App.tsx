@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Menu from "./pages/Menu";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import SuperAdmin from "./pages/SuperAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/cardapio/:slug" element={<Menu />} />
           <Route path="/criar-conta" element={<Auth />} />
           <Route path="/admin" element={<Dashboard />} />
+          <Route path="/super-admin" element={<SuperAdmin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

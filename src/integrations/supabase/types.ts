@@ -260,6 +260,19 @@ export type Database = {
         Args: { restaurant_name: string }
         Returns: string
       }
+      get_restaurants_with_emails: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          whatsapp: string
+          user_email: string
+          slug: string
+          created_at: string
+          logo_url: string
+          banner_url: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
