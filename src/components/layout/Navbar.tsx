@@ -15,11 +15,11 @@ export function Navbar() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/contato" className="hidden sm:flex">
+          <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 text-white" asChild>
+            <a href="https://wa.me/5511916924490?text=Quero%20saber%20mais%20sobre%20o%20cardápio%20grátis" target="_blank" rel="noopener noreferrer" className="hidden sm:flex">
               <Phone className="mr-2 h-4 w-4" />
-              Contato
-            </Link>
+              CHAMAR NO WHATSAPP
+            </a>
           </Button>
           
           <Button variant="outline" size="sm" asChild>
