@@ -83,7 +83,7 @@ export function Footer() {
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-primary-glow" />
-                <span className="text-white/80 text-sm">contato@clicaepedefree.com</span>
+                <span className="text-white/80 text-sm">comercial@clicaepede.online</span>
               </div>
             </div>
           </div>
