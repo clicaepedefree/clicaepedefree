@@ -2,15 +2,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Smartphone, Users, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-food.jpg";
-
 export function HeroSection() {
-  return (
-    <section className="min-h-screen flex items-center bg-gradient-hero relative overflow-hidden">
+  return <section className="min-h-screen flex items-center bg-gradient-hero relative overflow-hidden">
       {/* Background Image with Overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-20"
-        style={{ backgroundImage: `url(${heroImage})` }}
-      />
+      <div className="absolute inset-0 bg-cover bg-center opacity-20" style={{
+      backgroundImage: `url(${heroImage})`
+    }} />
       <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-transparent" />
       
       <div className="container mx-auto px-4 relative z-10">
@@ -21,12 +18,8 @@ export function HeroSection() {
               <h1 className="text-5xl md:text-6xl font-bold leading-tight">
                 Cardápio Digital Grátis para Restaurantes, Delivery e Lanchonetes
               </h1>
-              <h2 className="text-3xl md:text-4xl font-semibold text-primary-glow">
-                Clica e Pede FREE – Crie seu cardápio online 100% gratuito
-              </h2>
-              <h3 className="text-xl text-white/90 leading-relaxed">
-                Pedidos vão direto para o WhatsApp do seu negócio
-              </h3>
+              
+              <h3 className="text-xl text-white/90 leading-relaxed">Seus pedidos vão direto para o WhatsApp do seu negócio</h3>
               <p className="text-lg text-white/80 leading-relaxed">
                 Monte seu cardápio digital em minutos. O cliente escolhe os produtos e o pedido é enviado automaticamente pelo WhatsApp com todos os dados organizados: itens, preço, descrição e endereço.
               </p>
@@ -104,6 +97,5 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
