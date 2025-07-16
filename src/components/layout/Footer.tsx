@@ -93,9 +93,7 @@ export function Footer() {
           <p className="text-white/60 text-sm flex items-center justify-center gap-1">
             Feito com <Heart className="h-4 w-4 text-destructive" /> para ajudar pequenos negócios
           </p>
-          <p className="text-white/60 text-sm mt-2">
-            © 2024 Clica e Pede FREE. Todos os direitos reservados.
-          </p>
+          <p className="text-white/60 text-sm mt-2">© 2025 Clica e Pede FREE. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>;
