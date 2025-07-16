@@ -8,6 +8,7 @@ import Menu from "./pages/Menu";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import SuperAdmin from "./pages/SuperAdmin";
+import SuperAdminAuth from "./pages/SuperAdminAuth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/criar-conta" element={<Auth />} />
           <Route path="/admin" element={<Dashboard />} />
           <Route path="/super-admin" element={<SuperAdmin />} />
+          <Route path="/super-admin/auth" element={<SuperAdminAuth />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

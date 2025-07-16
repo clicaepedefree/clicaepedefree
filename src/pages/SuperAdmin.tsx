@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Users, Phone, Mail, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, Users, Phone, Mail, Calendar, LogOut, Shield } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 
 interface RestaurantWithEmail {
   id: string;
@@ -23,6 +26,15 @@ const SuperAdmin = () => {
   const [restaurants, setRestaurants] = useState<RestaurantWithEmail[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isAuthenticated, session, loading: authLoading, logout } = useSuperAdmin();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/super-admin/auth');
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   useEffect(() => {
     fetchRestaurants();
@@ -68,7 +80,12 @@ const SuperAdmin = () => {
     return whatsapp;
   };
 
-  if (loading) {
+  const handleLogout = () => {
+    logout();
+    navigate('/super-admin/auth');
+  };
+
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -80,16 +97,37 @@ const SuperAdmin = () => {
     );
   }
 
+  if (!isAuthenticated) {
+    return null; // Will redirect via useEffect
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Super Admin - Painel de Controle</h1>
-          <p className="text-muted-foreground">
-            Visão geral de todas as empresas cadastradas na plataforma
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Super Admin - Painel de Controle</h1>
+            <p className="text-muted-foreground">
+              Visão geral de todas as empresas cadastradas na plataforma
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Shield className="h-4 w-4" />
+              <span>Logado como: {session?.email}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogout}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

@@ -251,11 +251,43 @@ export type Database = {
         }
         Relationships: []
       }
+      super_admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          password_hash: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          password_hash: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          password_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      authenticate_super_admin: {
+        Args: { admin_email: string; admin_password: string }
+        Returns: {
+          id: string
+          email: string
+          success: boolean
+        }[]
+      }
       generate_unique_slug: {
         Args: { restaurant_name: string }
         Returns: string
