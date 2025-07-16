@@ -32,10 +32,10 @@ export function CTASection() {
               </Link>
             </Button>
             
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6 border-white/70 text-white hover:bg-white/20 hover:border-white" asChild>
-              <Link to="/cardapio/demo">
+            <Button variant="outline" size="lg" className="text-lg px-8 py-6 border-white/70 text-primary hover:bg-white/20 hover:border-white" asChild>
+              <a href="https://cardapiogratis.online/cardapio/pizza-do-z-1" target="_blank" rel="noopener noreferrer">
                 Ver Exemplo de Cardápio
-              </Link>
+              </a>
             </Button>
           </div>
         </div>
