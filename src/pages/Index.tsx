@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { HeroSection } from "@/components/home/HeroSection";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { TestimonialsSection } from "@/components/home/TestimonialsSection";
+import { FAQSection } from "@/components/home/FAQSection";
 import { CTASection } from "@/components/home/CTASection";
 import { Footer } from "@/components/layout/Footer";
 import { MessageCircle } from "lucide-react";
@@ -29,6 +31,8 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <FeaturesSection />
+      <TestimonialsSection />
+      <FAQSection />
       <CTASection />
       <Footer />
       
