@@ -21,7 +21,8 @@ import {
   Settings, 
   LogOut, 
   Link as LinkIcon,
-  Package
+  Package,
+  MapPin
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +30,7 @@ import { CategoryManager } from "./CategoryManager";
 import { ProductManager } from "./ProductManager";
 import { AddonManager } from "./AddonManager";
 import { RestaurantSettings } from "./RestaurantSettings";
+import { DeliveryZoneManager } from "./DeliveryZoneManager";
 import { CTABanner } from "./CTABanner";
 
 interface DashboardLayoutProps {
@@ -42,6 +44,7 @@ const menuItems = [
   { title: "Categorias", value: "categories", icon: MenuIcon },
   { title: "Produtos", value: "products", icon: Package },
   { title: "Adicionais", value: "addons", icon: Plus },
+  { title: "Zonas de Entrega", value: "delivery", icon: MapPin },
   { title: "Configurações", value: "settings", icon: Settings },
 ];
 
@@ -115,6 +118,7 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
             {activeSection === "categories" && <CategoryManager restaurant={restaurant} />}
             {activeSection === "products" && <ProductManager restaurant={restaurant} />}
             {activeSection === "addons" && <AddonManager restaurant={restaurant} />}
+            {activeSection === "delivery" && <DeliveryZoneManager restaurant={restaurant} />}
             {activeSection === "settings" && (
               <RestaurantSettings 
                 restaurant={restaurant} 

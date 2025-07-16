@@ -71,7 +71,7 @@ export function useCart() {
     }, 0);
   };
 
-  const generateWhatsAppMessage = (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }) => {
+  const generateWhatsAppMessage = (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }, deliveryFee?: number) => {
     console.log('generateWhatsAppMessage called with:', { cart, restaurant, products, address });
     
     if (Object.keys(cart).length === 0) {
@@ -101,7 +101,15 @@ export function useCart() {
       }
     });
 
-    message += `\n*Total: R$ ${numberToCurrency(getCartTotal())}*`;
+    const subtotal = getCartTotal();
+    message += `\n*Subtotal: R$ ${numberToCurrency(subtotal)}*`;
+    
+    if (deliveryFee && deliveryFee > 0) {
+      message += `\n*Taxa de Entrega: R$ ${numberToCurrency(deliveryFee)}*`;
+      message += `\n*Total: R$ ${numberToCurrency(subtotal + deliveryFee)}*`;
+    } else {
+      message += `\n*Total: R$ ${numberToCurrency(subtotal)}*`;
+    }
     
     if (address && address.street && address.number && address.neighborhood) {
       message += `\n\n📍 *Endereço de Entrega:*\n`;
@@ -136,10 +144,10 @@ export function useCart() {
     return encodeURIComponent(message);
   };
 
-  const sendWhatsAppOrder = (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }) => {
+  const sendWhatsAppOrder = (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }, deliveryFee?: number) => {
     if (!restaurant?.whatsapp || Object.keys(cart).length === 0) return;
     
-    const message = generateWhatsAppMessage(restaurant, products, address, payment);
+    const message = generateWhatsAppMessage(restaurant, products, address, payment, deliveryFee);
     const whatsappUrl = `https://wa.me/${restaurant.whatsapp.replace(/\D/g, '')}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };

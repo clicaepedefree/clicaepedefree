@@ -125,6 +125,36 @@ export type Database = {
           },
         ]
       }
+      delivery_zones: {
+        Row: {
+          created_at: string
+          delivery_fee: number
+          id: string
+          is_active: boolean | null
+          neighborhood: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_fee?: number
+          id?: string
+          is_active?: boolean | null
+          neighborhood: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_fee?: number
+          id?: string
+          is_active?: boolean | null
+          neighborhood?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_addon_groups: {
         Row: {
           addon_group_id: string

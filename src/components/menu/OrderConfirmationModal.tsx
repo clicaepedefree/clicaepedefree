@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Phone, ExternalLink, Plus, Minus, Trash2, MapPin, CreditCard, Banknote } from "lucide-react";
 import { numberToCurrency } from "@/components/ui/currency-input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Product {
   id: string;
@@ -32,6 +34,14 @@ interface DeliveryAddress {
   number: string;
   complement: string;
   neighborhood: string;
+  deliveryZoneId?: string;
+}
+
+interface DeliveryZone {
+  id: string;
+  neighborhood: string;
+  delivery_fee: number;
+  is_active: boolean;
 }
 
 interface PaymentMethod {
@@ -47,7 +57,7 @@ interface OrderConfirmationModalProps {
   restaurant: Restaurant | null;
   onUpdateQuantity: (cartKey: string, newQuantity: number) => void;
   onRemoveItem: (cartKey: string) => void;
-  onSendWhatsApp: (address?: DeliveryAddress, payment?: PaymentMethod) => void;
+  onSendWhatsApp: (address?: DeliveryAddress, payment?: PaymentMethod, deliveryFee?: number) => void;
   getCartTotal: () => number;
 }
 
@@ -63,12 +73,15 @@ export function OrderConfirmationModal({
   getCartTotal
 }: OrderConfirmationModalProps) {
   const cartEntries = Object.entries(cart);
+  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
+  const [selectedDeliveryZone, setSelectedDeliveryZone] = useState<DeliveryZone | null>(null);
   
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
     street: '',
     number: '',
     complement: '',
-    neighborhood: ''
+    neighborhood: '',
+    deliveryZoneId: ''
   });
   
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>({
@@ -76,17 +89,52 @@ export function OrderConfirmationModal({
   });
   
   const [changeAmount, setChangeAmount] = useState('');
+
+  useEffect(() => {
+    if (restaurant?.id && open) {
+      fetchDeliveryZones();
+    }
+  }, [restaurant?.id, open]);
+
+  const fetchDeliveryZones = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('delivery_zones')
+        .select('*')
+        .eq('restaurant_id', restaurant!.id)
+        .eq('is_active', true)
+        .order('neighborhood');
+
+      if (error) throw error;
+      setDeliveryZones(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar zonas de entrega:', error);
+    }
+  };
+
+  const handleDeliveryZoneChange = (zoneId: string) => {
+    const zone = deliveryZones.find(z => z.id === zoneId);
+    setSelectedDeliveryZone(zone || null);
+    setDeliveryAddress(prev => ({ 
+      ...prev, 
+      deliveryZoneId: zoneId,
+      neighborhood: zone?.neighborhood || ''
+    }));
+  };
   
   const handleSendOrder = () => {
     const payment: PaymentMethod = {
       type: paymentMethod.type,
       changeAmount: paymentMethod.type === 'cash' && changeAmount ? parseFloat(changeAmount) : undefined
     };
-    onSendWhatsApp(deliveryAddress, payment);
+    const deliveryFee = selectedDeliveryZone?.delivery_fee || 0;
+    onSendWhatsApp(deliveryAddress, payment, deliveryFee);
     onOpenChange(false);
   };
 
-  const isAddressValid = deliveryAddress.street && deliveryAddress.number && deliveryAddress.neighborhood;
+  const isAddressValid = deliveryAddress.street && deliveryAddress.number && deliveryAddress.deliveryZoneId;
+  const deliveryFee = selectedDeliveryZone?.delivery_fee || 0;
+  const totalWithDelivery = getCartTotal() + deliveryFee;
 
   const updateQuantity = (cartKey: string, delta: number) => {
     const currentQuantity = cart[cartKey]?.quantity || 0;
@@ -192,9 +240,21 @@ export function OrderConfirmationModal({
         <Separator />
 
         <div className="space-y-4">
-          <div className="flex justify-between items-center text-xl font-bold">
-            <span>Total do Pedido:</span>
-            <span>R$ {numberToCurrency(getCartTotal())}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span>Subtotal:</span>
+              <span>R$ {numberToCurrency(getCartTotal())}</span>
+            </div>
+            {selectedDeliveryZone && (
+              <div className="flex justify-between items-center">
+                <span>Taxa de entrega ({selectedDeliveryZone.neighborhood}):</span>
+                <span>R$ {numberToCurrency(deliveryFee)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center text-xl font-bold border-t pt-2">
+              <span>Total:</span>
+              <span>R$ {numberToCurrency(totalWithDelivery)}</span>
+            </div>
           </div>
 
           <Separator />
@@ -237,13 +297,28 @@ export function OrderConfirmationModal({
               </div>
               
               <div className="md:col-span-2">
-                <Label htmlFor="neighborhood">Bairro *</Label>
-                <Input
-                  id="neighborhood"
-                  placeholder="Nome do bairro"
-                  value={deliveryAddress.neighborhood}
-                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, neighborhood: e.target.value }))}
-                />
+                <Label htmlFor="deliveryZone">Bairro / Zona de Entrega *</Label>
+                {deliveryZones.length > 0 ? (
+                  <Select value={deliveryAddress.deliveryZoneId} onValueChange={handleDeliveryZoneChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione seu bairro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {deliveryZones.map((zone) => (
+                        <SelectItem key={zone.id} value={zone.id}>
+                          {zone.neighborhood} - R$ {numberToCurrency(zone.delivery_fee)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="neighborhood"
+                    placeholder="Nome do bairro"
+                    value={deliveryAddress.neighborhood}
+                    onChange={(e) => setDeliveryAddress(prev => ({ ...prev, neighborhood: e.target.value }))}
+                  />
+                )}
               </div>
             </div>
           </div>
