@@ -36,25 +36,36 @@ const Index = () => {
       <CTASection />
       <Footer />
       
-      <!--Start of Tawk.to Script-->
-<script type="text/javascript">
-var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-(function(){
-var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-s1.async=true;
-s1.src='https://embed.tawk.to/670d2b904304e3196ad16200/1ia5n4bn7';
-s1.charset='UTF-8';
-s1.setAttribute('crossorigin','*');
-s0.parentNode.insertBefore(s1,s0);
-})();
-</script>
-<!--End of Tawk.to Script-->
-
-   </a>
+      {/* Floating WhatsApp Button with Effects */}
+      <div className="fixed bottom-6 right-6 z-50">
+        {/* Popup */}
+        {showPopup && (
+          <div className="absolute bottom-16 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-3 mb-2 animate-fade-in whitespace-nowrap">
+            <div className="text-sm text-gray-700 font-medium">
+              Estamos online, tire suas dúvidas
+            </div>
+            <div className="absolute bottom-0 right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-white transform translate-y-full"></div>
+          </div>
+        )}
+        
+        {/* WhatsApp Button */}
+        <a
+          href="https://wa.me/5511916924490?text=Quero%20saber%20mais%20sobre%20o%20cardápio%20grátis"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleWhatsAppClick}
+          className={`inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 ${
+            showPulse ? 'animate-pulse' : ''
+          }`}
+          aria-label="Falar no WhatsApp"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </a>
       </div>
     </div>
   );
 };
+
 
      
 export default Index;
