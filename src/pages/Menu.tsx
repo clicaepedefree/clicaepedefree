@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { ProductAddonSelector } from "@/components/menu/ProductAddonSelector";
+import { CartSummary } from "@/components/menu/CartSummary";
+import { MenuCategories } from "@/components/menu/MenuCategories";
+import { MenuEmptyState } from "@/components/menu/MenuEmptyState";
 import { MenuHeader } from "@/components/menu/MenuHeader";
 import { MenuLoadingState } from "@/components/menu/MenuLoadingState";
 import { MenuNotFound } from "@/components/menu/MenuNotFound";
-import { MenuEmptyState } from "@/components/menu/MenuEmptyState";
-import { MenuCategories } from "@/components/menu/MenuCategories";
-import { CartSummary } from "@/components/menu/CartSummary";
 import { OrderConfirmationModal } from "@/components/menu/OrderConfirmationModal";
-import { useMenuData } from "@/hooks/useMenuData";
+import { ProductAddonSelector } from "@/components/menu/ProductAddonSelector";
 import { useCart } from "@/hooks/useCart";
+import { useMenuData } from "@/hooks/useMenuData";
+import { useState } from "react";
+import { useParams } from "react-router-dom";
 
 interface Product {
   id: string;
@@ -86,7 +86,7 @@ export default function Menu() {
         restaurant={restaurant}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeItem}
-        onSendWhatsApp={(address, payment) => sendWhatsAppOrder(restaurant, products, address, payment)}
+        onSendWhatsApp={(address, payment, deliveryFee) => sendWhatsAppOrder(restaurant, products, address, payment, deliveryFee)}
         getCartTotal={getCartTotal}
       />
 
