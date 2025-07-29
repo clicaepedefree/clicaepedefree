@@ -381,6 +381,7 @@ export type Database = {
           created_at: string
           logo_url: string
           banner_url: string
+          total_revenue: number
         }[]
       }
     }

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Phone, Mail, Calendar, LogOut, Shield } from "lucide-react";
+import { Building2, Users, Phone, Mail, Calendar, LogOut, Shield, DollarSign } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -20,6 +20,7 @@ interface RestaurantWithEmail {
   created_at: string;
   logo_url?: string;
   banner_url?: string;
+  total_revenue: number;
 }
 
 const SuperAdmin = () => {
@@ -80,6 +81,17 @@ const SuperAdmin = () => {
     return whatsapp;
   };
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const getTotalRevenue = () => {
+    return restaurants.reduce((sum, restaurant) => sum + Number(restaurant.total_revenue || 0), 0);
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/super-admin/auth');
@@ -131,7 +143,7 @@ const SuperAdmin = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Empresas</CardTitle>
@@ -141,6 +153,21 @@ const SuperAdmin = () => {
               <div className="text-2xl font-bold">{restaurants.length}</div>
               <p className="text-xs text-muted-foreground">
                 Restaurantes cadastrados
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Faturamento Total</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {formatCurrency(getTotalRevenue())}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Receita total da plataforma
               </p>
             </CardContent>
           </Card>
@@ -194,6 +221,7 @@ const SuperAdmin = () => {
                     <TableHead>Nome do Estabelecimento</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>WhatsApp</TableHead>
+                    <TableHead>Faturamento</TableHead>
                     <TableHead>Slug</TableHead>
                     <TableHead>Data de Cadastro</TableHead>
                     <TableHead>Status</TableHead>
@@ -224,6 +252,14 @@ const SuperAdmin = () => {
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-muted-foreground" />
                           {formatWhatsApp(restaurant.whatsapp)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <span className="font-semibold text-green-600">
+                            {formatCurrency(Number(restaurant.total_revenue || 0))}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
