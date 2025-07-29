@@ -15,6 +15,7 @@ import { Plus, Edit, Trash2, DollarSign, Settings2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CurrencyInput, currencyToNumber, numberToCurrency } from "@/components/ui/currency-input";
+import { ImageUpload } from "./ImageUpload";
 
 interface ProductManagerProps {
   restaurant: any;
@@ -421,12 +422,12 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
               </div>
               
               <div>
-                <Label htmlFor="image_url">URL da Imagem</Label>
-                <Input
-                  id="image_url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://exemplo.com/imagem.jpg"
+                <Label>Imagem do Produto</Label>
+                <ImageUpload
+                  currentUrl={formData.image_url}
+                  onImageUploaded={(url) => setFormData({ ...formData, image_url: url })}
+                  type="banner"
+                  restaurantId={restaurant.id}
                 />
               </div>
               
