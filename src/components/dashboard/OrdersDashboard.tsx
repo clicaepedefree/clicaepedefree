@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingCart, DollarSign, TrendingUp, Package } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -56,8 +57,17 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
 
       if (error) throw error;
 
-      setOrders(data || []);
-      calculateStats(data || []);
+      // Filter out delivered orders older than 10 minutes
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+      const filteredOrders = (data || []).filter(order => {
+        if (order.status === 'delivered') {
+          return new Date(order.created_at) >= tenMinutesAgo;
+        }
+        return true;
+      });
+
+      setOrders(filteredOrders);
+      calculateStats(data || []); // Use all orders for stats
     } catch (error: any) {
       console.error('Erro ao buscar pedidos:', error);
     } finally {
@@ -86,15 +96,30 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      pending: { label: "Pendente", variant: "secondary" as const },
-      confirmed: { label: "Confirmado", variant: "default" as const },
-      preparing: { label: "Preparando", variant: "outline" as const },
+      new: { label: "Novo", variant: "secondary" as const },
+      preparing: { label: "Em Preparo", variant: "outline" as const },
       delivered: { label: "Entregue", variant: "default" as const },
       cancelled: { label: "Cancelado", variant: "destructive" as const }
     };
     
-    const statusInfo = statusMap[status as keyof typeof statusMap] || statusMap.pending;
+    const statusInfo = statusMap[status as keyof typeof statusMap] || statusMap.new;
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
+  };
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      
+      // Refresh orders list
+      fetchOrders();
+    } catch (error: any) {
+      console.error('Erro ao atualizar status do pedido:', error);
+    }
   };
 
   if (loading) {
@@ -215,7 +240,19 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                       R$ {Number(order.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell>
-                      {getStatusBadge(order.status)}
+                      <Select value={order.status} onValueChange={(value) => updateOrderStatus(order.id, value)}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue>
+                            {getStatusBadge(order.status)}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">Novo</SelectItem>
+                          <SelectItem value="preparing">Em Preparo</SelectItem>
+                          <SelectItem value="delivered">Entregue</SelectItem>
+                          <SelectItem value="cancelled">Cancelado</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                   </TableRow>
                 ))}

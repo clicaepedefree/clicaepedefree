@@ -176,7 +176,7 @@ export function useCart() {
         total,
         address: address ? `${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ''}, ${address.neighborhood}` : null,
         payment_method: payment?.type || null,
-        status: 'pending'
+        status: 'new'
       });
     } catch (error) {
       console.error('Erro ao salvar pedido:', error);
