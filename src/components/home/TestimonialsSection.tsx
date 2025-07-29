@@ -28,36 +28,43 @@ export function TestimonialsSection() {
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-foreground mb-4">O que nossos clientes dizem</h2>
-          <p className="text-xl text-muted-foreground">Depoimentos reais de quem já está vendendo mais</p>
+          <div className="bg-green-50 p-2 rounded-lg inline-block mb-4">
+            <span className="text-green-600 font-medium text-sm">💬 Depoimentos</span>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            O que nossos clientes dizem
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Depoimentos reais de restaurantes que já estão vendendo mais com nosso cardápio digital
+          </p>
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
-            <Card key={index} className="border-0 shadow-card hover:shadow-brand transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="flex mb-4">
+            <Card key={index} className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+              <CardContent className="p-8">
+                <div className="flex mb-6">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                   ))}
                 </div>
                 
-                <blockquote className="text-foreground mb-4 italic">
+                <blockquote className="text-gray-700 mb-6 italic leading-relaxed text-lg">
                   "{testimonial.text}"
                 </blockquote>
                 
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarFallback className="bg-primary text-white">
+                <div className="flex items-center gap-4">
+                  <Avatar className="w-12 h-12">
+                    <AvatarFallback className="bg-blue-600 text-white text-lg font-semibold">
                       {testimonial.avatar}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-semibold text-foreground">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.business}</div>
+                    <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                    <div className="text-sm text-gray-500">{testimonial.business}</div>
                   </div>
                 </div>
               </CardContent>
