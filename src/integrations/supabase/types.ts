@@ -155,6 +155,54 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          address: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_fee: number
+          id: string
+          items: Json
+          payment_method: string | null
+          restaurant_id: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_fee?: number
+          id?: string
+          items: Json
+          payment_method?: string | null
+          restaurant_id: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_fee?: number
+          id?: string
+          items?: Json
+          payment_method?: string | null
+          restaurant_id?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_addon_groups: {
         Row: {
           addon_group_id: string

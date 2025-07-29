@@ -22,7 +22,8 @@ import {
   LogOut, 
   Link as LinkIcon,
   Package,
-  MapPin
+  MapPin,
+  BarChart3
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ import { ProductManager } from "./ProductManager";
 import { AddonManager } from "./AddonManager";
 import { RestaurantSettings } from "./RestaurantSettings";
 import { DeliveryZoneManager } from "./DeliveryZoneManager";
+import { OrdersDashboard } from "./OrdersDashboard";
 import { CTABanner } from "./CTABanner";
 
 interface DashboardLayoutProps {
@@ -41,6 +43,7 @@ interface DashboardLayoutProps {
 }
 
 const menuItems = [
+  { title: "Dashboard", value: "dashboard", icon: BarChart3 },
   { title: "Categorias", value: "categories", icon: MenuIcon },
   { title: "Produtos", value: "products", icon: Package },
   { title: "Adicionais", value: "addons", icon: Plus },
@@ -49,7 +52,7 @@ const menuItems = [
 ];
 
 export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate }: DashboardLayoutProps) {
-  const [activeSection, setActiveSection] = useState("categories");
+  const [activeSection, setActiveSection] = useState("dashboard");
   const { toast } = useToast();
 
   const copyLink = () => {
@@ -115,6 +118,7 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
               </Button>
             </div>
             
+            {activeSection === "dashboard" && <OrdersDashboard restaurant={restaurant} />}
             {activeSection === "categories" && <CategoryManager restaurant={restaurant} />}
             {activeSection === "products" && <ProductManager restaurant={restaurant} />}
             {activeSection === "addons" && <AddonManager restaurant={restaurant} />}

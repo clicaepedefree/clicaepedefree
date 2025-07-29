@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { numberToCurrency } from "@/components/ui/currency-input";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
   id: string;
@@ -144,12 +145,56 @@ export function useCart() {
     return encodeURIComponent(message);
   };
 
-  const sendWhatsAppOrder = (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }, deliveryFee?: number) => {
+  const saveOrderToDatabase = async (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }, deliveryFee?: number) => {
+    if (!restaurant || Object.keys(cart).length === 0) return;
+
+    try {
+      const orderItems = Object.entries(cart).map(([cartKey, item]) => {
+        const lastHyphenIndex = cartKey.lastIndexOf('-[');
+        const productId = lastHyphenIndex !== -1 ? cartKey.substring(0, lastHyphenIndex) : cartKey.split('-').slice(0, 5).join('-');
+        const product = products.find(p => p.id === productId);
+        
+        return {
+          productId,
+          productName: product?.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          addons: item.addons,
+          total: item.unitPrice * item.quantity
+        };
+      });
+
+      const subtotal = getCartTotal();
+      const total = subtotal + (deliveryFee || 0);
+
+      await supabase.from('orders').insert({
+        restaurant_id: restaurant.id,
+        customer_phone: address?.phone || null,
+        items: orderItems,
+        subtotal,
+        delivery_fee: deliveryFee || 0,
+        total,
+        address: address ? `${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ''}, ${address.neighborhood}` : null,
+        payment_method: payment?.type || null,
+        status: 'pending'
+      });
+    } catch (error) {
+      console.error('Erro ao salvar pedido:', error);
+    }
+  };
+
+  const sendWhatsAppOrder = async (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }, deliveryFee?: number) => {
     if (!restaurant?.whatsapp || Object.keys(cart).length === 0) return;
+    
+    // Salvar pedido no banco antes de enviar WhatsApp
+    await saveOrderToDatabase(restaurant, products, address, payment, deliveryFee);
     
     const message = generateWhatsAppMessage(restaurant, products, address, payment, deliveryFee);
     const whatsappUrl = `https://wa.me/${restaurant.whatsapp.replace(/\D/g, '')}?text=${message}`;
     window.open(whatsappUrl, '_blank');
+    
+    // Limpar carrinho após envio
+    setCart({});
   };
 
   const getCartItemsCount = () => {
