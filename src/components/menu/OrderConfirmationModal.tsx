@@ -34,6 +34,8 @@ interface DeliveryAddress {
   number: string;
   complement: string;
   neighborhood: string;
+  phone: string;
+  name: string;
   deliveryZoneId?: string;
 }
 
@@ -81,6 +83,8 @@ export function OrderConfirmationModal({
     number: '',
     complement: '',
     neighborhood: '',
+    phone: '',
+    name: '',
     deliveryZoneId: ''
   });
   
@@ -132,7 +136,7 @@ export function OrderConfirmationModal({
     onOpenChange(false);
   };
 
-  const isAddressValid = deliveryAddress.street && deliveryAddress.number && deliveryAddress.deliveryZoneId;
+  const isAddressValid = deliveryAddress.street && deliveryAddress.number && deliveryAddress.name && deliveryAddress.phone && deliveryAddress.deliveryZoneId;
   const deliveryFee = selectedDeliveryZone?.delivery_fee || 0;
   const totalWithDelivery = getCartTotal() + deliveryFee;
 
@@ -149,9 +153,9 @@ export function OrderConfirmationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-lg sm:max-w-2xl max-h-[85vh] sm:max-h-[80vh] overflow-y-auto mx-4">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
+          <DialogTitle className="text-lg sm:text-xl font-bold">
             Confirmar Pedido - {restaurant?.name}
           </DialogTitle>
         </DialogHeader>
@@ -265,8 +269,28 @@ export function OrderConfirmationModal({
               <h3 className="text-lg font-semibold">Endereço de Entrega</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <Label htmlFor="name">Nome *</Label>
+                <Input
+                  id="name"
+                  placeholder="Seu nome"
+                  value={deliveryAddress.name}
+                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="phone">Telefone *</Label>
+                <Input
+                  id="phone"
+                  placeholder="(11) 99999-9999"
+                  value={deliveryAddress.phone}
+                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, phone: e.target.value }))}
+                />
+              </div>
+              
+              <div className="sm:col-span-2">
                 <Label htmlFor="street">Endereço *</Label>
                 <Input
                   id="street"
@@ -296,7 +320,7 @@ export function OrderConfirmationModal({
                 />
               </div>
               
-              <div className="md:col-span-2">
+              <div className="sm:col-span-2">
                 <Label htmlFor="deliveryZone">Bairro / Zona de Entrega *</Label>
                 {deliveryZones.length > 0 ? (
                   <Select value={deliveryAddress.deliveryZoneId} onValueChange={handleDeliveryZoneChange}>

@@ -113,7 +113,9 @@ export function useCart() {
     }
     
     if (address && address.street && address.number && address.neighborhood) {
-      message += `\n\n📍 *Endereço de Entrega:*\n`;
+      message += `\n\n👤 *Cliente:* ${address.name}`;
+      message += `\n📞 *Telefone:* ${address.phone}`;
+      message += `\n📍 *Endereço de Entrega:*\n`;
       message += `${address.street}, ${address.number}`;
       if (address.complement) {
         message += ` - ${address.complement}`;
@@ -169,6 +171,7 @@ export function useCart() {
 
       await supabase.from('orders').insert({
         restaurant_id: restaurant.id,
+        customer_name: address?.name || null,
         customer_phone: address?.phone || null,
         items: orderItems,
         subtotal,
