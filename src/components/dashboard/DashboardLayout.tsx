@@ -102,20 +102,37 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
             
             {/* Mini Banner Tutorial */}
             <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <Button 
-                variant="default"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                asChild
-              >
-                <a 
-                  href="https://www.youtube.com/watch?v=XHJScS_YEMo" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button 
+                  variant="default"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  asChild
                 >
-                  📺 Veja como configurar o sistema
-                </a>
-              </Button>
+                  <a 
+                    href="https://www.youtube.com/watch?v=XHJScS_YEMo" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    📺 Veja como configurar o sistema
+                  </a>
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  className="border-green-600 text-green-600 hover:bg-green-50"
+                  asChild
+                >
+                  <a 
+                    href="https://wa.me/5511916924490?text=Preciso%20de%20ajuda%20no%20cardápio%20grátis" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    💬 Preciso de ajuda
+                  </a>
+                </Button>
+              </div>
             </div>
             
             {activeSection === "dashboard" && <OrdersDashboard restaurant={restaurant} />}
