@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Phone, User, LogIn, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
-import logo from "@/assets/clic-logo.png";
+import logo from "/lovable-uploads/1ddc24de-f742-4120-83ea-1a47a09aa99a.png";
 
 export function Navbar() {
   return (
