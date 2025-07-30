@@ -90,7 +90,7 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={copyLink} className="border-white/30 text-white hover:bg-white/20">
+              <Button variant="default" size="sm" onClick={copyLink} className="bg-blue-600 hover:bg-blue-700 text-white">
                 <LinkIcon className="h-4 w-4 mr-2" />
                 Copiar Link
               </Button>
