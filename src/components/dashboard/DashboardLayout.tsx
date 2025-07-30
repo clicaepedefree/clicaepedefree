@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
   useSidebar 
 } from "@/components/ui/sidebar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NavLink, useLocation } from "react-router-dom";
 import { 
   Store, 
@@ -23,7 +24,8 @@ import {
   Link as LinkIcon,
   Package,
   MapPin,
-  BarChart3
+  BarChart3,
+  MessageCircle
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +36,7 @@ import { RestaurantSettings } from "./RestaurantSettings";
 import { DeliveryZoneManager } from "./DeliveryZoneManager";
 import { OrdersDashboard } from "./OrdersDashboard";
 import { CTABanner } from "./CTABanner";
+
 
 interface DashboardLayoutProps {
   restaurant: any;
@@ -53,6 +56,7 @@ const menuItems = [
 
 export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate }: DashboardLayoutProps) {
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const { toast } = useToast();
 
   const copyLink = () => {
@@ -69,6 +73,12 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
     window.open(link, '_blank');
   };
 
+  const handleWhatsAppClick = () => {
+    const message = encodeURIComponent("quero o robo de WhatsApp");
+    const whatsappUrl = `https://wa.me/5511916924490?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -77,6 +87,7 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
           onSectionChange={setActiveSection}
           restaurant={restaurant}
           onLogout={onLogout}
+          onWhatsAppClick={() => setShowWhatsAppModal(true)}
         />
         
         <main className="flex-1 bg-background">
@@ -151,6 +162,58 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
             )}
           </div>
         </main>
+        
+        <Dialog open={showWhatsAppModal} onOpenChange={setShowWhatsAppModal}>
+          <DialogContent className="max-w-4xl p-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px]">
+              {/* Left Content */}
+              <div className="p-8 flex flex-col justify-center">
+                <DialogHeader className="mb-6">
+                  <DialogTitle className="text-2xl font-bold text-gray-900">
+                    Robô de WhatsApp da Clica e Pede
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <p className="text-gray-700 mb-6 leading-relaxed">
+                  Uma ferramenta poderosa para vender e responder automaticamente aos seus clientes. 
+                  Use facilmente, sem necessidade de conhecimentos de programação!
+                </p>
+                
+                <ul className="space-y-3 mb-8 text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">•</span>
+                    Mensagens automáticas totalmente editáveis.
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">•</span>
+                    Respostas instantâneas e inteligentes impulsionadas por IA.
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">•</span>
+                    Informações chave do seu negócio 24/7 para seus clientes.
+                  </li>
+                </ul>
+                
+                <Button 
+                  onClick={handleWhatsAppClick}
+                  className="bg-green-600 hover:bg-green-700 text-white text-lg py-6 px-8 rounded-lg font-semibold"
+                >
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  Conectar Robô de WhatsApp
+                </Button>
+              </div>
+              
+              {/* Right Banner */}
+              <div className="bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+                <img 
+                  src="/lovable-uploads/71f177cc-fd8b-47d3-a73c-fadf7e48e36d.png" 
+                  alt="WhatsApp Robot Banner" 
+                  className="max-w-full max-h-full object-contain"
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarProvider>
   );
@@ -160,12 +223,14 @@ function AppSidebar({
   activeSection, 
   onSectionChange, 
   restaurant, 
-  onLogout 
+  onLogout,
+  onWhatsAppClick 
 }: {
   activeSection: string;
   onSectionChange: (section: string) => void;
   restaurant: any;
   onLogout: () => void;
+  onWhatsAppClick: () => void;
 }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -197,6 +262,17 @@ function AppSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* WhatsApp Robot Button */}
+        <div className="px-4 pb-4">
+          <Button 
+            onClick={onWhatsAppClick}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg flex items-center justify-start gap-3"
+          >
+            <MessageCircle className="h-4 w-4" />
+            {!collapsed && <span>Robô de WhatsApp</span>}
+          </Button>
+        </div>
 
         <div className="mt-auto p-4">
           <Button 
