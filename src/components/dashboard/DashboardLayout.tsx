@@ -80,18 +80,21 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
         />
         
         <main className="flex-1 bg-background">
-          <header className="h-16 border-b bg-white flex items-center justify-between px-6">
+          <header className="h-16 border-b border-primary-glow/20 bg-primary flex items-center justify-between px-6">
             <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <h1 className="text-xl font-semibold">{restaurant.name}</h1>
+              <SidebarTrigger className="text-white hover:bg-white/20" />
+              <div className="flex items-center gap-3">
+                <img src="/lovable-uploads/df0ab910-5641-4faf-b0dc-3743be76338e.png" alt="Cardápio Grátis Logo" className="h-8" />
+                <h1 className="text-xl font-semibold text-white">{restaurant.name}</h1>
+              </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={copyLink}>
+              <Button variant="outline" size="sm" onClick={copyLink} className="border-white/30 text-white hover:bg-white/20">
                 <LinkIcon className="h-4 w-4 mr-2" />
                 Copiar Link
               </Button>
-              <Button variant="secondary" size="sm" onClick={openLink}>
+              <Button variant="secondary" size="sm" onClick={openLink} className="bg-white/20 hover:bg-white/30 text-white border border-white/30">
                 Ver Cardápio
               </Button>
             </div>
