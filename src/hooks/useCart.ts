@@ -80,7 +80,9 @@ export function useCart() {
       return "";
     }
 
-    let message = `*Pedido - ${restaurant?.name}*\n\n`;
+    const isDelivery = address && address.street && address.number && address.neighborhood;
+    let message = `*Pedido - ${restaurant?.name}*\n`;
+    message += `*Tipo:* ${isDelivery ? 'Entrega' : 'Retirada'}\n\n`;
     
     Object.entries(cart).forEach(([cartKey, item]) => {
       const lastHyphenIndex = cartKey.lastIndexOf('-[');
@@ -112,15 +114,18 @@ export function useCart() {
       message += `\n*Total: R$ ${numberToCurrency(subtotal)}*`;
     }
     
+    message += `\n\n👤 *Cliente:* ${address?.name || 'Não informado'}`;
+    message += `\n📞 *Telefone:* ${address?.phone || 'Não informado'}`;
+    
     if (address && address.street && address.number && address.neighborhood) {
-      message += `\n\n👤 *Cliente:* ${address.name}`;
-      message += `\n📞 *Telefone:* ${address.phone}`;
       message += `\n📍 *Endereço de Entrega:*\n`;
       message += `${address.street}, ${address.number}`;
       if (address.complement) {
         message += ` - ${address.complement}`;
       }
       message += `\n${address.neighborhood}`;
+    } else {
+      message += `\n🏪 *Retirada no local*`;
     }
 
     if (payment) {

@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { Banknote, CreditCard, ExternalLink, MapPin, Minus, Phone, Plus, Trash2 } from "lucide-react";
+import { Banknote, CreditCard, ExternalLink, MapPin, Minus, Phone, Plus, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface Product {
@@ -77,6 +77,7 @@ export function OrderConfirmationModal({
   const cartEntries = Object.entries(cart);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [selectedDeliveryZone, setSelectedDeliveryZone] = useState<DeliveryZone | null>(null);
+  const [orderType, setOrderType] = useState<'delivery' | 'pickup'>('delivery');
   
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
     street: '',
@@ -131,13 +132,17 @@ export function OrderConfirmationModal({
       type: paymentMethod.type,
       changeAmount: paymentMethod.type === 'cash' && changeAmount ? parseFloat(changeAmount) : undefined
     };
-    const deliveryFee = selectedDeliveryZone?.delivery_fee || 0;
-    onSendWhatsApp(deliveryAddress, payment, deliveryFee);
+    const deliveryFee = orderType === 'delivery' ? (selectedDeliveryZone?.delivery_fee || 0) : 0;
+    const address = orderType === 'delivery' ? deliveryAddress : { ...deliveryAddress, street: '', number: '', complement: '', neighborhood: '', deliveryZoneId: '' };
+    onSendWhatsApp(address, payment, deliveryFee);
     onOpenChange(false);
   };
 
-  const isAddressValid = deliveryAddress.street && deliveryAddress.number && deliveryAddress.name && deliveryAddress.phone && deliveryAddress.deliveryZoneId;
-  const deliveryFee = selectedDeliveryZone?.delivery_fee || 0;
+  const isAddressValid = orderType === 'pickup' 
+    ? deliveryAddress.name && deliveryAddress.phone
+    : deliveryAddress.street && deliveryAddress.number && deliveryAddress.name && deliveryAddress.phone && deliveryAddress.deliveryZoneId;
+  
+  const deliveryFee = orderType === 'delivery' ? (selectedDeliveryZone?.delivery_fee || 0) : 0;
   const totalWithDelivery = getCartTotal() + deliveryFee;
 
   const updateQuantity = (cartKey: string, delta: number) => {
@@ -249,7 +254,7 @@ export function OrderConfirmationModal({
               <span>Subtotal:</span>
               <span>R$ {numberToCurrency(getCartTotal())}</span>
             </div>
-            {selectedDeliveryZone && (
+            {orderType === 'delivery' && selectedDeliveryZone && (
               <div className="flex justify-between items-center">
                 <span>Taxa de entrega ({selectedDeliveryZone.neighborhood}):</span>
                 <span>R$ {numberToCurrency(deliveryFee)}</span>
@@ -265,8 +270,40 @@ export function OrderConfirmationModal({
 
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
+              <Truck className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">Tipo de Pedido</h3>
+            </div>
+            
+            <RadioGroup 
+              value={orderType} 
+              onValueChange={(value) => setOrderType(value as 'delivery' | 'pickup')}
+              className="flex flex-col space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="delivery" id="delivery" />
+                <Label htmlFor="delivery" className="flex items-center space-x-2">
+                  <Truck className="h-4 w-4" />
+                  <span>Entrega</span>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="pickup" id="pickup" />
+                <Label htmlFor="pickup" className="flex items-center space-x-2">
+                  <ShoppingBag className="h-4 w-4" />
+                  <span>Retirada</span>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
               <MapPin className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold">Endereço de Entrega</h3>
+              <h3 className="text-lg font-semibold">
+                {orderType === 'delivery' ? 'Endereço de Entrega' : 'Dados para Contato'}
+              </h3>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -290,60 +327,64 @@ export function OrderConfirmationModal({
                 />
               </div>
               
-              <div className="sm:col-span-2">
-                <Label htmlFor="street">Endereço *</Label>
-                <Input
-                  id="street"
-                  placeholder="Rua, Avenida..."
-                  value={deliveryAddress.street}
-                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, street: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="number">Número *</Label>
-                <Input
-                  id="number"
-                  placeholder="123"
-                  value={deliveryAddress.number}
-                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, number: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="complement">Complemento</Label>
-                <Input
-                  id="complement"
-                  placeholder="Apto, Bloco, Sala..."
-                  value={deliveryAddress.complement}
-                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, complement: e.target.value }))}
-                />
-              </div>
-              
-              <div className="sm:col-span-2">
-                <Label htmlFor="deliveryZone">Bairro / Zona de Entrega *</Label>
-                {deliveryZones.length > 0 ? (
-                  <Select value={deliveryAddress.deliveryZoneId} onValueChange={handleDeliveryZoneChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione seu bairro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {deliveryZones.map((zone) => (
-                        <SelectItem key={zone.id} value={zone.id}>
-                          {zone.neighborhood} - R$ {numberToCurrency(zone.delivery_fee)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    id="neighborhood"
-                    placeholder="Nome do bairro"
-                    value={deliveryAddress.neighborhood}
-                    onChange={(e) => setDeliveryAddress(prev => ({ ...prev, neighborhood: e.target.value }))}
-                  />
-                )}
-              </div>
+              {orderType === 'delivery' && (
+                <>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="street">Endereço *</Label>
+                    <Input
+                      id="street"
+                      placeholder="Rua, Avenida..."
+                      value={deliveryAddress.street}
+                      onChange={(e) => setDeliveryAddress(prev => ({ ...prev, street: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="number">Número *</Label>
+                    <Input
+                      id="number"
+                      placeholder="123"
+                      value={deliveryAddress.number}
+                      onChange={(e) => setDeliveryAddress(prev => ({ ...prev, number: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="complement">Complemento</Label>
+                    <Input
+                      id="complement"
+                      placeholder="Apto, Bloco, Sala..."
+                      value={deliveryAddress.complement}
+                      onChange={(e) => setDeliveryAddress(prev => ({ ...prev, complement: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="deliveryZone">Bairro / Zona de Entrega *</Label>
+                    {deliveryZones.length > 0 ? (
+                      <Select value={deliveryAddress.deliveryZoneId} onValueChange={handleDeliveryZoneChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione seu bairro" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {deliveryZones.map((zone) => (
+                            <SelectItem key={zone.id} value={zone.id}>
+                              {zone.neighborhood} - R$ {numberToCurrency(zone.delivery_fee)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        id="neighborhood"
+                        placeholder="Nome do bairro"
+                        value={deliveryAddress.neighborhood}
+                        onChange={(e) => setDeliveryAddress(prev => ({ ...prev, neighborhood: e.target.value }))}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
