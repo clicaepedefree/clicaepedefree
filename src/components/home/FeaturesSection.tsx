@@ -66,7 +66,7 @@ export function FeaturesSection() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
             {differentials.map((item, index) => (
               <Card key={index} className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
                 <CardContent className="p-8 text-center">
@@ -77,6 +77,20 @@ export function FeaturesSection() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          {/* YouTube Video */}
+          <div className="max-w-4xl mx-auto">
+            <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
+              <iframe
+                src="https://www.youtube.com/embed/7WtPPuYzVUA"
+                title="Vídeo demonstrativo do cardápio digital"
+                className="w-full h-full"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              ></iframe>
+            </div>
           </div>
         </div>
       </section>
