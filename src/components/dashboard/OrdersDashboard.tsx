@@ -129,10 +129,13 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
   const renderOrderDetails = (order: Order) => {
     const orderType = order.delivery_fee > 0 ? "Entrega" : "Retirada";
     
+    // Debug log para ver a estrutura dos itens
+    console.log("Order items structure:", order.items);
+    
     return (
       <div className="space-y-4">
         {/* Status do Pedido */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Status do Pedido</h3>
@@ -155,12 +158,12 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Informações do Cliente */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
             <User className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Informações do Cliente</h3>
           </div>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-1 text-sm">
             <div><strong>Nome:</strong> {order.customer_name || "Não informado"}</div>
             <div className="flex items-center gap-2">
               <Phone className="h-3 w-3" />
@@ -178,7 +181,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Tipo do Pedido */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Truck className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Tipo do Pedido</h3>
@@ -191,68 +194,85 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Itens do Pedido */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Itens do Pedido ({order.items?.length || 0} {(order.items?.length || 0) === 1 ? 'item' : 'itens'})</h3>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {order.items && order.items.length > 0 ? (
-              order.items.map((item: any, index: number) => (
-                <div key={index} className="border rounded-lg p-3 space-y-2 bg-muted/20">
-                  <div className="space-y-2">
-                    {/* Nome do Produto - Destaque principal */}
-                    <div className="font-semibold text-base text-foreground">
-                      {item.product?.name || item.name || item.product_name || "Produto sem nome"}
-                    </div>
-                    
-                    {/* Quantidade e Preço */}
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-muted-foreground">
-                        <strong>Quantidade:</strong> {item.quantity || 1}
+              order.items.map((item: any, index: number) => {
+                // Debug log para cada item
+                console.log(`Item ${index}:`, item);
+                
+                // Múltiplas tentativas de acessar o nome do produto
+                const productName = item.product_name || 
+                                  item.name || 
+                                  item.product?.name || 
+                                  (item.productId && `Produto ID: ${item.productId}`) ||
+                                  `Produto #${index + 1}`;
+                
+                return (
+                  <div key={index} className="border rounded-lg p-3 space-y-2 bg-muted/20">
+                    <div className="space-y-2">
+                      {/* Nome do Produto - Destaque principal */}
+                      <div className="font-semibold text-base text-foreground">
+                        {productName}
                       </div>
-                      <div className="font-medium">
-                        R$ {Number((item.unitPrice || item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                      
+                      {/* Debug: Mostrar todas as chaves do item */}
+                      <div className="text-xs text-red-500 font-mono bg-red-50 p-1 rounded">
+                        Debug - Chaves disponíveis: {Object.keys(item).join(', ')}
                       </div>
-                    </div>
-                    
-                    <div className="text-xs text-muted-foreground">
-                      Preço unitário: R$ {Number(item.unitPrice || item.price || 0).toFixed(2)}
-                    </div>
-                    
-                    {/* Adicionais */}
-                    {item.addons && item.addons.length > 0 && (
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium text-muted-foreground">Adicionais:</div>
-                        <div className="bg-background rounded border p-2 space-y-1">
-                          {item.addons.map((addon: any, addonIndex: number) => (
-                            <div key={addonIndex} className="flex justify-between items-center text-xs">
-                              <span>• {addon.name}</span>
-                              <span className="font-medium">+R$ {Number(addon.price || 0).toFixed(2)}</span>
-                            </div>
-                          ))}
-                          <div className="border-t pt-1 mt-1">
-                            <div className="flex justify-between text-xs font-medium">
-                              <span>Total adicionais:</span>
-                              <span>+R$ {Number(item.addons.reduce((sum: number, addon: any) => sum + (Number(addon.price || 0) * (item.quantity || 1)), 0)).toFixed(2)}</span>
+                      
+                      {/* Quantidade e Preço */}
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-muted-foreground">
+                          <strong>Quantidade:</strong> {item.quantity || 1}
+                        </div>
+                        <div className="font-medium">
+                          R$ {Number((item.unitPrice || item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground">
+                        Preço unitário: R$ {Number(item.unitPrice || item.price || 0).toFixed(2)}
+                      </div>
+                      
+                      {/* Adicionais */}
+                      {item.addons && item.addons.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-muted-foreground">Adicionais:</div>
+                          <div className="bg-background rounded border p-2 space-y-1">
+                            {item.addons.map((addon: any, addonIndex: number) => (
+                              <div key={addonIndex} className="flex justify-between items-center text-xs">
+                                <span>• {addon.name}</span>
+                                <span className="font-medium">+R$ {Number(addon.price || 0).toFixed(2)}</span>
+                              </div>
+                            ))}
+                            <div className="border-t pt-1 mt-1">
+                              <div className="flex justify-between text-xs font-medium">
+                                <span>Total adicionais:</span>
+                                <span>+R$ {Number(item.addons.reduce((sum: number, addon: any) => sum + (Number(addon.price || 0) * (item.quantity || 1)), 0)).toFixed(2)}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                    
-                    {/* Observações */}
-                    {item.observations && (
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium text-muted-foreground">Observações:</div>
-                        <div className="text-xs bg-yellow-50 border border-yellow-200 rounded p-2">
-                          {item.observations}
+                      )}
+                      
+                      {/* Observações */}
+                      {item.observations && (
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-muted-foreground">Observações:</div>
+                          <div className="text-xs bg-yellow-50 border border-yellow-200 rounded p-2">
+                            {item.observations}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="text-center py-4 text-muted-foreground">
                 <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -265,7 +285,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Forma de Pagamento */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
             <CreditCard className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Forma de Pagamento</h3>
@@ -278,7 +298,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Resumo Financeiro */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Resumo Financeiro</h3>
@@ -305,7 +325,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Data do Pedido */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Data do Pedido</h3>
