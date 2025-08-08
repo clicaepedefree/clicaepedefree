@@ -131,6 +131,29 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
     
     return (
       <div className="space-y-6">
+        {/* Status do Pedido */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Package className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold">Status do Pedido</h3>
+          </div>
+          <Select value={order.status} onValueChange={(value) => updateOrderStatus(order.id, value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                {getStatusBadge(order.status)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="new">Novo</SelectItem>
+              <SelectItem value="preparing">Em Preparo</SelectItem>
+              <SelectItem value="delivered">Entregue</SelectItem>
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Separator />
+
         {/* Informações do Cliente */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -160,7 +183,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
             <Truck className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Tipo do Pedido</h3>
           </div>
-          <Badge variant={orderType === "Entrega" ? "default" : "secondary"}>
+          <Badge variant={orderType === "Entrega" ? "default" : "secondary"} className="text-sm">
             {orderType}
           </Badge>
         </div>
@@ -170,37 +193,68 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         {/* Itens do Pedido */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Package className="h-4 w-4 text-primary" />
-            <h3 className="font-semibold">Itens do Pedido</h3>
+            <ShoppingCart className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold">Itens do Pedido ({order.items?.length || 0} {(order.items?.length || 0) === 1 ? 'item' : 'itens'})</h3>
           </div>
           <div className="space-y-3">
-            {order.items.map((item: any, index: number) => (
-              <div key={index} className="border rounded-lg p-3 space-y-2">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Quantidade: {item.quantity}
-                    </div>
-                    {item.addons && item.addons.length > 0 && (
-                      <div className="text-sm text-muted-foreground mt-1">
-                        <strong>Adicionais:</strong>
-                        <ul className="list-disc list-inside ml-2">
-                          {item.addons.map((addon: any, addonIndex: number) => (
-                            <li key={addonIndex}>{addon.name} (+R$ {Number(addon.price).toFixed(2)})</li>
-                          ))}
-                        </ul>
+            {order.items && order.items.length > 0 ? (
+              order.items.map((item: any, index: number) => (
+                <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 space-y-2">
+                      <div className="font-medium text-base">{item.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        <strong>Quantidade:</strong> {item.quantity}
                       </div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium">
-                      R$ {Number(item.unitPrice * item.quantity).toFixed(2)}
+                      <div className="text-sm">
+                        <strong>Preço unitário:</strong> R$ {Number(item.unitPrice || item.price || 0).toFixed(2)}
+                      </div>
+                      
+                      {/* Adicionais */}
+                      {item.addons && item.addons.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="text-sm font-medium text-muted-foreground">Adicionais:</div>
+                          <div className="space-y-1 ml-4">
+                            {item.addons.map((addon: any, addonIndex: number) => (
+                              <div key={addonIndex} className="flex justify-between items-center text-sm">
+                                <span>• {addon.name}</span>
+                                <span className="font-medium">+R$ {Number(addon.price || 0).toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Observações */}
+                      {item.observations && (
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-muted-foreground">Observações:</div>
+                          <div className="text-sm bg-yellow-50 border border-yellow-200 rounded p-2">
+                            {item.observations}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-right ml-4">
+                      <div className="font-semibold text-base">
+                        R$ {Number((item.unitPrice || item.price || 0) * item.quantity).toFixed(2)}
+                      </div>
+                      {item.addons && item.addons.length > 0 && (
+                        <div className="text-sm text-muted-foreground">
+                          + R$ {Number(item.addons.reduce((sum: number, addon: any) => sum + (Number(addon.price || 0) * item.quantity), 0)).toFixed(2)} adicionais
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>Nenhum item encontrado no pedido</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -212,7 +266,9 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
             <CreditCard className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Forma de Pagamento</h3>
           </div>
-          <div className="text-sm">{order.payment_method || "Não informado"}</div>
+          <div className="text-sm bg-muted/50 rounded p-2">
+            {order.payment_method || "Não informado"}
+          </div>
         </div>
 
         <Separator />
@@ -223,21 +279,21 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
             <DollarSign className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Resumo Financeiro</h3>
           </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
+          <div className="space-y-3 bg-muted/30 rounded-lg p-4">
+            <div className="flex justify-between text-sm">
               <span>Subtotal:</span>
-              <span>R$ {Number(order.subtotal).toFixed(2)}</span>
+              <span>R$ {Number(order.subtotal || 0).toFixed(2)}</span>
             </div>
-            {order.delivery_fee > 0 && (
-              <div className="flex justify-between">
+            {Number(order.delivery_fee || 0) > 0 && (
+              <div className="flex justify-between text-sm">
                 <span>Taxa de entrega:</span>
                 <span>R$ {Number(order.delivery_fee).toFixed(2)}</span>
               </div>
             )}
             <Separator />
-            <div className="flex justify-between font-semibold text-base">
+            <div className="flex justify-between font-semibold text-lg">
               <span>Total:</span>
-              <span>R$ {Number(order.total).toFixed(2)}</span>
+              <span>R$ {Number(order.total || 0).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -250,7 +306,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
             <Clock className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Data do Pedido</h3>
           </div>
-          <div className="text-sm">
+          <div className="text-sm bg-muted/50 rounded p-2">
             {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
           </div>
         </div>
