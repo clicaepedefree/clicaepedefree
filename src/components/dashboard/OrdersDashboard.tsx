@@ -205,11 +205,11 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                 // Debug log para cada item
                 console.log(`Item ${index}:`, item);
                 
-                // Múltiplas tentativas de acessar o nome do produto
-                const productName = item.product_name || 
+                // Acessar o nome do produto corretamente
+                const productName = item.productName || 
+                                  item.product_name || 
                                   item.name || 
                                   item.product?.name || 
-                                  (item.productId && `Produto ID: ${item.productId}`) ||
                                   `Produto #${index + 1}`;
                 
                 return (
