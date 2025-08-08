@@ -203,7 +203,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                   <div className="space-y-2">
                     {/* Nome do Produto - Destaque principal */}
                     <div className="font-semibold text-base text-foreground">
-                      {item.name || item.product_name || "Produto sem nome"}
+                      {item.product?.name || item.name || item.product_name || "Produto sem nome"}
                     </div>
                     
                     {/* Quantidade e Preço */}
