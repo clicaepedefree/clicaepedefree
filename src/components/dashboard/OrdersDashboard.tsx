@@ -130,9 +130,9 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
     const orderType = order.delivery_fee > 0 ? "Entrega" : "Retirada";
     
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Status do Pedido */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Status do Pedido</h3>
@@ -155,7 +155,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Informações do Cliente */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <User className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Informações do Cliente</h3>
@@ -178,7 +178,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Tipo do Pedido */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Truck className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Tipo do Pedido</h3>
@@ -191,7 +191,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Itens do Pedido */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Itens do Pedido ({order.items?.length || 0} {(order.items?.length || 0) === 1 ? 'item' : 'itens'})</h3>
@@ -199,53 +199,57 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
           <div className="space-y-3">
             {order.items && order.items.length > 0 ? (
               order.items.map((item: any, index: number) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/30">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 space-y-2">
-                      <div className="font-medium text-base">{item.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        <strong>Quantidade:</strong> {item.quantity}
-                      </div>
-                      <div className="text-sm">
-                        <strong>Preço unitário:</strong> R$ {Number(item.unitPrice || item.price || 0).toFixed(2)}
-                      </div>
-                      
-                      {/* Adicionais */}
-                      {item.addons && item.addons.length > 0 && (
-                        <div className="space-y-2">
-                          <div className="text-sm font-medium text-muted-foreground">Adicionais:</div>
-                          <div className="space-y-1 ml-4">
-                            {item.addons.map((addon: any, addonIndex: number) => (
-                              <div key={addonIndex} className="flex justify-between items-center text-sm">
-                                <span>• {addon.name}</span>
-                                <span className="font-medium">+R$ {Number(addon.price || 0).toFixed(2)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Observações */}
-                      {item.observations && (
-                        <div className="space-y-1">
-                          <div className="text-sm font-medium text-muted-foreground">Observações:</div>
-                          <div className="text-sm bg-yellow-50 border border-yellow-200 rounded p-2">
-                            {item.observations}
-                          </div>
-                        </div>
-                      )}
+                <div key={index} className="border rounded-lg p-3 space-y-2 bg-muted/20">
+                  <div className="space-y-2">
+                    {/* Nome do Produto - Destaque principal */}
+                    <div className="font-semibold text-base text-foreground">
+                      {item.name || item.product_name || "Produto sem nome"}
                     </div>
                     
-                    <div className="text-right ml-4">
-                      <div className="font-semibold text-base">
-                        R$ {Number((item.unitPrice || item.price || 0) * item.quantity).toFixed(2)}
+                    {/* Quantidade e Preço */}
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-muted-foreground">
+                        <strong>Quantidade:</strong> {item.quantity || 1}
                       </div>
-                      {item.addons && item.addons.length > 0 && (
-                        <div className="text-sm text-muted-foreground">
-                          + R$ {Number(item.addons.reduce((sum: number, addon: any) => sum + (Number(addon.price || 0) * item.quantity), 0)).toFixed(2)} adicionais
-                        </div>
-                      )}
+                      <div className="font-medium">
+                        R$ {Number((item.unitPrice || item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                      </div>
                     </div>
+                    
+                    <div className="text-xs text-muted-foreground">
+                      Preço unitário: R$ {Number(item.unitPrice || item.price || 0).toFixed(2)}
+                    </div>
+                    
+                    {/* Adicionais */}
+                    {item.addons && item.addons.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">Adicionais:</div>
+                        <div className="bg-background rounded border p-2 space-y-1">
+                          {item.addons.map((addon: any, addonIndex: number) => (
+                            <div key={addonIndex} className="flex justify-between items-center text-xs">
+                              <span>• {addon.name}</span>
+                              <span className="font-medium">+R$ {Number(addon.price || 0).toFixed(2)}</span>
+                            </div>
+                          ))}
+                          <div className="border-t pt-1 mt-1">
+                            <div className="flex justify-between text-xs font-medium">
+                              <span>Total adicionais:</span>
+                              <span>+R$ {Number(item.addons.reduce((sum: number, addon: any) => sum + (Number(addon.price || 0) * (item.quantity || 1)), 0)).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Observações */}
+                    {item.observations && (
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">Observações:</div>
+                        <div className="text-xs bg-yellow-50 border border-yellow-200 rounded p-2">
+                          {item.observations}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
@@ -261,7 +265,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Forma de Pagamento */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <CreditCard className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Forma de Pagamento</h3>
@@ -274,12 +278,12 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Resumo Financeiro */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Resumo Financeiro</h3>
           </div>
-          <div className="space-y-3 bg-muted/30 rounded-lg p-4">
+          <div className="space-y-2 bg-muted/30 rounded-lg p-3">
             <div className="flex justify-between text-sm">
               <span>Subtotal:</span>
               <span>R$ {Number(order.subtotal || 0).toFixed(2)}</span>
@@ -291,7 +295,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
               </div>
             )}
             <Separator />
-            <div className="flex justify-between font-semibold text-lg">
+            <div className="flex justify-between font-semibold text-base">
               <span>Total:</span>
               <span>R$ {Number(order.total || 0).toFixed(2)}</span>
             </div>
@@ -301,7 +305,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
         <Separator />
 
         {/* Data do Pedido */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-primary" />
             <h3 className="font-semibold">Data do Pedido</h3>
@@ -459,7 +463,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                             Ver Pedido
                           </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+                        <SheetContent side="right" className="w-[500px] sm:w-[600px] overflow-y-auto">
                           <SheetHeader>
                             <SheetTitle>Detalhes do Pedido #{order.id.slice(-8)}</SheetTitle>
                           </SheetHeader>
