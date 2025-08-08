@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, DollarSign, TrendingUp, Package } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { ShoppingCart, DollarSign, TrendingUp, Package, Eye, MapPin, Phone, User, CreditCard, Clock, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -42,6 +45,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
     todayOrders: 0
   });
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -120,6 +124,138 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
     } catch (error: any) {
       console.error('Erro ao atualizar status do pedido:', error);
     }
+  };
+
+  const renderOrderDetails = (order: Order) => {
+    const orderType = order.delivery_fee > 0 ? "Entrega" : "Retirada";
+    
+    return (
+      <div className="space-y-6">
+        {/* Informações do Cliente */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold">Informações do Cliente</h3>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div><strong>Nome:</strong> {order.customer_name || "Não informado"}</div>
+            <div className="flex items-center gap-2">
+              <Phone className="h-3 w-3" />
+              <span>{order.customer_phone || "Não informado"}</span>
+            </div>
+            {orderType === "Entrega" && order.address && (
+              <div className="flex items-start gap-2">
+                <MapPin className="h-3 w-3 mt-0.5" />
+                <span>{order.address}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Tipo do Pedido */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Truck className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold">Tipo do Pedido</h3>
+          </div>
+          <Badge variant={orderType === "Entrega" ? "default" : "secondary"}>
+            {orderType}
+          </Badge>
+        </div>
+
+        <Separator />
+
+        {/* Itens do Pedido */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Package className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold">Itens do Pedido</h3>
+          </div>
+          <div className="space-y-3">
+            {order.items.map((item: any, index: number) => (
+              <div key={index} className="border rounded-lg p-3 space-y-2">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="font-medium">{item.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      Quantidade: {item.quantity}
+                    </div>
+                    {item.addons && item.addons.length > 0 && (
+                      <div className="text-sm text-muted-foreground mt-1">
+                        <strong>Adicionais:</strong>
+                        <ul className="list-disc list-inside ml-2">
+                          {item.addons.map((addon: any, addonIndex: number) => (
+                            <li key={addonIndex}>{addon.name} (+R$ {Number(addon.price).toFixed(2)})</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">
+                      R$ {Number(item.unitPrice * item.quantity).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Forma de Pagamento */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold">Forma de Pagamento</h3>
+          </div>
+          <div className="text-sm">{order.payment_method || "Não informado"}</div>
+        </div>
+
+        <Separator />
+
+        {/* Resumo Financeiro */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold">Resumo Financeiro</h3>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Subtotal:</span>
+              <span>R$ {Number(order.subtotal).toFixed(2)}</span>
+            </div>
+            {order.delivery_fee > 0 && (
+              <div className="flex justify-between">
+                <span>Taxa de entrega:</span>
+                <span>R$ {Number(order.delivery_fee).toFixed(2)}</span>
+              </div>
+            )}
+            <Separator />
+            <div className="flex justify-between font-semibold text-base">
+              <span>Total:</span>
+              <span>R$ {Number(order.total).toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Data do Pedido */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold">Data do Pedido</h3>
+          </div>
+          <div className="text-sm">
+            {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -217,6 +353,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                   <TableHead>Itens</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -253,6 +390,28 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                           <SelectItem value="cancelled">Cancelado</SelectItem>
                         </SelectContent>
                       </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedOrder(order)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver Pedido
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+                          <SheetHeader>
+                            <SheetTitle>Detalhes do Pedido #{order.id.slice(-8)}</SheetTitle>
+                          </SheetHeader>
+                          <div className="mt-6">
+                            {selectedOrder && renderOrderDetails(selectedOrder)}
+                          </div>
+                        </SheetContent>
+                      </Sheet>
                     </TableCell>
                   </TableRow>
                 ))}
