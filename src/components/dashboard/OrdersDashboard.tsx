@@ -239,16 +239,22 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                         <div className="space-y-1">
                           <div className="text-sm font-medium text-muted-foreground">Adicionais:</div>
                           <div className="bg-background rounded border p-2 space-y-1">
-                            {item.addons.map((addon: any, addonIndex: number) => (
-                              <div key={addonIndex} className="flex justify-between items-center text-xs">
-                                <span>• {addon.name}</span>
-                                <span className="font-medium">+R$ {Number(addon.price || 0).toFixed(2)}</span>
-                              </div>
-                            ))}
+                            {item.addons.map((addon: any, addonIndex: number) => {
+                              // Acessar nome e preço do addon corretamente
+                              const addonName = addon.option?.name || addon.name || `Adicional ${addonIndex + 1}`;
+                              const addonPrice = addon.option?.price || addon.price || 0;
+                              
+                              return (
+                                <div key={addonIndex} className="flex justify-between items-center text-xs">
+                                  <span>• {addonName}</span>
+                                  <span className="font-medium">+R$ {Number(addonPrice).toFixed(2)}</span>
+                                </div>
+                              );
+                            })}
                             <div className="border-t pt-1 mt-1">
                               <div className="flex justify-between text-xs font-medium">
                                 <span>Total adicionais:</span>
-                                <span>+R$ {Number(item.addons.reduce((sum: number, addon: any) => sum + (Number(addon.price || 0) * (item.quantity || 1)), 0)).toFixed(2)}</span>
+                                <span>+R$ {Number(item.addons.reduce((sum: number, addon: any) => sum + (Number(addon.option?.price || addon.price || 0) * (item.quantity || 1)), 0)).toFixed(2)}</span>
                               </div>
                             </div>
                           </div>
