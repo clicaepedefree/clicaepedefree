@@ -220,11 +220,6 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                         {productName}
                       </div>
                       
-                      {/* Debug: Mostrar todas as chaves do item */}
-                      <div className="text-xs text-red-500 font-mono bg-red-50 p-1 rounded">
-                        Debug - Chaves disponíveis: {Object.keys(item).join(', ')}
-                      </div>
-                      
                       {/* Quantidade e Preço */}
                       <div className="flex justify-between items-center">
                         <div className="text-sm text-muted-foreground">
