@@ -301,6 +301,7 @@ export type Database = {
           logo_url: string | null
           name: string
           slug: string
+          tax_id: string | null
           updated_at: string
           user_id: string
           whatsapp: string
@@ -312,6 +313,7 @@ export type Database = {
           logo_url?: string | null
           name: string
           slug: string
+          tax_id?: string | null
           updated_at?: string
           user_id: string
           whatsapp: string
@@ -323,6 +325,7 @@ export type Database = {
           logo_url?: string | null
           name?: string
           slug?: string
+          tax_id?: string | null
           updated_at?: string
           user_id?: string
           whatsapp?: string
