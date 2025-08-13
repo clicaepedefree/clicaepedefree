@@ -53,10 +53,10 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
 
   const fetchOrders = async () => {
     try {
+      // Use the secure view instead of direct table access
       const { data, error } = await supabase
-        .from('orders')
+        .from('secure_orders_view')
         .select('*')
-        .eq('restaurant_id', restaurant.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -74,6 +74,12 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
       calculateStats(data || []); // Use all orders for stats
     } catch (error: any) {
       console.error('Erro ao buscar pedidos:', error);
+      // Log security access attempt
+      console.warn('Tentativa de acesso aos pedidos detectada:', {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+        restaurantId: restaurant.id
+      });
     } finally {
       setLoading(false);
     }

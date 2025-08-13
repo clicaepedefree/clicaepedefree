@@ -155,6 +155,36 @@ export type Database = {
         }
         Relationships: []
       }
+      order_access_logs: {
+        Row: {
+          access_type: string
+          accessed_by: string | null
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          order_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          access_type: string
+          accessed_by?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          order_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          access_type?: string
+          accessed_by?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          order_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address: string | null
@@ -358,9 +388,60 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      secure_orders_view: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_fee: number | null
+          id: string | null
+          items: Json | null
+          payment_method: string | null
+          restaurant_id: string | null
+          status: string | null
+          subtotal: number | null
+          total: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: never
+          created_at?: string | null
+          customer_name?: never
+          customer_phone?: never
+          delivery_fee?: number | null
+          id?: string | null
+          items?: Json | null
+          payment_method?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          subtotal?: number | null
+          total?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: never
+          created_at?: string | null
+          customer_name?: never
+          customer_phone?: never
+          delivery_fee?: number | null
+          id?: string | null
+          items?: Json | null
+          payment_method?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          subtotal?: number | null
+          total?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      anonymize_old_orders: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       authenticate_super_admin: {
         Args: { admin_email: string; admin_password: string }
         Returns: {
@@ -386,6 +467,18 @@ export type Database = {
           banner_url: string
           total_revenue: number
         }[]
+      }
+      mask_customer_data: {
+        Args: {
+          customer_name: string
+          customer_phone: string
+          is_owner?: boolean
+        }
+        Returns: Json
+      }
+      user_owns_order_restaurant: {
+        Args: { order_id: string }
+        Returns: boolean
       }
     }
     Enums: {
