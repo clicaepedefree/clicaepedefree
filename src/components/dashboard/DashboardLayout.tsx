@@ -25,7 +25,8 @@ import {
   Package,
   MapPin,
   BarChart3,
-  MessageCircle
+  MessageCircle,
+  Send
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +52,7 @@ const menuItems = [
   { title: "Produtos", value: "products", icon: Package },
   { title: "Adicionais", value: "addons", icon: Plus },
   { title: "Zonas de Entrega", value: "delivery", icon: MapPin },
+  { title: "Disparar mensagens", value: "messages", icon: Send, isGreen: true },
   { title: "Configurações", value: "settings", icon: Settings },
 ];
 
@@ -154,6 +156,12 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
             {activeSection === "products" && <ProductManager restaurant={restaurant} />}
             {activeSection === "addons" && <AddonManager restaurant={restaurant} />}
             {activeSection === "delivery" && <DeliveryZoneManager restaurant={restaurant} />}
+            {activeSection === "messages" && (
+              <div className="bg-card rounded-lg p-6">
+                <h2 className="text-2xl font-bold mb-4 text-foreground">Disparar Mensagens</h2>
+                <p className="text-muted-foreground">Funcionalidade em desenvolvimento...</p>
+              </div>
+            )}
             {activeSection === "settings" && (
               <RestaurantSettings 
                 restaurant={restaurant} 
@@ -249,9 +257,14 @@ function AppSidebar({
                 <SidebarMenuItem key={item.value}>
                   <SidebarMenuButton
                     onClick={() => onSectionChange(item.value)}
-                    className={activeSection === item.value ? 
-                      "bg-accent text-accent-foreground" : 
-                      "hover:bg-accent/50"
+                    className={
+                      item.isGreen
+                        ? activeSection === item.value
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "text-green-600 hover:bg-green-50 hover:text-green-700"
+                        : activeSection === item.value
+                          ? "bg-accent text-accent-foreground"
+                          : "hover:bg-accent/50"
                     }
                   >
                     <item.icon className="h-4 w-4" />
