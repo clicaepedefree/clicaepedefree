@@ -159,7 +159,20 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
             {activeSection === "messages" && (
               <div className="bg-card rounded-lg p-6">
                 <h2 className="text-2xl font-bold mb-4 text-foreground">Disparar Mensagens</h2>
-                <p className="text-muted-foreground">Funcionalidade em desenvolvimento...</p>
+                <p className="text-muted-foreground mb-4">
+                  Para liberar esta funcionalidade, entre em contato conosco.
+                </p>
+                <Button 
+                  onClick={() => {
+                    const message = "Quero liberar a função de disparar mensagens";
+                    const whatsappUrl = `https://wa.me/5511916924490?text=${encodeURIComponent(message)}`;
+                    window.open(whatsappUrl, '_blank');
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Solicitar Liberação
+                </Button>
               </div>
             )}
             {activeSection === "settings" && (

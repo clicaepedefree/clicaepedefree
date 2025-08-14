@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -330,6 +330,7 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          responsible_name: string | null
           slug: string
           tax_id: string | null
           updated_at: string
@@ -342,6 +343,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          responsible_name?: string | null
           slug: string
           tax_id?: string | null
           updated_at?: string
@@ -354,6 +356,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          responsible_name?: string | null
           slug?: string
           tax_id?: string | null
           updated_at?: string
@@ -445,8 +448,8 @@ export type Database = {
       authenticate_super_admin: {
         Args: { admin_email: string; admin_password: string }
         Returns: {
-          id: string
           email: string
+          id: string
           success: boolean
         }[]
       }
@@ -457,15 +460,15 @@ export type Database = {
       get_restaurants_with_emails: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          name: string
-          whatsapp: string
-          user_email: string
-          slug: string
-          created_at: string
-          logo_url: string
           banner_url: string
+          created_at: string
+          id: string
+          logo_url: string
+          name: string
+          slug: string
           total_revenue: number
+          user_email: string
+          whatsapp: string
         }[]
       }
       mask_customer_data: {

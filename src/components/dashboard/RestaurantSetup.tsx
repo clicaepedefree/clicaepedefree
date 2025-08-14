@@ -80,6 +80,7 @@ export function RestaurantSetup({ user, onRestaurantCreated }: RestaurantSetupPr
     try {
       const formData = new FormData(e.currentTarget);
       const restaurantName = formData.get("restaurantName") as string;
+      const responsibleName = formData.get("responsibleName") as string;
       const whatsappRaw = formData.get("whatsapp") as string;
       const taxIdRaw = formData.get("taxId") as string;
 
@@ -106,6 +107,7 @@ export function RestaurantSetup({ user, onRestaurantCreated }: RestaurantSetupPr
         .insert({
           user_id: user.id,
           name: restaurantName,
+          responsible_name: responsibleName,
           whatsapp: cleanedWhats,
           tax_id: cleanedTaxId,
           slug: slugData
@@ -156,6 +158,15 @@ export function RestaurantSetup({ user, onRestaurantCreated }: RestaurantSetupPr
                 name="restaurantName"
                 placeholder="Ex: Pizzaria do João"
                 defaultValue={user.user_metadata?.restaurant_name || ""}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="responsibleName">Nome do Responsável</Label>
+              <Input
+                id="responsibleName"
+                name="responsibleName"
+                placeholder="Ex: João Silva"
                 required
               />
             </div>

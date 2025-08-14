@@ -14,6 +14,7 @@ import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 interface RestaurantWithEmail {
   id: string;
   name: string;
+  responsible_name?: string;
   whatsapp: string;
   user_email: string;
   slug: string;
@@ -21,6 +22,7 @@ interface RestaurantWithEmail {
   logo_url?: string;
   banner_url?: string;
   total_revenue: number;
+  tax_id?: string;
 }
 
 const SuperAdmin = () => {
@@ -219,8 +221,10 @@ const SuperAdmin = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome do Estabelecimento</TableHead>
+                    <TableHead>Responsável</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>WhatsApp</TableHead>
+                    <TableHead>CPF/CNPJ</TableHead>
                     <TableHead>Faturamento</TableHead>
                     <TableHead>Slug</TableHead>
                     <TableHead>Data de Cadastro</TableHead>
@@ -243,6 +247,9 @@ const SuperAdmin = () => {
                         </div>
                       </TableCell>
                       <TableCell>
+                        {restaurant.responsible_name || '-'}
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4 text-muted-foreground" />
                           {restaurant.user_email}
@@ -253,6 +260,9 @@ const SuperAdmin = () => {
                           <Phone className="h-4 w-4 text-muted-foreground" />
                           {formatWhatsApp(restaurant.whatsapp)}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {restaurant.tax_id || '-'}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
