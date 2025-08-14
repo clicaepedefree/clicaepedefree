@@ -107,6 +107,7 @@ export default function Auth() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const restaurantName = formData.get("restaurantName") as string;
+    const responsibleName = formData.get("responsibleName") as string;
     const whatsappRaw = formData.get("whatsapp") as string;
     const taxIdRaw = formData.get("taxId") as string;
 
@@ -128,6 +129,7 @@ export default function Auth() {
           emailRedirectTo: `${window.location.origin}/admin`,
           data: {
             restaurant_name: restaurantName,
+            responsible_name: responsibleName,
             whatsapp: cleanedWhats,
             tax_id: cleanedTaxId,
           }
@@ -263,6 +265,15 @@ export default function Auth() {
                       id="restaurantName"
                       name="restaurantName"
                       placeholder="Ex: Pizzaria do João"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="responsibleName">Nome do Responsável</Label>
+                    <Input
+                      id="responsibleName"
+                      name="responsibleName"
+                      placeholder="Ex: João Silva"
                       required
                     />
                   </div>
