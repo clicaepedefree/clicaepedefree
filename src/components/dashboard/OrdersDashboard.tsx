@@ -7,9 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, DollarSign, TrendingUp, Package, Eye, MapPin, Phone, User, CreditCard, Clock, Truck } from "lucide-react";
+import { ShoppingCart, DollarSign, TrendingUp, Package, Eye, MapPin, Phone, User, CreditCard, Clock, Truck, Printer } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PrintableReceipt } from "./PrintableReceipt";
 
 interface OrdersDashboardProps {
   restaurant: any;
@@ -130,6 +131,231 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
     } catch (error: any) {
       console.error('Erro ao atualizar status do pedido:', error);
     }
+  };
+
+  const handlePrintReceipt = (order: Order) => {
+    // Criar um elemento temporário com o conteúdo para impressão
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Por favor, permita pop-ups para usar a função de impressão.');
+      return;
+    }
+
+    // Gerar o HTML da impressão
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Cupom - Pedido #${order.id.slice(-8)}</title>
+          <style>
+            @page {
+              size: 80mm auto;
+              margin: 0;
+            }
+            
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body {
+              font-family: 'Courier New', monospace;
+              font-size: 12px;
+              line-height: 1.2;
+              color: black;
+              background: white;
+              padding: 5mm;
+              width: 80mm;
+            }
+            
+            .text-center { text-align: center; }
+            .text-bold { font-weight: bold; }
+            .text-small { font-size: 10px; }
+            .separator { 
+              border-top: 1px dashed black; 
+              margin: 3mm 0; 
+            }
+            .flex-between {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+            }
+            .mb-1 { margin-bottom: 1mm; }
+            .mb-2 { margin-bottom: 2mm; }
+            .mt-2 { margin-top: 2mm; }
+          </style>
+        </head>
+        <body>
+          ${generateReceiptHTML(order)}
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // Aguardar o carregamento e imprimir
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 100);
+    };
+  };
+
+  const generateReceiptHTML = (order: Order) => {
+    const orderType = order.delivery_fee > 0 ? "ENTREGA" : "RETIRADA";
+    
+    let itemsHTML = '';
+    if (order.items && order.items.length > 0) {
+      itemsHTML = order.items.map((item: any, index: number) => {
+        const productName = item.productName || 
+                          item.product_name || 
+                          item.name || 
+                          item.product?.name || 
+                          `Produto #${index + 1}`;
+        
+        const unitPrice = Number(item.unitPrice || item.price || 0);
+        const quantity = item.quantity || 1;
+        const itemTotal = unitPrice * quantity;
+
+        let addonsHTML = '';
+        if (item.addons && item.addons.length > 0) {
+          addonsHTML = item.addons.map((addon: any, addonIndex: number) => {
+            const addonName = addon.option?.name || addon.name || `Adicional ${addonIndex + 1}`;
+            const addonPrice = Number(addon.option?.price || addon.price || 0);
+            
+            return `
+              <div class="flex-between text-small" style="margin-left: 5mm;">
+                <div>+ ${addonName}</div>
+                <div>R$ ${(addonPrice * quantity).toFixed(2)}</div>
+              </div>
+            `;
+          }).join('');
+        }
+
+        let observationsHTML = '';
+        if (item.observations) {
+          observationsHTML = `
+            <div class="text-small" style="margin-left: 5mm;">
+              Obs: ${item.observations}
+            </div>
+          `;
+        }
+
+        return `
+          <div class="mb-1">
+            <div class="flex-between">
+              <div style="flex: 1;">
+                ${quantity}x ${productName}
+              </div>
+              <div>
+                R$ ${itemTotal.toFixed(2)}
+              </div>
+            </div>
+            ${addonsHTML}
+            ${observationsHTML}
+          </div>
+        `;
+      }).join('');
+    }
+
+    return `
+      <!-- Cabeçalho -->
+      <div class="text-center mb-2">
+        <div class="text-bold" style="font-size: 14px;">
+          ${restaurant.name}
+        </div>
+        ${restaurant.whatsapp ? `<div class="text-small">WhatsApp: ${restaurant.whatsapp}</div>` : ''}
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Informações do Pedido -->
+      <div class="mb-2">
+        <div class="text-center text-bold">
+          CUPOM NÃO FISCAL
+        </div>
+        <div class="text-center text-small">
+          Pedido #${order.id.slice(-8)}
+        </div>
+        <div class="text-center text-small">
+          ${format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Tipo de Pedido -->
+      <div class="text-center text-bold mb-2">
+        ${orderType}
+      </div>
+
+      <!-- Cliente -->
+      ${order.customer_name ? `
+        <div class="mb-2">
+          <div><strong>Cliente:</strong> ${order.customer_name}</div>
+          ${order.customer_phone ? `<div><strong>Telefone:</strong> ${order.customer_phone}</div>` : ''}
+          ${orderType === "ENTREGA" && order.address ? `
+            <div class="text-small">
+              <strong>Endereço:</strong> ${order.address}
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
+
+      <div class="separator"></div>
+
+      <!-- Itens do Pedido -->
+      <div class="mb-2">
+        <div class="text-bold mb-1">ITENS:</div>
+        ${itemsHTML}
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Totais -->
+      <div class="mb-2">
+        <div class="flex-between">
+          <div>Subtotal:</div>
+          <div>R$ ${Number(order.subtotal || 0).toFixed(2)}</div>
+        </div>
+        
+        ${Number(order.delivery_fee || 0) > 0 ? `
+          <div class="flex-between">
+            <div>Taxa de entrega:</div>
+            <div>R$ ${Number(order.delivery_fee).toFixed(2)}</div>
+          </div>
+        ` : ''}
+        
+        <div class="separator"></div>
+        
+        <div class="flex-between text-bold">
+          <div>TOTAL:</div>
+          <div>R$ ${Number(order.total || 0).toFixed(2)}</div>
+        </div>
+      </div>
+
+      <!-- Forma de Pagamento -->
+      ${order.payment_method ? `
+        <div class="separator"></div>
+        <div class="mb-2">
+          <div><strong>Pagamento:</strong> ${order.payment_method}</div>
+        </div>
+      ` : ''}
+
+      <div class="separator"></div>
+
+      <!-- Rodapé -->
+      <div class="text-center text-small">
+        <div>Obrigado pela preferência!</div>
+        <div class="mt-2">
+          ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+        </div>
+      </div>
+    `;
   };
 
   const renderOrderDetails = (order: Order) => {
@@ -496,6 +722,20 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                           </SheetHeader>
                           <div className="mt-6">
                             {selectedOrder && renderOrderDetails(selectedOrder)}
+                            
+                            {/* Botão de Impressão */}
+                            {selectedOrder && (
+                              <div className="mt-6 pt-4 border-t">
+                                <Button
+                                  onClick={() => handlePrintReceipt(selectedOrder)}
+                                  variant="outline"
+                                  className="w-full"
+                                >
+                                  <Printer className="h-4 w-4 mr-2" />
+                                  Imprimir Cupom
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </SheetContent>
                       </Sheet>
