@@ -26,7 +26,8 @@ import {
   MapPin,
   BarChart3,
   MessageCircle,
-  Send
+  Send,
+  CreditCard
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ import { ProductManager } from "./ProductManager";
 import { AddonManager } from "./AddonManager";
 import { RestaurantSettings } from "./RestaurantSettings";
 import { DeliveryZoneManager } from "./DeliveryZoneManager";
+import { PaymentMethodsManager } from "./PaymentMethodsManager";
 import { OrdersDashboard } from "./OrdersDashboard";
 import { CTABanner } from "./CTABanner";
 
@@ -52,6 +54,7 @@ const menuItems = [
   { title: "Produtos", value: "products", icon: Package },
   { title: "Adicionais", value: "addons", icon: Plus },
   { title: "Zonas de Entrega", value: "delivery", icon: MapPin },
+  { title: "Pagamento", value: "payment", icon: CreditCard },
   { title: "Disparar mensagens", value: "messages", icon: Send, isGreen: true },
   { title: "Configurações", value: "settings", icon: Settings },
 ];
@@ -156,6 +159,7 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
             {activeSection === "products" && <ProductManager restaurant={restaurant} />}
             {activeSection === "addons" && <AddonManager restaurant={restaurant} />}
             {activeSection === "delivery" && <DeliveryZoneManager restaurant={restaurant} />}
+            {activeSection === "payment" && <PaymentMethodsManager restaurant={restaurant} />}
             {activeSection === "messages" && (
               <div className="bg-card rounded-lg p-6">
                 <h2 className="text-2xl font-bold mb-4 text-foreground">Disparar Mensagens</h2>

@@ -233,6 +233,36 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_methods: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          method_type: string
+          pix_key: string | null
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          method_type: string
+          pix_key?: string | null
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          method_type?: string
+          pix_key?: string | null
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_addon_groups: {
         Row: {
           addon_group_id: string

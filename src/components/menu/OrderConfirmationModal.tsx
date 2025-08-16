@@ -94,10 +94,13 @@ export function OrderConfirmationModal({
   });
   
   const [changeAmount, setChangeAmount] = useState('');
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>([]);
+  const [restaurantPixKey, setRestaurantPixKey] = useState('');
 
   useEffect(() => {
     if (restaurant?.id && open) {
       fetchDeliveryZones();
+      fetchPaymentMethods();
     }
   }, [restaurant?.id, open]);
 
@@ -114,6 +117,28 @@ export function OrderConfirmationModal({
       setDeliveryZones(data || []);
     } catch (error) {
       console.error('Erro ao buscar zonas de entrega:', error);
+    }
+  };
+
+  const fetchPaymentMethods = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('restaurant_id', restaurant.id)
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      setAvailablePaymentMethods(data || []);
+      
+      // Buscar chave PIX se disponível
+      const pixMethod = data?.find(method => method.method_type === 'pix');
+      if (pixMethod?.pix_key) {
+        setRestaurantPixKey(pixMethod.pix_key);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar formas de pagamento:', error);
     }
   };
 
@@ -400,22 +425,16 @@ export function OrderConfirmationModal({
               value={paymentMethod.type} 
               onValueChange={(value) => setPaymentMethod({ type: value as PaymentMethod['type'] })}
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="debit" id="debit" />
-                <Label htmlFor="debit">Cartão de Débito</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="credit" id="credit" />
-                <Label htmlFor="credit">Cartão de Crédito</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="pix" id="pix" />
-                <Label htmlFor="pix">PIX</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="cash" id="cash" />
-                <Label htmlFor="cash">Dinheiro</Label>
-              </div>
+              {availablePaymentMethods.map((method) => (
+                <div key={method.method_type} className="flex items-center space-x-2">
+                  <RadioGroupItem value={method.method_type} id={method.method_type} />
+                  <Label htmlFor={method.method_type}>
+                    {method.method_type === 'cash' && 'Dinheiro'}
+                    {method.method_type === 'card' && 'Cartão'}
+                    {method.method_type === 'pix' && 'PIX'}
+                  </Label>
+                </div>
+              ))}
             </RadioGroup>
             
             {paymentMethod.type === 'cash' && (
@@ -429,6 +448,27 @@ export function OrderConfirmationModal({
                   onChange={(e) => setChangeAmount(e.target.value)}
                   className="w-32"
                 />
+              </div>
+            )}
+
+            {paymentMethod.type === 'pix' && restaurantPixKey && (
+              <div className="mt-3 p-4 bg-muted rounded-lg">
+                <Label className="text-sm font-medium">Chave PIX para pagamento:</Label>
+                <div className="mt-2 flex items-center justify-between bg-background p-3 rounded border">
+                  <span className="text-sm font-mono break-all">{restaurantPixKey}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(restaurantPixKey);
+                    }}
+                  >
+                    Copiar
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Copie a chave PIX acima e faça o pagamento no seu aplicativo bancário.
+                </p>
               </div>
             )}
           </div>
