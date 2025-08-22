@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Store, AlertTriangle, ExternalLink, TrendingUp } from "lucide-react";
+import { DollarSign, Store, AlertTriangle, ExternalLink, TrendingUp, MessageCircle } from "lucide-react";
 
 interface RestaurantControlsProps {
   restaurant: any;
@@ -238,11 +238,11 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
           
           <div className="space-y-4">
             <div className="text-center">
-              <p className="text-lg font-semibold mb-2">
-                Parabéns! Você vendeu {formatCurrency(monthlyRevenue)} este mês
-              </p>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-2">
                 Você ultrapassou o limite de <strong>R$ 1.800</strong> do plano gratuito.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Está gostando? Apoie a continuação do projeto:
               </p>
             </div>
 
@@ -278,6 +278,22 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
                 className="w-full"
               >
                 Fechar
+              </Button>
+
+              <Button 
+                asChild
+                variant="ghost" 
+                className="w-full border border-green-600 text-green-600 hover:bg-green-50"
+              >
+                <a 
+                  href="https://wa.me/5511999999999?text=Preciso%20liberar%20meu%20cardápio" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Fale com o Suporte
+                </a>
               </Button>
             </div>
 
