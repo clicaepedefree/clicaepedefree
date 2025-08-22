@@ -358,7 +358,10 @@ export type Database = {
           banner_url: string | null
           created_at: string
           id: string
+          is_blocked: boolean | null
+          is_open: boolean | null
           logo_url: string | null
+          monthly_revenue: number | null
           name: string
           responsible_name: string | null
           slug: string
@@ -371,7 +374,10 @@ export type Database = {
           banner_url?: string | null
           created_at?: string
           id?: string
+          is_blocked?: boolean | null
+          is_open?: boolean | null
           logo_url?: string | null
+          monthly_revenue?: number | null
           name: string
           responsible_name?: string | null
           slug: string
@@ -384,7 +390,10 @@ export type Database = {
           banner_url?: string | null
           created_at?: string
           id?: string
+          is_blocked?: boolean | null
+          is_open?: boolean | null
           logo_url?: string | null
+          monthly_revenue?: number | null
           name?: string
           responsible_name?: string | null
           slug?: string
@@ -483,9 +492,21 @@ export type Database = {
           success: boolean
         }[]
       }
+      check_revenue_limits: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       generate_unique_slug: {
         Args: { restaurant_name: string }
         Returns: string
+      }
+      get_monthly_revenue: {
+        Args: {
+          restaurant_id_param: string
+          target_month?: number
+          target_year?: number
+        }
+        Returns: number
       }
       get_restaurants_with_emails: {
         Args: Record<PropertyKey, never>
@@ -508,6 +529,10 @@ export type Database = {
           is_owner?: boolean
         }
         Returns: Json
+      }
+      update_monthly_revenues: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       user_owns_order_restaurant: {
         Args: { order_id: string }
