@@ -39,6 +39,7 @@ import { DeliveryZoneManager } from "./DeliveryZoneManager";
 import { PaymentMethodsManager } from "./PaymentMethodsManager";
 import { OrdersDashboard } from "./OrdersDashboard";
 import { CTABanner } from "./CTABanner";
+import { RestaurantControls } from "./RestaurantControls";
 
 
 interface DashboardLayoutProps {
@@ -118,6 +119,14 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
 
           <div className="p-6">
             <CTABanner />
+            
+            {/* Restaurant Controls */}
+            {activeSection === "dashboard" && (
+              <RestaurantControls 
+                restaurant={restaurant}
+                onRestaurantUpdate={onRestaurantUpdate}
+              />
+            )}
             
             {/* Mini Banner Tutorial */}
             <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">

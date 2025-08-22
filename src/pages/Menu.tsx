@@ -10,6 +10,8 @@ import { useCart } from "@/hooks/useCart";
 import { useMenuData } from "@/hooks/useMenuData";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, Clock } from "lucide-react";
 
 interface Product {
   id: string;
@@ -59,6 +61,25 @@ export default function Menu() {
       />
 
       <div className="container mx-auto px-4 py-8">
+        {/* Restaurant Status Alert */}
+        {restaurant.is_blocked && (
+          <Alert className="mb-6 border-red-500 bg-red-50">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="text-red-800">
+              <strong>Loja temporariamente indisponível.</strong> Não é possível realizar pedidos no momento.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {!restaurant.is_blocked && !restaurant.is_open && (
+          <Alert className="mb-6 border-orange-500 bg-orange-50">
+            <Clock className="h-4 w-4" />
+            <AlertDescription className="text-orange-800">
+              <strong>Loja fechada.</strong> Você pode visualizar o cardápio, mas não é possível fazer pedidos no momento.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {categories.length === 0 ? (
           <MenuEmptyState />
         ) : (
@@ -76,6 +97,10 @@ export default function Menu() {
         cartItemsCount={cartItemsCount}
         cartTotal={getCartTotal()}
         onOpenConfirmation={() => setConfirmationModalOpen(true)}
+        restaurantStatus={{
+          is_open: restaurant?.is_open ?? true,
+          is_blocked: restaurant?.is_blocked ?? false
+        }}
       />
 
       <OrderConfirmationModal

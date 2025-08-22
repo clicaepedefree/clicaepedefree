@@ -8,6 +8,8 @@ interface Restaurant {
   slug: string;
   logo_url?: string;
   banner_url?: string;
+  is_open?: boolean;
+  is_blocked?: boolean;
 }
 
 interface Category {

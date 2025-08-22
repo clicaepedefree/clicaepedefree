@@ -6,10 +6,17 @@ interface CartSummaryProps {
   cartItemsCount: number;
   cartTotal: number;
   onOpenConfirmation: () => void;
+  restaurantStatus?: {
+    is_open: boolean;
+    is_blocked: boolean;
+  };
 }
 
-export function CartSummary({ cartItemsCount, cartTotal, onOpenConfirmation }: CartSummaryProps) {
+export function CartSummary({ cartItemsCount, cartTotal, onOpenConfirmation, restaurantStatus }: CartSummaryProps) {
   if (cartItemsCount === 0) return null;
+  
+  // Don't show cart if restaurant is closed or blocked
+  const isRestaurantUnavailable = restaurantStatus && (!restaurantStatus.is_open || restaurantStatus.is_blocked);
 
   return (
     <>
@@ -27,9 +34,18 @@ export function CartSummary({ cartItemsCount, cartTotal, onOpenConfirmation }: C
             </div>
           </div>
           
-          <Button onClick={onOpenConfirmation} className="flex items-center space-x-2">
+          <Button 
+            onClick={onOpenConfirmation} 
+            disabled={isRestaurantUnavailable}
+            className="flex items-center space-x-2"
+          >
             <ShoppingCart className="h-4 w-4" />
-            <span>Confirmar Pedido</span>
+            <span>
+              {isRestaurantUnavailable 
+                ? (restaurantStatus?.is_blocked ? "Loja Bloqueada" : "Loja Fechada")
+                : "Confirmar Pedido"
+              }
+            </span>
           </Button>
         </div>
       </div>
