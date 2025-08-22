@@ -51,14 +51,15 @@ const SuperAdmin = () => {
       // Update monthly revenues first
       await supabase.rpc('update_monthly_revenues');
       
-      // Then fetch restaurants with updated data
+      // Then fetch restaurants with updated data - ordenados por data de cadastro (mais novos primeiro)
       const { data: restaurantData, error } = await supabase
         .from('restaurants')
         .select(`
           id, name, responsible_name, whatsapp, slug, created_at, 
           logo_url, banner_url, tax_id, is_open, is_blocked, monthly_revenue,
           user_id
-        `);
+        `)
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
 
@@ -67,7 +68,7 @@ const SuperAdmin = () => {
         (restaurantData || []).map(async (restaurant) => {
           const { data: userData, error: userError } = await supabase.auth.admin.getUserById(restaurant.user_id);
           
-          // Calculate total revenue
+          // Calculate total revenue desde o lançamento da plataforma
           const { data: ordersData } = await supabase
             .from('orders')
             .select('total')
@@ -118,7 +119,13 @@ const SuperAdmin = () => {
   };
 
   const getTotalRevenue = () => {
+    // Faturamento total desde o lançamento da plataforma
     return restaurants.reduce((sum, restaurant) => sum + Number(restaurant.total_revenue || 0), 0);
+  };
+
+  const getMonthlyRevenue = () => {
+    // Faturamento apenas do mês atual
+    return restaurants.reduce((sum, restaurant) => sum + Number(restaurant.monthly_revenue || 0), 0);
   };
 
   const toggleRestaurantBlock = async (restaurantId: string, isCurrentlyBlocked: boolean) => {
@@ -255,7 +262,7 @@ const SuperAdmin = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {formatCurrency(restaurants.reduce((sum, r) => sum + Number(r.monthly_revenue || 0), 0))}
+                {formatCurrency(getMonthlyRevenue())}
               </div>
               <p className="text-xs text-muted-foreground">
                 Receita deste mês
