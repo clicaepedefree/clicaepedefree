@@ -25,6 +25,7 @@ interface RestaurantWithEmail {
   monthly_revenue: number;
   is_open: boolean;
   is_blocked: boolean;
+  revenue_block_exempt_until?: string;
   tax_id?: string;
 }
 
@@ -56,7 +57,7 @@ const SuperAdmin = () => {
         .from('restaurants')
         .select(`
           id, name, responsible_name, whatsapp, slug, created_at, 
-          logo_url, banner_url, tax_id, is_open, is_blocked, monthly_revenue,
+          logo_url, banner_url, tax_id, is_open, is_blocked, monthly_revenue, revenue_block_exempt_until,
           user_id
         `)
         .order('created_at', { ascending: false });
@@ -154,6 +155,36 @@ const SuperAdmin = () => {
       });
 
       // Refresh the list
+      fetchRestaurants();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: error.message,
+      });
+    }
+  };
+
+  const markRestaurantAsPaid = async (restaurantId: string) => {
+    try {
+      const now = new Date();
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+      const { error } = await supabase
+        .from('restaurants')
+        .update({
+          is_blocked: false,
+          revenue_block_exempt_until: endOfMonth.toISOString(),
+        })
+        .eq('id', restaurantId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Pagamento confirmado",
+        description: "Limite de faturamento liberado até o fim do mês.",
+      });
+
       fetchRestaurants();
     } catch (error: any) {
       toast({
@@ -375,27 +406,44 @@ const SuperAdmin = () => {
                           {restaurant.logo_url && (
                             <Badge variant="outline" className="text-xs">Logo OK</Badge>
                           )}
+                          {restaurant.revenue_block_exempt_until && new Date(restaurant.revenue_block_exempt_until) > new Date() && (
+                            <Badge variant="secondary" className="text-xs">
+                              Pago até {new Date(restaurant.revenue_block_exempt_until).toLocaleDateString('pt-BR')}
+                            </Badge>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant={restaurant.is_blocked ? "default" : "destructive"}
-                          onClick={() => toggleRestaurantBlock(restaurant.id, restaurant.is_blocked)}
-                          className="flex items-center gap-1 text-xs"
-                        >
-                          {restaurant.is_blocked ? (
-                            <>
-                              <Unlock className="h-3 w-3" />
-                              Liberar
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="h-3 w-3" />
-                              Bloquear
-                            </>
-                          )}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant={restaurant.is_blocked ? "default" : "destructive"}
+                            onClick={() => toggleRestaurantBlock(restaurant.id, restaurant.is_blocked)}
+                            className="flex items-center gap-1 text-xs"
+                          >
+                            {restaurant.is_blocked ? (
+                              <>
+                                <Unlock className="h-3 w-3" />
+                                Liberar
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="h-3 w-3" />
+                                Bloquear
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => markRestaurantAsPaid(restaurant.id)}
+                            disabled={!!(restaurant.revenue_block_exempt_until && new Date(restaurant.revenue_block_exempt_until) > new Date())}
+                            className="flex items-center gap-1 text-xs"
+                          >
+                            <DollarSign className="h-3 w-3" />
+                            Pago
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
