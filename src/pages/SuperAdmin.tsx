@@ -130,9 +130,18 @@ const SuperAdmin = () => {
 
   const toggleRestaurantBlock = async (restaurantId: string, isCurrentlyBlocked: boolean) => {
     try {
+      const updateData: any = { is_blocked: !isCurrentlyBlocked };
+      
+      // Se está liberando (desbloqueando), marcar que está exempto até o fim do mês
+      if (isCurrentlyBlocked) {
+        const now = new Date();
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        updateData.revenue_block_exempt_until = endOfMonth.toISOString();
+      }
+
       const { error } = await supabase
         .from('restaurants')
-        .update({ is_blocked: !isCurrentlyBlocked })
+        .update(updateData)
         .eq('id', restaurantId);
 
       if (error) throw error;
@@ -141,7 +150,7 @@ const SuperAdmin = () => {
         title: !isCurrentlyBlocked ? "Restaurante bloqueado" : "Restaurante liberado",
         description: !isCurrentlyBlocked 
           ? "O restaurante não pode mais receber pedidos"
-          : "O restaurante pode receber pedidos novamente",
+          : "O restaurante pode receber pedidos até o fim do mês",
       });
 
       // Refresh the list

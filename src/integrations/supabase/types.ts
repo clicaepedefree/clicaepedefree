@@ -364,6 +364,7 @@ export type Database = {
           monthly_revenue: number | null
           name: string
           responsible_name: string | null
+          revenue_block_exempt_until: string | null
           slug: string
           tax_id: string | null
           updated_at: string
@@ -380,6 +381,7 @@ export type Database = {
           monthly_revenue?: number | null
           name: string
           responsible_name?: string | null
+          revenue_block_exempt_until?: string | null
           slug: string
           tax_id?: string | null
           updated_at?: string
@@ -396,6 +398,7 @@ export type Database = {
           monthly_revenue?: number | null
           name?: string
           responsible_name?: string | null
+          revenue_block_exempt_until?: string | null
           slug?: string
           tax_id?: string | null
           updated_at?: string
