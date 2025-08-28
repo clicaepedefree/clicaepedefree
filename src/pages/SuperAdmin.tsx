@@ -52,41 +52,30 @@ const SuperAdmin = () => {
       // Update monthly revenues first
       await supabase.rpc('update_monthly_revenues');
       
-      // Then fetch restaurants with updated data - ordenados por data de cadastro (mais novos primeiro)
-      const { data: restaurantData, error } = await supabase
-        .from('restaurants')
-        .select(`
-          id, name, responsible_name, whatsapp, slug, created_at, 
-          logo_url, banner_url, tax_id, is_open, is_blocked, monthly_revenue, revenue_block_exempt_until,
-          user_id
-        `)
-        .order('created_at', { ascending: false });
+      // Use the existing function to get restaurants with emails
+      const { data: restaurantData, error } = await supabase.rpc('get_restaurants_with_emails');
       
       if (error) throw error;
 
-      // Get user emails separately
-      const restaurantsWithEmails = await Promise.all(
+      // Fetch additional data not included in the function
+      const restaurantsWithDetails = await Promise.all(
         (restaurantData || []).map(async (restaurant) => {
-          const { data: userData, error: userError } = await supabase.auth.admin.getUserById(restaurant.user_id);
+          // Get additional restaurant details
+          const { data: detailsData } = await supabase
+            .from('restaurants')
+            .select('responsible_name, tax_id, is_open, is_blocked, monthly_revenue, revenue_block_exempt_until')
+            .eq('id', restaurant.id)
+            .single();
           
-          // Calculate total revenue desde o lançamento da plataforma
-          const { data: ordersData } = await supabase
-            .from('orders')
-            .select('total')
-            .eq('restaurant_id', restaurant.id)
-            .neq('status', 'cancelled');
-          
-          const totalRevenue = ordersData?.reduce((sum, order) => sum + Number(order.total || 0), 0) || 0;
-
           return {
             ...restaurant,
-            user_email: userData?.user?.email || 'Email não encontrado',
-            total_revenue: totalRevenue
+            ...detailsData,
+            user_email: restaurant.user_email || 'Email não encontrado'
           };
         })
       );
 
-      setRestaurants(restaurantsWithEmails);
+      setRestaurants(restaurantsWithDetails);
     } catch (error: any) {
       console.error('Error:', error);
       toast({
