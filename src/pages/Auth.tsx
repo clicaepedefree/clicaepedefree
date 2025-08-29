@@ -69,6 +69,7 @@ const isValidWhatsApp = (value: string) => {
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -217,6 +218,41 @@ export default function Auth() {
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin`,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setEmailSent(true);
+      toast({
+        title: "Email de recuperação enviado!",
+        description: "Verifique sua caixa de entrada e siga as instruções.",
+      });
+
+      // Limpar formulário
+      (e.target as HTMLFormElement).reset();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar email",
+        description: error.message || "Ocorreu um erro inesperado",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (checkingAuth) {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
@@ -252,9 +288,10 @@ export default function Auth() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signup" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="signup">Criar Conta</TabsTrigger>
                 <TabsTrigger value="signin">Entrar</TabsTrigger>
+                <TabsTrigger value="recover">Recuperar</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signup" className="space-y-4">
@@ -353,6 +390,50 @@ export default function Auth() {
                     {isLoading ? "Entrando..." : "Entrar"}
                   </Button>
                 </form>
+              </TabsContent>
+
+              <TabsContent value="recover" className="space-y-4">
+                {emailSent ? (
+                  <div className="text-center space-y-4">
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-green-800 mb-2">Email Enviado!</h3>
+                      <p className="text-green-700 text-sm">
+                        Enviamos um link de recuperação para seu email. 
+                        Verifique sua caixa de entrada (e também o spam) e siga as instruções.
+                      </p>
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => setEmailSent(false)}
+                    >
+                      Enviar novamente
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={handlePasswordReset} className="space-y-4">
+                    <div className="text-center mb-4">
+                      <h3 className="font-semibold text-gray-800 mb-2">Recuperar Senha</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Digite seu email e enviaremos um link para redefinir sua senha.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="recover-email">Email</Label>
+                      <Input
+                        id="recover-email"
+                        name="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Enviando..." : "Enviar Link de Recuperação"}
+                    </Button>
+                  </form>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
