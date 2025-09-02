@@ -56,7 +56,7 @@ const menuItems = [
   { title: "Adicionais", value: "addons", icon: Plus },
   { title: "Zonas de Entrega", value: "delivery", icon: MapPin },
   { title: "Pagamento", value: "payment", icon: CreditCard },
-  { title: "Disparar mensagens", value: "messages", icon: Send, isGreen: true },
+  { title: "Marketing", value: "marketing", icon: Send, isGreen: true },
   { title: "Configurações", value: "settings", icon: Settings },
 ];
 
@@ -169,23 +169,30 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
             {activeSection === "addons" && <AddonManager restaurant={restaurant} />}
             {activeSection === "delivery" && <DeliveryZoneManager restaurant={restaurant} />}
             {activeSection === "payment" && <PaymentMethodsManager restaurant={restaurant} />}
-            {activeSection === "messages" && (
+            {activeSection === "marketing" && (
               <div className="bg-card rounded-lg p-6">
-                <h2 className="text-2xl font-bold mb-4 text-foreground">Disparar Mensagens</h2>
-                <p className="text-muted-foreground mb-4">
-                  Para liberar esta funcionalidade, entre em contato conosco.
-                </p>
-                <Button 
-                  onClick={() => {
-                    const message = "Quero liberar a função de disparar mensagens";
-                    const whatsappUrl = `https://wa.me/5511916924490?text=${encodeURIComponent(message)}`;
-                    window.open(whatsappUrl, '_blank');
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Solicitar Liberação
-                </Button>
+                <h2 className="text-2xl font-bold mb-6 text-foreground">Marketing</h2>
+                
+                <div className="space-y-6">
+                  {/* Disparar Mensagens */}
+                  <div className="border border-border rounded-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-foreground">Disparar Mensagens</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Para liberar esta funcionalidade, entre em contato conosco.
+                    </p>
+                    <Button 
+                      onClick={() => {
+                        const message = "Quero liberar a função de disparar mensagens";
+                        const whatsappUrl = `https://wa.me/5511916924490?text=${encodeURIComponent(message)}`;
+                        window.open(whatsappUrl, '_blank');
+                      }}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Solicitar Liberação
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
             {activeSection === "settings" && (
