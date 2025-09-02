@@ -508,7 +508,7 @@ export type Database = {
         }[]
       }
       check_revenue_limits: {
-        Args: { target_time?: string }
+        Args: { target_time?: string } | { target_time?: string; tz?: string }
         Returns: number
       }
       generate_unique_slug: {
@@ -516,11 +516,13 @@ export type Database = {
         Returns: string
       }
       get_monthly_revenue: {
-        Args: {
-          restaurant_id_param: string
-          target_month?: number
-          target_year?: number
-        }
+        Args:
+          | {
+              restaurant_id_param: string
+              target_month?: number
+              target_year?: number
+            }
+          | { restaurant_id_param: string; target_time?: string; tz?: string }
         Returns: number
       }
       get_restaurants_with_emails: {
@@ -546,7 +548,7 @@ export type Database = {
         Returns: Json
       }
       update_monthly_revenues: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never> | { target_time?: string; tz?: string }
         Returns: number
       }
       user_owns_order_restaurant: {

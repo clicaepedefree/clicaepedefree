@@ -31,9 +31,15 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
 
   const fetchRevenue = async () => {
     try {
-      // Get monthly revenue
+      // Data específica: 01/09/2025 22:24 Brasília
+      const specificDate = new Date('2025-09-01T22:24:00-03:00');
+      
+      // Get monthly revenue with specific date
       const { data: monthlyData, error: monthlyError } = await supabase
-        .rpc('get_monthly_revenue', { restaurant_id_param: restaurant.id });
+        .rpc('get_monthly_revenue', { 
+          restaurant_id_param: restaurant.id,
+          target_time: specificDate.toISOString()
+        });
 
       if (monthlyError) throw monthlyError;
       setMonthlyRevenue(Number(monthlyData || 0));
@@ -61,8 +67,13 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
 
   const checkRevenueLimit = async () => {
     try {
+      // Data específica: 01/09/2025 22:24 Brasília
+      const specificDate = new Date('2025-09-01T22:24:00-03:00');
+      
       // Check and update restaurant status based on revenue
-      const { error } = await supabase.rpc('check_revenue_limits');
+      const { error } = await supabase.rpc('check_revenue_limits', {
+        target_time: specificDate.toISOString()
+      });
       if (error) throw error;
 
       // Refresh restaurant data

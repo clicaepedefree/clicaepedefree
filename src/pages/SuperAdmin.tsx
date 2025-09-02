@@ -55,8 +55,10 @@ const SuperAdmin = () => {
         target_time: specificDate.toISOString() 
       });
       
-      // Update monthly revenues first
-      await supabase.rpc('update_monthly_revenues');
+      // Update monthly revenues first with specific date
+      await supabase.rpc('update_monthly_revenues', {
+        target_time: specificDate.toISOString()
+      });
       
       // Use the existing function to get restaurants with emails
       const { data: restaurantData, error } = await supabase.rpc('get_restaurants_with_emails');
