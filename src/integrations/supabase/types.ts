@@ -483,6 +483,18 @@ export type Database = {
       }
     }
     Functions: {
+      admin_mark_restaurant_paid: {
+        Args: { for_time?: string; restaurant_id: string }
+        Returns: string
+      }
+      admin_set_restaurant_block: {
+        Args: {
+          exempt_until?: string
+          restaurant_id: string
+          set_blocked: boolean
+        }
+        Returns: boolean
+      }
       anonymize_old_orders: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -496,7 +508,7 @@ export type Database = {
         }[]
       }
       check_revenue_limits: {
-        Args: Record<PropertyKey, never>
+        Args: { target_time?: string }
         Returns: number
       }
       generate_unique_slug: {

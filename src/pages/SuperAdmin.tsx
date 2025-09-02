@@ -49,6 +49,12 @@ const SuperAdmin = () => {
 
   const fetchRestaurants = async () => {
     try {
+      // Executar verificação de limites com data específica (01/09/2025 22:24 Brasília)
+      const specificDate = new Date('2025-09-01T22:24:00-03:00');
+      await supabase.rpc('check_revenue_limits', { 
+        target_time: specificDate.toISOString() 
+      });
+      
       // Update monthly revenues first
       await supabase.rpc('update_monthly_revenues');
       
@@ -120,19 +126,21 @@ const SuperAdmin = () => {
 
   const toggleRestaurantBlock = async (restaurantId: string, isCurrentlyBlocked: boolean) => {
     try {
-      const updateData: any = { is_blocked: !isCurrentlyBlocked };
+      // Usar data específica: 01/09/2025 22:24 Brasília
+      const specificDate = new Date('2025-09-01T22:24:00-03:00');
       
-      // Se está liberando (desbloqueando), marcar que está exempto até o fim do mês
+      let exemptUntil = null;
       if (isCurrentlyBlocked) {
-        const now = new Date();
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-        updateData.revenue_block_exempt_until = endOfMonth.toISOString();
+        // Se está liberando, definir isenção até fim do mês
+        const endOfMonth = new Date(specificDate.getFullYear(), specificDate.getMonth() + 1, 0, 23, 59, 59);
+        exemptUntil = endOfMonth.toISOString();
       }
 
-      const { error } = await supabase
-        .from('restaurants')
-        .update(updateData)
-        .eq('id', restaurantId);
+      const { data, error } = await supabase.rpc('admin_set_restaurant_block', {
+        restaurant_id: restaurantId,
+        set_blocked: !isCurrentlyBlocked,
+        exempt_until: exemptUntil
+      });
 
       if (error) throw error;
 
@@ -143,7 +151,6 @@ const SuperAdmin = () => {
           : "O restaurante pode receber pedidos até o fim do mês",
       });
 
-      // Refresh the list
       fetchRestaurants();
     } catch (error: any) {
       toast({
@@ -156,16 +163,13 @@ const SuperAdmin = () => {
 
   const markRestaurantAsPaid = async (restaurantId: string) => {
     try {
-      const now = new Date();
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      // Usar data específica: 01/09/2025 22:24 Brasília
+      const specificDate = new Date('2025-09-01T22:24:00-03:00');
 
-      const { error } = await supabase
-        .from('restaurants')
-        .update({
-          is_blocked: false,
-          revenue_block_exempt_until: endOfMonth.toISOString(),
-        })
-        .eq('id', restaurantId);
+      const { data, error } = await supabase.rpc('admin_mark_restaurant_paid', {
+        restaurant_id: restaurantId,
+        for_time: specificDate.toISOString()
+      });
 
       if (error) throw error;
 
