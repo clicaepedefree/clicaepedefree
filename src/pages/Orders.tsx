@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
 import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { OrdersKanban } from "@/components/orders/OrdersKanban";
 
 export default function Orders() {
   const [user, setUser] = useState<User | null>(null);
@@ -78,6 +76,10 @@ export default function Orders() {
     }
   };
 
+  const handleRestaurantUpdate = (updatedRestaurant: any) => {
+    setRestaurant(updatedRestaurant);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -98,22 +100,13 @@ export default function Orders() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Pedidos - {restaurant.name}</h1>
-            <p className="text-sm text-muted-foreground">Gerencie seus pedidos em tempo real</p>
-          </div>
-          <Button variant="outline" onClick={handleLogout}>
-            Sair
-          </Button>
-        </div>
-      </header>
-      
-      <main className="container mx-auto px-4 py-6">
-        <OrdersKanban restaurant={restaurant} />
-      </main>
-    </div>
+    <DashboardLayout
+      restaurant={restaurant}
+      user={user}
+      onLogout={handleLogout}
+      onRestaurantUpdate={handleRestaurantUpdate}
+      activeSection="orders"
+      onSectionChange={() => {}}
+    />
   );
 }

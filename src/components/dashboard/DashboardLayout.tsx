@@ -44,6 +44,7 @@ import { PaymentMethodsManager } from "./PaymentMethodsManager";
 import { SalesDashboard } from "./SalesDashboard";
 import { CTABanner } from "./CTABanner";
 import { RestaurantControls } from "./RestaurantControls";
+import { OrdersKanban } from "../orders/OrdersKanban";
 
 
 interface DashboardLayoutProps {
@@ -51,6 +52,8 @@ interface DashboardLayoutProps {
   user: User;
   onLogout: () => void;
   onRestaurantUpdate: (restaurant: any) => void;
+  activeSection?: string;
+  onSectionChange?: (section: string) => void;
 }
 
 const menuItems = [
@@ -65,10 +68,22 @@ const menuItems = [
   { title: "Configurações", value: "settings", icon: Settings },
 ];
 
-export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate }: DashboardLayoutProps) {
-  const [activeSection, setActiveSection] = useState("dashboard");
+export function DashboardLayout({ 
+  restaurant, 
+  user, 
+  onLogout, 
+  onRestaurantUpdate, 
+  activeSection: propActiveSection,
+  onSectionChange: propOnSectionChange 
+}: DashboardLayoutProps) {
+  const [activeSection, setActiveSection] = useState(propActiveSection || "dashboard");
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const { toast } = useToast();
+
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section);
+    propOnSectionChange?.(section);
+  };
 
   const copyLink = () => {
     const link = `${window.location.origin}/cardapio/${restaurant.slug}`;
@@ -94,8 +109,8 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar 
-          activeSection={activeSection}
-          onSectionChange={setActiveSection}
+          activeSection={propActiveSection || activeSection}
+          onSectionChange={handleSectionChange}
           restaurant={restaurant}
           onLogout={onLogout}
           onWhatsAppClick={() => setShowWhatsAppModal(true)}
@@ -169,6 +184,7 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
             </div>
             
             {activeSection === "dashboard" && <SalesDashboard restaurant={restaurant} />}
+            {activeSection === "orders" && <OrdersKanban restaurant={restaurant} />}
             {activeSection === "categories" && <CategoryManager restaurant={restaurant} />}
             {activeSection === "products" && <ProductManager restaurant={restaurant} />}
             {activeSection === "addons" && <AddonManager restaurant={restaurant} />}
