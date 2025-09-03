@@ -14,7 +14,7 @@ import {
   useSidebar 
 } from "@/components/ui/sidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { 
   Store, 
   Menu as MenuIcon, 
@@ -169,20 +169,6 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
             </div>
             
             {activeSection === "dashboard" && <SalesDashboard restaurant={restaurant} />}
-            {activeSection === "orders" && (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  A tela de pedidos foi movida para uma página separada para melhor experiência.
-                </p>
-                <a 
-                  href="/admin/orders" 
-                  className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Ir para Pedidos
-                </a>
-              </div>
-            )}
             {activeSection === "categories" && <CategoryManager restaurant={restaurant} />}
             {activeSection === "products" && <ProductManager restaurant={restaurant} />}
             {activeSection === "addons" && <AddonManager restaurant={restaurant} />}
@@ -294,6 +280,15 @@ function AppSidebar({
 }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const navigate = useNavigate();
+
+  const handleMenuClick = (item: any) => {
+    if (item.value === "orders") {
+      navigate("/admin/orders");
+    } else {
+      onSectionChange(item.value);
+    }
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -308,7 +303,7 @@ function AppSidebar({
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.value}>
                   <SidebarMenuButton
-                    onClick={() => onSectionChange(item.value)}
+                    onClick={() => handleMenuClick(item)}
                     className={
                       item.isGreen
                         ? activeSection === item.value
