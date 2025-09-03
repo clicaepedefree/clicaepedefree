@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, User, Phone, MapPin, Clock, Printer, Truck, Eye, CreditCard } from "lucide-react";
+import { ShoppingCart, User, Phone, MapPin, Clock, Printer, Truck, Eye, CreditCard, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -36,7 +36,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   const statusColumns = [
     { key: 'new', title: 'Novos', color: 'bg-blue-50 border-blue-200' },
     { key: 'preparing', title: 'Em Preparo', color: 'bg-yellow-50 border-yellow-200' },
-    { key: 'delivered', title: 'Entregues', color: 'bg-green-50 border-green-200' },
+    { key: 'delivered', title: 'Em Entrega', color: 'bg-green-50 border-green-200' },
     { key: 'cancelled', title: 'Cancelados', color: 'bg-red-50 border-red-200' }
   ];
 
@@ -70,17 +70,8 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      // Filter out delivered orders older than 10 minutes
-      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-      const filteredOrders = (data || []).filter(order => {
-        if (order.status === 'delivered') {
-          return new Date(order.created_at) >= tenMinutesAgo;
-        }
-        return true;
-      });
-
-      setOrders(filteredOrders);
+      
+      setOrders(data || []);
     } catch (error: any) {
       console.error('Erro ao buscar pedidos:', error);
     } finally {
@@ -103,11 +94,26 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
     }
   };
 
+  const confirmDelivery = async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+
+      if (error) throw error;
+      
+      fetchOrders();
+    } catch (error: any) {
+      console.error('Erro ao confirmar entrega:', error);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusMap = {
       new: { label: "Novo", variant: "secondary" as const },
       preparing: { label: "Em Preparo", variant: "outline" as const },
-      delivered: { label: "Entregue", variant: "default" as const },
+      delivered: { label: "Em Entrega", variant: "default" as const },
       cancelled: { label: "Cancelado", variant: "destructive" as const }
     };
     
@@ -335,19 +341,19 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                         </div>
                       </div>
                       
-                      <div className="flex gap-1 pt-2">
-                        <Sheet>
-                          <SheetTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="flex-1 text-xs"
-                              onClick={() => setSelectedOrder(order)}
-                            >
-                              <Eye className="h-3 w-3 mr-1" />
-                              Ver
-                            </Button>
-                          </SheetTrigger>
+                       <div className="flex gap-1 pt-2">
+                         <Sheet>
+                           <SheetTrigger asChild>
+                             <Button 
+                               size="sm" 
+                               variant="outline" 
+                               className="flex-1 text-xs"
+                               onClick={() => setSelectedOrder(order)}
+                             >
+                               <Eye className="h-3 w-3 mr-1" />
+                               Ver
+                             </Button>
+                           </SheetTrigger>
                           <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
                             <SheetHeader>
                               <SheetTitle>Pedido #{selectedOrder?.id.slice(-8)}</SheetTitle>
@@ -363,12 +369,12 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                                         {getStatusBadge(selectedOrder.status)}
                                       </SelectValue>
                                     </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="new">Novo</SelectItem>
-                                      <SelectItem value="preparing">Em Preparo</SelectItem>
-                                      <SelectItem value="delivered">Entregue</SelectItem>
-                                      <SelectItem value="cancelled">Cancelado</SelectItem>
-                                    </SelectContent>
+                                     <SelectContent>
+                                       <SelectItem value="new">Novo</SelectItem>
+                                       <SelectItem value="preparing">Em Preparo</SelectItem>
+                                       <SelectItem value="delivered">Em Entrega</SelectItem>
+                                       <SelectItem value="cancelled">Cancelado</SelectItem>
+                                     </SelectContent>
                                   </Select>
                                 </div>
 
@@ -476,29 +482,51 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                                   </>
                                 )}
 
-                                <div className="pt-4">
-                                  <Button 
-                                    onClick={() => handlePrintReceipt(selectedOrder)} 
-                                    className="w-full"
-                                    variant="outline"
-                                  >
-                                    <Printer className="h-4 w-4 mr-2" />
-                                    Imprimir Cupom
-                                  </Button>
-                                </div>
+                                 <div className="pt-4 space-y-2">
+                                   <Button 
+                                     onClick={() => handlePrintReceipt(selectedOrder)} 
+                                     className="w-full"
+                                     variant="outline"
+                                   >
+                                     <Printer className="h-4 w-4 mr-2" />
+                                     Imprimir Cupom
+                                   </Button>
+                                   
+                                   {selectedOrder.status === 'delivered' && (
+                                     <Button 
+                                       onClick={() => confirmDelivery(selectedOrder.id)} 
+                                       className="w-full"
+                                       variant="default"
+                                     >
+                                       <CheckCircle className="h-4 w-4 mr-2" />
+                                       Confirmar Entrega
+                                     </Button>
+                                   )}
+                                 </div>
                               </div>
                             )}
                           </SheetContent>
                         </Sheet>
                         
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handlePrintReceipt(order)}
-                        >
-                          <Printer className="h-3 w-3" />
-                        </Button>
-                      </div>
+                         {order.status === 'delivered' ? (
+                           <Button 
+                             size="sm" 
+                             variant="default"
+                             onClick={() => confirmDelivery(order.id)}
+                             className="text-xs"
+                           >
+                             <CheckCircle className="h-3 w-3" />
+                           </Button>
+                         ) : (
+                           <Button 
+                             size="sm" 
+                             variant="outline"
+                             onClick={() => handlePrintReceipt(order)}
+                           >
+                             <Printer className="h-3 w-3" />
+                           </Button>
+                         )}
+                       </div>
                     </CardContent>
                   </Card>
                 ))}
