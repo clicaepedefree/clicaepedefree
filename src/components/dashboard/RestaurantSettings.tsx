@@ -14,6 +14,7 @@ interface RestaurantSettingsProps {
 
 export function RestaurantSettings({ restaurant, onUpdate }: RestaurantSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const { toast } = useToast();
 
   const handleImageUpdate = async (field: 'logo_url' | 'banner_url', url: string) => {
@@ -74,6 +75,48 @@ export function RestaurantSettings({ restaurant, onUpdate }: RestaurantSettingsP
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPasswordLoading(true);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      const currentPassword = formData.get("currentPassword") as string;
+      const newPassword = formData.get("newPassword") as string;
+      const confirmPassword = formData.get("confirmPassword") as string;
+
+      if (newPassword !== confirmPassword) {
+        throw new Error("As senhas não coincidem");
+      }
+
+      if (newPassword.length < 6) {
+        throw new Error("A nova senha deve ter pelo menos 6 caracteres");
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Senha alterada!",
+        description: "Sua senha foi atualizada com sucesso.",
+      });
+
+      // Limpar o formulário
+      (e.target as HTMLFormElement).reset();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao alterar senha",
+        description: error.message,
+      });
+    } finally {
+      setIsPasswordLoading(false);
     }
   };
 
@@ -180,6 +223,51 @@ export function RestaurantSettings({ restaurant, onUpdate }: RestaurantSettingsP
                 Copiar
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Alterar Senha</CardTitle>
+            <CardDescription>
+              Atualize sua senha de acesso ao painel
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Senha Atual</Label>
+                <Input
+                  id="currentPassword"
+                  name="currentPassword"
+                  type="password"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Nova Senha</Label>
+                <Input
+                  id="newPassword"
+                  name="newPassword"
+                  type="password"
+                  minLength={6}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  minLength={6}
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={isPasswordLoading}>
+                {isPasswordLoading ? "Alterando..." : "Alterar Senha"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
