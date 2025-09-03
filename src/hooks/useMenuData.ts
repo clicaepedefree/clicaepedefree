@@ -43,26 +43,24 @@ export function useMenuData(slug: string | undefined) {
 
   const fetchMenuData = async () => {
     try {
-      // Buscar restaurante
+      // Buscar restaurante usando função segura
       const { data: restaurantData, error: restaurantError } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('slug', slug)
-        .single();
+        .rpc('get_public_restaurant_by_slug', { slug_input: slug });
 
       if (restaurantError) throw restaurantError;
-      if (!restaurantData) {
+      if (!restaurantData || restaurantData.length === 0) {
         setLoading(false);
         return;
       }
 
-      setRestaurant(restaurantData);
+      const restaurant = restaurantData[0];
+      setRestaurant(restaurant);
 
       // Buscar categorias
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
         .select('*')
-        .eq('restaurant_id', restaurantData.id)
+        .eq('restaurant_id', restaurant.id)
         .order('display_order', { ascending: true });
 
       if (categoriesError) throw categoriesError;
@@ -72,7 +70,7 @@ export function useMenuData(slug: string | undefined) {
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*')
-        .eq('restaurant_id', restaurantData.id)
+        .eq('restaurant_id', restaurant.id)
         .eq('is_active', true)
         .order('display_order', { ascending: true });
 

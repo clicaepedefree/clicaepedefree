@@ -525,6 +525,18 @@ export type Database = {
           | { restaurant_id_param: string; target_time?: string; tz?: string }
         Returns: number
       }
+      get_public_restaurant_by_slug: {
+        Args: { slug_input: string }
+        Returns: {
+          banner_url: string
+          id: string
+          is_open: boolean
+          logo_url: string
+          name: string
+          slug: string
+          whatsapp: string
+        }[]
+      }
       get_restaurants_with_emails: {
         Args: Record<PropertyKey, never>
         Returns: {
