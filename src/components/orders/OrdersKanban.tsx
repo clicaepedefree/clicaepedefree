@@ -98,7 +98,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
     try {
       const { error } = await supabase
         .from('orders')
-        .delete()
+        .update({ status: 'completed' })
         .eq('id', orderId);
 
       if (error) throw error;
@@ -271,7 +271,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   };
 
   const getOrdersByStatus = (status: string) => {
-    return orders.filter(order => order.status === status);
+    return orders.filter(order => order.status === status && order.status !== 'completed');
   };
 
   if (loading) {
