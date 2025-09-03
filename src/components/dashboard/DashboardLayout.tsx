@@ -27,7 +27,11 @@ import {
   BarChart3,
   MessageCircle,
   Send,
-  CreditCard
+  CreditCard,
+  ShoppingCart,
+  Home,
+  List,
+  ChefHat
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -37,7 +41,7 @@ import { AddonManager } from "./AddonManager";
 import { RestaurantSettings } from "./RestaurantSettings";
 import { DeliveryZoneManager } from "./DeliveryZoneManager";
 import { PaymentMethodsManager } from "./PaymentMethodsManager";
-import { OrdersDashboard } from "./OrdersDashboard";
+import { SalesDashboard } from "./SalesDashboard";
 import { CTABanner } from "./CTABanner";
 import { RestaurantControls } from "./RestaurantControls";
 
@@ -50,9 +54,10 @@ interface DashboardLayoutProps {
 }
 
 const menuItems = [
-  { title: "Dashboard", value: "dashboard", icon: BarChart3 },
-  { title: "Categorias", value: "categories", icon: MenuIcon },
-  { title: "Produtos", value: "products", icon: Package },
+  { title: "Dashboard", value: "dashboard", icon: Home },
+  { title: "Pedidos", value: "orders", icon: ShoppingCart },
+  { title: "Cardápio", value: "products", icon: ChefHat },
+  { title: "Categorias", value: "categories", icon: List },
   { title: "Adicionais", value: "addons", icon: Plus },
   { title: "Zonas de Entrega", value: "delivery", icon: MapPin },
   { title: "Pagamento", value: "payment", icon: CreditCard },
@@ -163,7 +168,21 @@ export function DashboardLayout({ restaurant, user, onLogout, onRestaurantUpdate
               </div>
             </div>
             
-            {activeSection === "dashboard" && <OrdersDashboard restaurant={restaurant} />}
+            {activeSection === "dashboard" && <SalesDashboard restaurant={restaurant} />}
+            {activeSection === "orders" && (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  A tela de pedidos foi movida para uma página separada para melhor experiência.
+                </p>
+                <a 
+                  href="/admin/orders" 
+                  className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Ir para Pedidos
+                </a>
+              </div>
+            )}
             {activeSection === "categories" && <CategoryManager restaurant={restaurant} />}
             {activeSection === "products" && <ProductManager restaurant={restaurant} />}
             {activeSection === "addons" && <AddonManager restaurant={restaurant} />}
