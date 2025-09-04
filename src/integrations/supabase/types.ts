@@ -543,9 +543,15 @@ export type Database = {
           banner_url: string
           created_at: string
           id: string
+          is_blocked: boolean
+          is_open: boolean
           logo_url: string
+          monthly_revenue: number
           name: string
+          responsible_name: string
+          revenue_block_exempt_until: string
           slug: string
+          tax_id: string
           total_revenue: number
           user_email: string
           whatsapp: string

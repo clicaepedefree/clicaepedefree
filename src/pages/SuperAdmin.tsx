@@ -60,30 +60,18 @@ const SuperAdmin = () => {
         target_time: specificDate.toISOString()
       });
       
-      // Use the existing function to get restaurants with emails
+      // Use the existing function to get restaurants with emails (now includes all fields)
       const { data: restaurantData, error } = await supabase.rpc('get_restaurants_with_emails');
       
       if (error) throw error;
 
-      // Fetch additional data not included in the function
-      const restaurantsWithDetails = await Promise.all(
-        (restaurantData || []).map(async (restaurant) => {
-          // Get additional restaurant details
-          const { data: detailsData } = await supabase
-            .from('restaurants')
-            .select('responsible_name, tax_id, is_open, is_blocked, monthly_revenue, revenue_block_exempt_until')
-            .eq('id', restaurant.id)
-            .single();
-          
-          return {
-            ...restaurant,
-            ...detailsData,
-            user_email: restaurant.user_email || 'Email não encontrado'
-          };
-        })
-      );
+      // Format restaurants data with fallback for email
+      const restaurantsFormatted = (restaurantData || []).map(restaurant => ({
+        ...restaurant,
+        user_email: restaurant.user_email || 'Email não encontrado'
+      }));
 
-      setRestaurants(restaurantsWithDetails);
+      setRestaurants(restaurantsFormatted);
     } catch (error: any) {
       console.error('Error:', error);
       toast({
