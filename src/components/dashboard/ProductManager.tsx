@@ -358,7 +358,7 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
             </Button>
           </DialogTrigger>
           
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingProduct ? "Editar Produto" : "Novo Produto"}
@@ -471,7 +471,7 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
 
       {/* Dialog para gerenciar addons do produto */}
       <Dialog open={addonDialogOpen} onOpenChange={setAddonDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Gerenciar Addons</DialogTitle>
             <DialogDescription>
