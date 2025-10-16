@@ -9,7 +9,7 @@ export function FAQSection() {
   const faqs = [
     {
       question: "O cardápio é realmente gratuito para sempre?",
-      answer: "Sim, nosso cardápio digital é 100% gratuito para sempre. Não cobramos mensalidades, taxas de configuração ou comissões sobre vendas. Você pode usar todas as funcionalidades sem qualquer custo."
+      answer: "Sim! É 100% gratuito até R$2.000 em vendas mensais. Se ultrapassar esse valor, você paga apenas R$29,90 no mês que passar. Não cobramos taxas de configuração ou comissões sobre vendas. Você pode usar todas as funcionalidades livremente."
     },
     {
       question: "Funciona no celular simples?", 
