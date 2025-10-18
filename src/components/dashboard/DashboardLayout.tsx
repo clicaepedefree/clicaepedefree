@@ -57,19 +57,12 @@ interface DashboardLayoutProps {
   onSectionChange?: (section: string) => void;
 }
 
-const mainMenuItems = [
+const menuItems = [
   { title: "Financeiro", value: "dashboard", icon: BarChart3 },
   { title: "Pedidos", value: "orders", icon: ShoppingCart },
-  { title: "Zonas de Entrega", value: "delivery", icon: MapPin },
+  { title: "Entrega", value: "delivery", icon: MapPin },
   { title: "Marketing", value: "marketing", icon: Send, isGreen: true },
-];
-
-const settingsMenuItems = [
-  { title: "Cardápio", value: "products", icon: ChefHat },
-  { title: "Categorias", value: "categories", icon: List },
-  { title: "Adicionais", value: "addons", icon: Plus },
-  { title: "Pagamento", value: "payment", icon: CreditCard },
-  { title: "Configurações", value: "settings", icon: Settings },
+  { title: "Ajustes", value: "settings", icon: Settings },
 ];
 
 export function DashboardLayout({ 
@@ -122,12 +115,12 @@ export function DashboardLayout({
         />
         
         <main className="flex-1 bg-background">
-          <header className="h-16 border-b border-primary-glow/20 bg-primary flex items-center justify-between px-6">
+          <header className="h-16 border-b bg-background flex items-center justify-between px-6">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="text-white hover:bg-white/20" />
+              <SidebarTrigger />
               <div className="flex items-center gap-3">
                 <img src="/lovable-uploads/df0ab910-5641-4faf-b0dc-3743be76338e.png" alt="Cardápio Grátis Logo" className="h-8" />
-                <h1 className="text-xl font-semibold text-white">{restaurant.name}</h1>
+                <h1 className="text-xl font-semibold text-foreground">{restaurant.name}</h1>
               </div>
             </div>
             
@@ -136,7 +129,7 @@ export function DashboardLayout({
                 <LinkIcon className="h-4 w-4 mr-2" />
                 Copiar Link
               </Button>
-              <Button variant="secondary" size="sm" onClick={openLink} className="bg-white/20 hover:bg-white/30 text-white border border-white/30">
+              <Button variant="outline" size="sm" onClick={openLink}>
                 Ver Cardápio
               </Button>
             </div>
@@ -190,11 +183,7 @@ export function DashboardLayout({
             
             {activeSection === "dashboard" && <SalesDashboard restaurant={restaurant} />}
             {activeSection === "orders" && <OrdersKanban restaurant={restaurant} />}
-            {activeSection === "categories" && <CategoryManager restaurant={restaurant} />}
-            {activeSection === "products" && <ProductManager restaurant={restaurant} />}
-            {activeSection === "addons" && <AddonManager restaurant={restaurant} />}
             {activeSection === "delivery" && <DeliveryZoneManager restaurant={restaurant} />}
-            {activeSection === "payment" && <PaymentMethodsManager restaurant={restaurant} />}
             {activeSection === "marketing" && (
               <div className="bg-card rounded-lg p-6">
                 <h2 className="text-2xl font-bold mb-6 text-foreground">Marketing</h2>
@@ -220,12 +209,6 @@ export function DashboardLayout({
                   </div>
                 </div>
               </div>
-            )}
-            {activeSection === "settings" && (
-              <RestaurantSettings 
-                restaurant={restaurant} 
-                onUpdate={onRestaurantUpdate} 
-              />
             )}
           </div>
         </main>
@@ -306,27 +289,24 @@ function AppSidebar({
   const handleMenuClick = (item: any) => {
     if (item.value === "orders") {
       navigate("/admin/orders");
+    } else if (item.value === "settings") {
+      navigate("/admin/settings");
     } else {
       onSectionChange(item.value);
     }
   };
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarContent>
-        {/* Main Menu */}
+    <Sidebar collapsible="none" className="w-20 border-r">
+      <SidebarContent className="p-2">
         <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center gap-2">
-            <Store className="h-4 w-4" />
-            {!collapsed && <span>Menu</span>}
-          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {mainMenuItems.map((item) => (
+            <SidebarMenu className="space-y-2">
+              {menuItems.map((item) => (
                 <SidebarMenuItem key={item.value}>
                   <SidebarMenuButton
                     onClick={() => handleMenuClick(item)}
-                    className={
+                    className={`flex flex-col items-center justify-center h-16 w-full rounded-lg gap-1 p-2 ${
                       item.isGreen
                         ? activeSection === item.value
                           ? "bg-green-600 text-white hover:bg-green-700"
@@ -334,37 +314,10 @@ function AppSidebar({
                         : activeSection === item.value
                           ? "bg-accent text-accent-foreground"
                           : "hover:bg-accent/50"
-                    }
+                    }`}
                   >
-                    <item.icon className="h-4 w-4" />
-                    {!collapsed && <span>{item.title}</span>}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Settings Menu */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            {!collapsed && <span>Ajustes</span>}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {settingsMenuItems.map((item) => (
-                <SidebarMenuItem key={item.value}>
-                  <SidebarMenuButton
-                    onClick={() => handleMenuClick(item)}
-                    className={
-                      activeSection === item.value
-                        ? "bg-accent text-accent-foreground"
-                        : "hover:bg-accent/50"
-                    }
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {!collapsed && <span>{item.title}</span>}
+                    <item.icon className="h-5 w-5" />
+                    <span className="text-xs font-medium">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -373,25 +326,24 @@ function AppSidebar({
         </SidebarGroup>
 
         {/* WhatsApp Robot Button */}
-        <div className="px-4 pb-4">
+        <div className="px-2 pb-4">
           <Button 
             onClick={onWhatsAppClick}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg flex items-center justify-start gap-3"
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-2 rounded-lg flex flex-col items-center justify-center gap-1 h-16"
           >
-            <MessageCircle className="h-4 w-4" />
-            {!collapsed && <span>Robô de WhatsApp</span>}
+            <MessageCircle className="h-5 w-5" />
+            <span className="text-xs">WhatsApp</span>
           </Button>
         </div>
 
-        <div className="mt-auto p-4">
+        <div className="mt-auto p-2">
           <Button 
             variant="ghost" 
-            size="sm" 
             onClick={onLogout}
-            className="w-full justify-start"
+            className="w-full flex flex-col items-center justify-center gap-1 h-16 rounded-lg"
           >
-            <LogOut className="h-4 w-4" />
-            {!collapsed && <span className="ml-2">Sair</span>}
+            <LogOut className="h-5 w-5" />
+            <span className="text-xs">Sair</span>
           </Button>
         </div>
       </SidebarContent>
