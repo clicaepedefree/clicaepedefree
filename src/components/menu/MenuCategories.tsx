@@ -40,7 +40,7 @@ export function MenuCategories({
         if (categoryProducts.length === 0) return null;
 
         return (
-          <div key={category.id} className="space-y-4">
+          <div key={category.id} id={`category-${category.id}`} className="space-y-4 scroll-mt-20">
             <h2 className="text-2xl font-bold border-b pb-2">{category.name}</h2>
             
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

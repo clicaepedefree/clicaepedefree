@@ -1,7 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
 import { numberToCurrency } from "@/components/ui/currency-input";
 
 interface Product {
@@ -23,75 +21,45 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, cart, onProductClick, onRemoveFromCart }: ProductCardProps) {
-  const productInCart = Object.entries(cart).find(([key]) => key.startsWith(product.id));
   const totalQuantity = Object.entries(cart)
     .filter(([key]) => key.startsWith(product.id))
     .reduce((sum, [, item]) => sum + item.quantity, 0);
 
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-4">
-        <div className="flex gap-3">
-          <div className="flex-1 space-y-2">
-            <h3 className="font-semibold text-lg">{product.name}</h3>
-            {product.description && (
-              <p className="text-muted-foreground text-sm">{product.description}</p>
+    <Card 
+      className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={() => onProductClick(product)}
+    >
+      <CardContent className="p-0">
+        {product.image_url && (
+          <div className="relative w-full h-48 md:h-56">
+            <img
+              src={product.image_url}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+            {totalQuantity > 0 && (
+              <Badge 
+                variant="default" 
+                className="absolute top-2 right-2 bg-primary text-primary-foreground shadow-lg"
+              >
+                {totalQuantity}
+              </Badge>
             )}
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <span className="text-lg font-bold">
-                  R$ {numberToCurrency(product.price)}
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                {productInCart ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const cartKey = Object.keys(cart).find(key => key.startsWith(product.id));
-                        if (cartKey) onRemoveFromCart(cartKey);
-                      }}
-                    >
-                      -
-                    </Button>
-                    <Badge variant="secondary">
-                      {totalQuantity}
-                    </Badge>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onProductClick(product)}
-                    >
-                      +
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onProductClick(product)}
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-1" />
-                    Adicionar
-                  </Button>
-                )}
-              </div>
-            </div>
           </div>
-          
-          {product.image_url && (
-            <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
-              <img
-                src={product.image_url}
-                alt={product.name}
-                className="w-full h-full object-cover rounded-md"
-              />
-            </div>
+        )}
+        
+        <div className="p-4 space-y-2">
+          <h3 className="font-semibold text-lg">{product.name}</h3>
+          {product.description && (
+            <p className="text-muted-foreground text-sm line-clamp-2">{product.description}</p>
           )}
+          
+          <div className="pt-2">
+            <span className="text-xl font-bold text-primary">
+              R$ {numberToCurrency(product.price)}
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>

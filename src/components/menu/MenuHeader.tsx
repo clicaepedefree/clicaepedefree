@@ -6,7 +6,7 @@ interface MenuHeaderProps {
 
 export function MenuHeader({ restaurantName, logoUrl, bannerUrl }: MenuHeaderProps) {
   return (
-    <div className="bg-primary text-primary-foreground">
+    <div className="bg-background">
       {bannerUrl && (
         <div className="w-full h-32 md:h-48 overflow-hidden">
           <img 
@@ -17,23 +17,20 @@ export function MenuHeader({ restaurantName, logoUrl, bannerUrl }: MenuHeaderPro
         </div>
       )}
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center gap-4 md:gap-6">
-          {logoUrl && (
-            <div className="flex-shrink-0">
-              <img 
-                src={logoUrl} 
-                alt="Logo do restaurante" 
-                className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border-2 border-primary-foreground/20"
-              />
-            </div>
-          )}
-          
-          <div className="text-center md:text-left">
-            <h1 className="text-2xl md:text-4xl font-bold mb-2">{restaurantName}</h1>
-            <p className="text-primary-foreground/80">Cardápio Digital</p>
+      <div className="container mx-auto px-4 py-6 flex flex-col items-center">
+        {logoUrl && (
+          <div className="mb-4">
+            <img 
+              src={logoUrl} 
+              alt="Logo do restaurante" 
+              className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-full border-4 border-border shadow-lg"
+            />
           </div>
-        </div>
+        )}
+        
+        <h1 className="text-2xl md:text-3xl font-bold text-center" style={{ color: '#000000' }}>
+          {restaurantName}
+        </h1>
       </div>
     </div>
   );

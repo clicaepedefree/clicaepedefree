@@ -6,6 +6,7 @@ import { MenuLoadingState } from "@/components/menu/MenuLoadingState";
 import { MenuNotFound } from "@/components/menu/MenuNotFound";
 import { OrderConfirmationModal } from "@/components/menu/OrderConfirmationModal";
 import { ProductAddonSelector } from "@/components/menu/ProductAddonSelector";
+import { CategoryMenu } from "@/components/menu/CategoryMenu";
 import { useCart } from "@/hooks/useCart";
 import { useMenuData } from "@/hooks/useMenuData";
 import { useState } from "react";
@@ -59,6 +60,8 @@ export default function Menu() {
         logoUrl={restaurant.logo_url}
         bannerUrl={restaurant.banner_url}
       />
+
+      {categories.length > 0 && <CategoryMenu categories={categories} />}
 
       <div className="container mx-auto px-4 py-8">
         {/* Restaurant Status Alert */}
