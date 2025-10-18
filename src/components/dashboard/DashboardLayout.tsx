@@ -297,8 +297,17 @@ function AppSidebar({
   };
 
   return (
-    <Sidebar collapsible="none" className="w-20 border-r">
+    <Sidebar collapsible="none" className="w-[100px] border-r">
       <SidebarContent className="p-2">
+        {/* Logo */}
+        <div className="flex items-center justify-center py-4 mb-2">
+          <img 
+            src="/lovable-uploads/df0ab910-5641-4faf-b0dc-3743be76338e.png" 
+            alt="Logo" 
+            className="h-10 w-auto"
+          />
+        </div>
+        
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
@@ -329,10 +338,10 @@ function AppSidebar({
         <div className="px-2 pb-4">
           <Button 
             onClick={onWhatsAppClick}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-2 rounded-lg flex flex-col items-center justify-center gap-1 h-16"
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-2 rounded-lg flex flex-col items-center justify-center gap-0.5 h-16"
           >
             <MessageCircle className="h-5 w-5" />
-            <span className="text-xs">WhatsApp</span>
+            <span className="text-xs leading-tight text-center">Robô de<br />WhatsApp</span>
           </Button>
         </div>
 
