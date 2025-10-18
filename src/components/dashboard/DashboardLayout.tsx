@@ -60,7 +60,6 @@ interface DashboardLayoutProps {
 const menuItems = [
   { title: "Financeiro", value: "dashboard", icon: BarChart3 },
   { title: "Pedidos", value: "orders", icon: ShoppingCart },
-  { title: "Entrega", value: "delivery", icon: MapPin },
   { title: "Marketing", value: "marketing", icon: Send, isGreen: true },
   { title: "Ajustes", value: "settings", icon: Settings },
 ];
@@ -118,10 +117,7 @@ export function DashboardLayout({
           <header className="h-16 border-b bg-background flex items-center justify-between px-6">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <div className="flex items-center gap-3">
-                <img src="/lovable-uploads/df0ab910-5641-4faf-b0dc-3743be76338e.png" alt="Cardápio Grátis Logo" className="h-8" />
-                <h1 className="text-xl font-semibold text-foreground">{restaurant.name}</h1>
-              </div>
+              <h1 className="text-xl font-semibold text-foreground">{restaurant.name}</h1>
             </div>
             
             <div className="flex items-center gap-2">
@@ -183,7 +179,6 @@ export function DashboardLayout({
             
             {activeSection === "dashboard" && <SalesDashboard restaurant={restaurant} />}
             {activeSection === "orders" && <OrdersKanban restaurant={restaurant} />}
-            {activeSection === "delivery" && <DeliveryZoneManager restaurant={restaurant} />}
             {activeSection === "marketing" && (
               <div className="bg-card rounded-lg p-6">
                 <h2 className="text-2xl font-bold mb-6 text-foreground">Marketing</h2>
