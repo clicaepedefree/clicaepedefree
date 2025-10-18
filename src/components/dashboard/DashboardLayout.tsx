@@ -57,15 +57,18 @@ interface DashboardLayoutProps {
   onSectionChange?: (section: string) => void;
 }
 
-const menuItems = [
-  { title: "Dashboard", value: "dashboard", icon: Home },
+const mainMenuItems = [
+  { title: "Financeiro", value: "dashboard", icon: BarChart3 },
   { title: "Pedidos", value: "orders", icon: ShoppingCart },
+  { title: "Zonas de Entrega", value: "delivery", icon: MapPin },
+  { title: "Marketing", value: "marketing", icon: Send, isGreen: true },
+];
+
+const settingsMenuItems = [
   { title: "Cardápio", value: "products", icon: ChefHat },
   { title: "Categorias", value: "categories", icon: List },
   { title: "Adicionais", value: "addons", icon: Plus },
-  { title: "Zonas de Entrega", value: "delivery", icon: MapPin },
   { title: "Pagamento", value: "payment", icon: CreditCard },
-  { title: "Marketing", value: "marketing", icon: Send, isGreen: true },
   { title: "Configurações", value: "settings", icon: Settings },
 ];
 
@@ -311,14 +314,15 @@ function AppSidebar({
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
+        {/* Main Menu */}
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center gap-2">
             <Store className="h-4 w-4" />
-            {!collapsed && <span>Painel</span>}
+            {!collapsed && <span>Menu</span>}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {mainMenuItems.map((item) => (
                 <SidebarMenuItem key={item.value}>
                   <SidebarMenuButton
                     onClick={() => handleMenuClick(item)}
@@ -330,6 +334,33 @@ function AppSidebar({
                         : activeSection === item.value
                           ? "bg-accent text-accent-foreground"
                           : "hover:bg-accent/50"
+                    }
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {!collapsed && <span>{item.title}</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Settings Menu */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            {!collapsed && <span>Ajustes</span>}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {settingsMenuItems.map((item) => (
+                <SidebarMenuItem key={item.value}>
+                  <SidebarMenuButton
+                    onClick={() => handleMenuClick(item)}
+                    className={
+                      activeSection === item.value
+                        ? "bg-accent text-accent-foreground"
+                        : "hover:bg-accent/50"
                     }
                   >
                     <item.icon className="h-4 w-4" />
