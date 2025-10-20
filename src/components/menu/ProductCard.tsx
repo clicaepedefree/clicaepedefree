@@ -31,36 +31,35 @@ export function ProductCard({ product, cart, onProductClick, onRemoveFromCart }:
       className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
       onClick={() => onProductClick(product)}
     >
-      <CardContent className="p-0">
-        {product.image_url && (
-          <div className="relative w-full h-48 md:h-56">
-            <img
-              src={product.image_url}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-            {totalQuantity > 0 && (
-              <Badge 
-                variant="default" 
-                className="absolute top-2 right-2 bg-primary text-primary-foreground shadow-lg"
-              >
-                {totalQuantity}
-              </Badge>
+      <CardContent className="p-4">
+        <div className="flex gap-3 items-start">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base mb-1">{product.name}</h3>
+            {product.description && (
+              <p className="text-muted-foreground text-xs line-clamp-2 mb-2">{product.description}</p>
             )}
-          </div>
-        )}
-        
-        <div className="p-4 space-y-2">
-          <h3 className="font-semibold text-lg">{product.name}</h3>
-          {product.description && (
-            <p className="text-muted-foreground text-sm line-clamp-2">{product.description}</p>
-          )}
-          
-          <div className="pt-2">
-            <span className="text-xl font-bold text-primary">
+            <span className="text-lg font-bold text-primary">
               R$ {numberToCurrency(product.price)}
             </span>
           </div>
+          
+          {product.image_url && (
+            <div className="relative w-20 h-20 flex-shrink-0">
+              <img
+                src={product.image_url}
+                alt={product.name}
+                className="w-full h-full object-cover rounded-lg"
+              />
+              {totalQuantity > 0 && (
+                <Badge 
+                  variant="default" 
+                  className="absolute -top-2 -right-2 bg-primary text-primary-foreground shadow-lg min-w-[24px] h-6 flex items-center justify-center"
+                >
+                  {totalQuantity}
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
