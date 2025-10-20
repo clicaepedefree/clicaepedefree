@@ -29,6 +29,7 @@ interface Product {
   category_id: string;
   image_url?: string;
   is_active: boolean;
+  is_featured?: boolean;
   display_order: number;
   created_at: string;
   updated_at: string;
@@ -326,6 +327,29 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
     }
   };
 
+  const toggleProductFeatured = async (productId: string, isFeatured: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ is_featured: isFeatured })
+        .eq('id', productId);
+
+      if (error) throw error;
+      
+      fetchProducts();
+      toast({
+        title: "Destaque atualizado",
+        description: `Produto ${isFeatured ? 'adicionado aos' : 'removido dos'} destaques`
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar destaque",
+        description: "Não foi possível atualizar o destaque do produto",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getCategoryName = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId);
     return category?.name || "Categoria não encontrada";
@@ -562,6 +586,7 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
                   <TableHead>Categoria</TableHead>
                   <TableHead>Preço</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Destaque</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -588,6 +613,12 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
                       <Badge variant={product.is_active ? "default" : "secondary"}>
                         {product.is_active ? "Ativo" : "Inativo"}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={product.is_featured || false}
+                        onCheckedChange={(checked) => toggleProductFeatured(product.id, checked)}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">

@@ -10,6 +10,7 @@ interface Product {
   category_id: string;
   image_url?: string;
   is_active: boolean;
+  is_featured?: boolean;
   display_order: number;
 }
 

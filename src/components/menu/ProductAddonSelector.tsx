@@ -230,12 +230,25 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg">{product.name}</DialogTitle>
-          <DialogDescription>
-            Personalize seu produto escolhendo os adicionais
-          </DialogDescription>
+          <div className="flex gap-4 items-start">
+            <div className="flex-1">
+              <DialogTitle className="text-lg">{product.name}</DialogTitle>
+              <DialogDescription>
+                Personalize seu produto escolhendo os adicionais
+              </DialogDescription>
+            </div>
+            {product.image_url && (
+              <div className="w-24 h-24 flex-shrink-0">
+                <img
+                  src={product.image_url}
+                  alt={product.name}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+            )}
+          </div>
         </DialogHeader>
 
         {loading ? (

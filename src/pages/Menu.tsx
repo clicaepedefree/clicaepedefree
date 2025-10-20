@@ -7,6 +7,7 @@ import { MenuNotFound } from "@/components/menu/MenuNotFound";
 import { OrderConfirmationModal } from "@/components/menu/OrderConfirmationModal";
 import { ProductAddonSelector } from "@/components/menu/ProductAddonSelector";
 import { CategoryMenu } from "@/components/menu/CategoryMenu";
+import { FeaturedProducts } from "@/components/menu/FeaturedProducts";
 import { useCart } from "@/hooks/useCart";
 import { useMenuData } from "@/hooks/useMenuData";
 import { useState } from "react";
@@ -22,6 +23,7 @@ interface Product {
   category_id: string;
   image_url?: string;
   is_active: boolean;
+  is_featured?: boolean;
   display_order: number;
 }
 
@@ -59,6 +61,8 @@ export default function Menu() {
         restaurantName={restaurant.name} 
         logoUrl={restaurant.logo_url}
         bannerUrl={restaurant.banner_url}
+        whatsapp={restaurant.whatsapp}
+        isOpen={restaurant.is_open}
       />
 
       {categories.length > 0 && <CategoryMenu categories={categories} />}
@@ -86,13 +90,21 @@ export default function Menu() {
         {categories.length === 0 ? (
           <MenuEmptyState />
         ) : (
-          <MenuCategories
-            categories={categories}
-            getProductsByCategory={getProductsByCategory}
-            cart={cart}
-            onProductClick={handleProductClick}
-            onRemoveFromCart={removeFromCart}
-          />
+          <>
+            <FeaturedProducts
+              products={products}
+              cart={cart}
+              onProductClick={handleProductClick}
+            />
+            
+            <MenuCategories
+              categories={categories}
+              getProductsByCategory={getProductsByCategory}
+              cart={cart}
+              onProductClick={handleProductClick}
+              onRemoveFromCart={removeFromCart}
+            />
+          </>
         )}
       </div>
 
