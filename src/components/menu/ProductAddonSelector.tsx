@@ -232,15 +232,6 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
     }).filter(Boolean);
   };
 
-  if (addonGroups.length === 0 && !loading) {
-    // Se não há addons, adicionar diretamente
-    if (open) {
-      onAddToCart(product, [], product.price);
-      onOpenChange(false);
-    }
-    return null;
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0 flex flex-col">
