@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { DollarSign, Plus } from "lucide-react";
 import { numberToCurrency } from "@/components/ui/currency-input";
 
@@ -46,10 +47,14 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
   const [addonOptions, setAddonOptions] = useState<AddonOption[]>([]);
   const [selectedAddons, setSelectedAddons] = useState<{ [groupId: string]: string[] }>({});
   const [loading, setLoading] = useState(true);
+  const [quantity, setQuantity] = useState(1);
+  const [observations, setObservations] = useState("");
 
   useEffect(() => {
     if (open && product) {
       fetchProductAddons();
+      setQuantity(1);
+      setObservations("");
     }
   }, [open, product]);
 
@@ -207,7 +212,15 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
       )
       .filter(item => item.option && item.group);
 
-    onAddToCart(product, selectedAddonItems, calculateTotalPrice());
+    const unitPrice = calculateTotalPrice();
+    
+    // Add to cart multiple times based on quantity
+    for (let i = 0; i < quantity; i++) {
+      onAddToCart(product, selectedAddonItems, unitPrice);
+    }
+    
+    setQuantity(1);
+    setObservations("");
     onOpenChange(false);
   };
 
@@ -230,151 +243,169 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex gap-4 items-start">
-            <div className="flex-1">
-              <DialogTitle className="text-lg">{product.name}</DialogTitle>
-              <DialogDescription>
-                Personalize seu produto escolhendo os adicionais
-              </DialogDescription>
-            </div>
-            {product.image_url && (
-              <div className="w-24 h-24 flex-shrink-0">
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              </div>
-            )}
-          </div>
-        </DialogHeader>
-
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0 flex flex-col">
         {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-sm text-muted-foreground">Carregando opções...</p>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Preço base */}
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Preço base:</span>
-                  <div className="flex items-center">
-                    <span className="font-bold">R$ {numberToCurrency(product.price)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <>
+            <div className="overflow-y-auto flex-1 p-6">
+              <DialogHeader className="text-center mb-4">
+                <DialogTitle className="text-sm font-normal text-muted-foreground uppercase">
+                  DETALHES DO ITEM
+                </DialogTitle>
+              </DialogHeader>
 
-            {/* Grupos de addon */}
-            {addonGroups.map((group) => (
-              <div key={group.id} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium">{group.name}</h4>
-                  <div className="flex gap-1">
-                    {group.is_required && (
-                      <Badge variant="destructive" className="text-xs">Obrigatório</Badge>
-                    )}
-                    <Badge variant="outline" className="text-xs">
-                      {group.selection_type === 'single' 
-                        ? 'Escolha 1' 
-                        : group.selection_type === 'fractional_highest'
-                        ? 'Fracionado (maior valor)'
-                        : group.selection_type === 'fractional_average'
-                        ? 'Fracionado (média)'
-                        : `${group.min_selections}-${group.max_selections || '∞'} escolhas`
-                      }
-                    </Badge>
-                  </div>
+              {product.image_url && (
+                <div className="w-full mb-4">
+                  <img 
+                    src={product.image_url} 
+                    alt={product.name}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  {group.selection_type === 'single' ? (
-                    <RadioGroup
-                      value={selectedAddons[group.id]?.[0] || ""}
-                      onValueChange={(value) => handleOptionChange(group.id, value, group)}
-                    >
-                      {getOptionsForGroup(group.id).map((option) => (
-                        <div key={option.id} className="flex items-center justify-between p-2 border rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value={option.id} id={option.id} />
-                            <Label htmlFor={option.id} className="font-normal cursor-pointer">
-                              {option.name}
-                            </Label>
-                          </div>
-                          {option.price > 0 && (
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <Plus className="h-3 w-3 mr-1" />
-                              R$ {numberToCurrency(option.price)}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  ) : (
-                    <div className="space-y-2">
-                      {getOptionsForGroup(group.id).map((option) => (
-                        <div key={option.id} className="flex items-center justify-between p-2 border rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id={option.id}
-                              checked={selectedAddons[group.id]?.includes(option.id) || false}
-                              onCheckedChange={() => handleOptionChange(group.id, option.id, group)}
-                              disabled={
-                                !selectedAddons[group.id]?.includes(option.id) &&
-                                group.max_selections &&
-                                (selectedAddons[group.id]?.length || 0) >= group.max_selections
-                              }
-                            />
-                            <Label htmlFor={option.id} className="font-normal cursor-pointer">
-                              {option.name}
-                            </Label>
-                          </div>
-                          {option.price > 0 && (
-                            <div className="flex items-center text-sm text-muted-foreground">
-                              <Plus className="h-3 w-3 mr-1" />
-                              R$ {numberToCurrency(option.price)}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+              <h2 className="text-2xl font-bold mb-2">{product.name}</h2>
+              <p className="text-xl font-bold text-primary mb-4">
+                R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
 
-            {/* Total e botão */}
-            <div className="border-t pt-4">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-medium">Total:</span>
-                <div className="flex items-center text-lg font-bold">
-                  R$ {calculateTotalPrice().toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })}
-                </div>
-              </div>
-              
-              <Button 
-                onClick={handleAddToCart}
-                disabled={!isValidSelection()}
-                className="w-full"
-              >
-                Adicionar ao Carrinho
-              </Button>
-              
-              {!isValidSelection() && (
-                <p className="text-sm text-destructive text-center mt-2">
-                  Verifique as seleções obrigatórias e limites de cada grupo
+              {product.description && (
+                <p className="text-sm text-muted-foreground mb-6">
+                  {product.description}
                 </p>
               )}
+
+              <div className="space-y-6">
+                {addonGroups.map((group) => {
+                  const options = getOptionsForGroup(group.id);
+                  if (options.length === 0) return null;
+
+                  return (
+                    <div key={group.id} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold">
+                          {group.name}
+                          {group.is_required && (
+                            <span className="text-destructive ml-1">*</span>
+                          )}
+                        </h3>
+                        {(group.selection_type === 'multiple' || group.selection_type === 'fractional_highest' || group.selection_type === 'fractional_average') && (
+                          <span className="text-xs text-muted-foreground">
+                            {group.min_selections && group.max_selections
+                              ? `Selecione entre ${group.min_selections} e ${group.max_selections}`
+                              : group.min_selections
+                              ? `Selecione no mínimo ${group.min_selections}`
+                              : group.max_selections
+                              ? `Selecione no máximo ${group.max_selections}`
+                              : 'Múltipla escolha'}
+                          </span>
+                        )}
+                      </div>
+
+                      {group.selection_type === 'single' ? (
+                        <RadioGroup
+                          value={selectedAddons[group.id]?.[0] || ''}
+                          onValueChange={(value) => handleOptionChange(group.id, value, group)}
+                        >
+                          {options.map((option) => (
+                            <div key={option.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent">
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value={option.id} id={option.id} />
+                                <Label htmlFor={option.id} className="cursor-pointer">
+                                  {option.name}
+                                </Label>
+                              </div>
+                              {option.price > 0 && (
+                                <span className="text-sm font-medium">
+                                  + R$ {option.price.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      ) : (
+                        <div className="space-y-2">
+                          {options.map((option) => (
+                            <div key={option.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={option.id}
+                                  checked={selectedAddons[group.id]?.includes(option.id) || false}
+                                  onCheckedChange={() => handleOptionChange(group.id, option.id, group)}
+                                  disabled={
+                                    !selectedAddons[group.id]?.includes(option.id) &&
+                                    group.max_selections &&
+                                    (selectedAddons[group.id]?.length || 0) >= group.max_selections
+                                  }
+                                />
+                                <Label htmlFor={option.id} className="cursor-pointer">
+                                  {option.name}
+                                </Label>
+                              </div>
+                              {option.price > 0 && (
+                                <span className="text-sm font-medium">
+                                  + R$ {option.price.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6">
+                <Label htmlFor="observations" className="font-semibold mb-2 block">
+                  Observações
+                </Label>
+                <Textarea
+                  id="observations"
+                  placeholder="Adicione sua observação aqui"
+                  value={observations}
+                  onChange={(e) => setObservations(e.target.value)}
+                  className="min-h-[100px] resize-none"
+                />
+              </div>
             </div>
-          </div>
+
+            <div className="border-t bg-background p-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="h-10 w-10"
+                >
+                  -
+                </Button>
+                <span className="w-12 text-center font-medium">{quantity}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="h-10 w-10"
+                >
+                  +
+                </Button>
+              </div>
+
+              <Button
+                onClick={handleAddToCart}
+                disabled={!isValidSelection()}
+                className="flex-1 h-12 text-base font-semibold bg-[#4BA3C3] hover:bg-[#3d8aa8] text-white"
+              >
+                Adicionar R$ {(calculateTotalPrice() * quantity).toLocaleString('pt-BR', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                })}
+              </Button>
+            </div>
+          </>
         )}
       </DialogContent>
     </Dialog>

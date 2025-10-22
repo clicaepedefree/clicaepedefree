@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
 
@@ -20,30 +19,33 @@ export function CartSummary({ cartItemsCount, cartTotal, onOpenConfirmation, res
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t p-4 shadow-lg">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Badge variant="secondary" className="text-lg px-3 py-1">
-              {cartItemsCount} {cartItemsCount === 1 ? 'item' : 'itens'}
-            </Badge>
-            <div className="text-lg font-bold">
-              Total: R$ {cartTotal.toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 shadow-lg">
+        <div className="container mx-auto flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">Total sem entrega</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold">
+                R$ {cartTotal.toLocaleString('pt-BR', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                • {cartItemsCount} {cartItemsCount === 1 ? 'item' : 'itens'}
+              </span>
             </div>
           </div>
           
           <Button 
             onClick={onOpenConfirmation} 
             disabled={isRestaurantUnavailable}
-            className="flex items-center space-x-2"
+            className="flex items-center gap-2 bg-[#4BA3C3] hover:bg-[#3d8aa8] text-white px-6 h-12 text-base font-semibold"
           >
-            <ShoppingCart className="h-4 w-4" />
+            <ShoppingCart className="h-5 w-5" />
             <span>
               {isRestaurantUnavailable 
                 ? (restaurantStatus?.is_blocked ? "Loja Bloqueada" : "Loja Fechada")
-                : "Confirmar Pedido"
+                : "Ver sacola"
               }
             </span>
           </Button>
@@ -51,7 +53,7 @@ export function CartSummary({ cartItemsCount, cartTotal, onOpenConfirmation, res
       </div>
       
       {/* Padding para o carrinho fixo */}
-      <div className="h-20"></div>
+      <div className="h-24"></div>
     </>
   );
 }
