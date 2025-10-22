@@ -183,14 +183,15 @@ export function OrderConfirmationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg sm:max-w-2xl max-h-[85vh] sm:max-h-[80vh] overflow-y-auto mx-4">
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl font-bold">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl h-[90vh] sm:h-auto sm:max-h-[85vh] p-0 gap-0 flex flex-col">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 border-b sticky top-0 bg-background z-10">
+          <DialogTitle className="text-base sm:text-xl font-bold">
             Confirmar Pedido - {restaurant?.name}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+          <div className="space-y-4">
         {cartEntries.map(([cartKey, item]) => {
           // O productId é toda a parte antes do último hífen que precede o JSON dos addons
           const lastHyphenIndex = cartKey.lastIndexOf('-[');
@@ -269,225 +270,237 @@ export function OrderConfirmationModal({
               </div>
             );
           })}
-        </div>
-
-        <Separator />
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span>Subtotal:</span>
-              <span>R$ {numberToCurrency(getCartTotal())}</span>
-            </div>
-            {orderType === 'delivery' && selectedDeliveryZone && (
-              <div className="flex justify-between items-center">
-                <span>Taxa de entrega ({selectedDeliveryZone.neighborhood}):</span>
-                <span>R$ {numberToCurrency(deliveryFee)}</span>
-              </div>
-            )}
-            <div className="flex justify-between items-center text-xl font-bold border-t pt-2">
-              <span>Total:</span>
-              <span>R$ {numberToCurrency(totalWithDelivery)}</span>
-            </div>
           </div>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Truck className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold">Tipo de Pedido</h3>
-            </div>
-            
-            <RadioGroup 
-              value={orderType} 
-              onValueChange={(value) => setOrderType(value as 'delivery' | 'pickup')}
-              className="flex flex-col space-y-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="delivery" id="delivery" />
-                <Label htmlFor="delivery" className="flex items-center space-x-2">
-                  <Truck className="h-4 w-4" />
-                  <span>Entrega</span>
-                </Label>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-sm sm:text-base">
+                <span>Subtotal:</span>
+                <span>R$ {numberToCurrency(getCartTotal())}</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="pickup" id="pickup" />
-                <Label htmlFor="pickup" className="flex items-center space-x-2">
-                  <ShoppingBag className="h-4 w-4" />
-                  <span>Retirada</span>
-                </Label>
+              {orderType === 'delivery' && selectedDeliveryZone && (
+                <div className="flex justify-between items-center text-sm sm:text-base">
+                  <span className="text-xs sm:text-sm">Taxa de entrega ({selectedDeliveryZone.neighborhood}):</span>
+                  <span>R$ {numberToCurrency(deliveryFee)}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-lg sm:text-xl font-bold border-t pt-2">
+                <span>Total:</span>
+                <span>R$ {numberToCurrency(totalWithDelivery)}</span>
               </div>
-            </RadioGroup>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <MapPin className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold">
-                {orderType === 'delivery' ? 'Endereço de Entrega' : 'Dados para Contato'}
-              </h3>
             </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div>
-                <Label htmlFor="name">Nome *</Label>
-                <Input
-                  id="name"
-                  placeholder="Seu nome"
-                  value={deliveryAddress.name}
-                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, name: e.target.value }))}
-                />
+
+            <Separator className="my-4" />
+
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <h3 className="text-base sm:text-lg font-semibold">Tipo de Pedido</h3>
               </div>
               
-              <div>
-                <Label htmlFor="phone">Telefone *</Label>
-                <Input
-                  id="phone"
-                  placeholder="(11) 99999-9999"
-                  value={deliveryAddress.phone}
-                  onChange={(e) => setDeliveryAddress(prev => ({ ...prev, phone: e.target.value }))}
-                />
+              <RadioGroup 
+                value={orderType} 
+                onValueChange={(value) => setOrderType(value as 'delivery' | 'pickup')}
+                className="flex flex-col space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="delivery" id="delivery" />
+                  <Label htmlFor="delivery" className="flex items-center space-x-2 text-sm sm:text-base">
+                    <Truck className="h-4 w-4" />
+                    <span>Entrega</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="pickup" id="pickup" />
+                  <Label htmlFor="pickup" className="flex items-center space-x-2 text-sm sm:text-base">
+                    <ShoppingBag className="h-4 w-4" />
+                    <span>Retirada</span>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <Separator className="my-4" />
+
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <h3 className="text-base sm:text-lg font-semibold">
+                  {orderType === 'delivery' ? 'Endereço de Entrega' : 'Dados para Contato'}
+                </h3>
               </div>
               
-              {orderType === 'delivery' && (
-                <>
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="street">Endereço *</Label>
-                    <Input
-                      id="street"
-                      placeholder="Rua, Avenida..."
-                      value={deliveryAddress.street}
-                      onChange={(e) => setDeliveryAddress(prev => ({ ...prev, street: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="number">Número *</Label>
-                    <Input
-                      id="number"
-                      placeholder="123"
-                      value={deliveryAddress.number}
-                      onChange={(e) => setDeliveryAddress(prev => ({ ...prev, number: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="complement">Complemento</Label>
-                    <Input
-                      id="complement"
-                      placeholder="Apto, Bloco, Sala..."
-                      value={deliveryAddress.complement}
-                      onChange={(e) => setDeliveryAddress(prev => ({ ...prev, complement: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="deliveryZone">Bairro / Zona de Entrega *</Label>
-                    {deliveryZones.length > 0 ? (
-                      <Select value={deliveryAddress.deliveryZoneId} onValueChange={handleDeliveryZoneChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione seu bairro" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {deliveryZones.map((zone) => (
-                            <SelectItem key={zone.id} value={zone.id}>
-                              {zone.neighborhood} - R$ {numberToCurrency(zone.delivery_fee)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="name" className="text-sm">Nome *</Label>
+                  <Input
+                    id="name"
+                    placeholder="Seu nome"
+                    value={deliveryAddress.name}
+                    onChange={(e) => setDeliveryAddress(prev => ({ ...prev, name: e.target.value }))}
+                    className="h-10"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="phone" className="text-sm">Telefone *</Label>
+                  <Input
+                    id="phone"
+                    placeholder="(11) 99999-9999"
+                    value={deliveryAddress.phone}
+                    onChange={(e) => setDeliveryAddress(prev => ({ ...prev, phone: e.target.value }))}
+                    className="h-10"
+                  />
+                </div>
+              
+                {orderType === 'delivery' && (
+                  <>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="street" className="text-sm">Endereço *</Label>
                       <Input
-                        id="neighborhood"
-                        placeholder="Nome do bairro"
-                        value={deliveryAddress.neighborhood}
-                        onChange={(e) => setDeliveryAddress(prev => ({ ...prev, neighborhood: e.target.value }))}
+                        id="street"
+                        placeholder="Rua, Avenida..."
+                        value={deliveryAddress.street}
+                        onChange={(e) => setDeliveryAddress(prev => ({ ...prev, street: e.target.value }))}
+                        className="h-10"
                       />
-                    )}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="number" className="text-sm">Número *</Label>
+                      <Input
+                        id="number"
+                        placeholder="123"
+                        value={deliveryAddress.number}
+                        onChange={(e) => setDeliveryAddress(prev => ({ ...prev, number: e.target.value }))}
+                        className="h-10"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="complement" className="text-sm">Complemento</Label>
+                      <Input
+                        id="complement"
+                        placeholder="Apto, Bloco, Sala..."
+                        value={deliveryAddress.complement}
+                        onChange={(e) => setDeliveryAddress(prev => ({ ...prev, complement: e.target.value }))}
+                        className="h-10"
+                      />
+                    </div>
+                    
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="deliveryZone" className="text-sm">Bairro / Zona de Entrega *</Label>
+                      {deliveryZones.length > 0 ? (
+                        <Select value={deliveryAddress.deliveryZoneId} onValueChange={handleDeliveryZoneChange}>
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder="Selecione seu bairro" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {deliveryZones.map((zone) => (
+                              <SelectItem key={zone.id} value={zone.id}>
+                                {zone.neighborhood} - R$ {numberToCurrency(zone.delivery_fee)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="neighborhood"
+                          placeholder="Nome do bairro"
+                          value={deliveryAddress.neighborhood}
+                          onChange={(e) => setDeliveryAddress(prev => ({ ...prev, neighborhood: e.target.value }))}
+                          className="h-10"
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <Separator className="my-4" />
+
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <h3 className="text-base sm:text-lg font-semibold">Forma de Pagamento</h3>
+              </div>
+              
+              <RadioGroup 
+                value={paymentMethod.type} 
+                onValueChange={(value) => setPaymentMethod({ type: value as PaymentMethod['type'] })}
+                className="space-y-2"
+              >
+                {availablePaymentMethods.map((method) => (
+                  <div key={method.method_type} className="flex items-center space-x-2">
+                    <RadioGroupItem value={method.method_type} id={method.method_type} />
+                    <Label htmlFor={method.method_type} className="text-sm sm:text-base">
+                      {method.method_type === 'cash' && 'Dinheiro'}
+                      {method.method_type === 'card' && 'Cartão'}
+                      {method.method_type === 'pix' && 'PIX'}
+                    </Label>
                   </div>
-                </>
+                ))}
+              </RadioGroup>
+              
+              {paymentMethod.type === 'cash' && (
+                <div className="ml-6">
+                  <Label htmlFor="change" className="text-sm">Troco para (opcional)</Label>
+                  <Input
+                    id="change"
+                    type="number"
+                    placeholder="50.00"
+                    value={changeAmount}
+                    onChange={(e) => setChangeAmount(e.target.value)}
+                    className="w-full sm:w-32 h-10"
+                  />
+                </div>
+              )}
+
+              {paymentMethod.type === 'pix' && restaurantPixKey && (
+                <div className="mt-3 p-3 sm:p-4 bg-muted rounded-lg">
+                  <Label className="text-xs sm:text-sm font-medium">Chave PIX para pagamento:</Label>
+                  <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-background p-2 sm:p-3 rounded border">
+                    <span className="text-xs sm:text-sm font-mono break-all">{restaurantPixKey}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(restaurantPixKey);
+                      }}
+                      className="shrink-0"
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Copie a chave PIX acima e faça o pagamento no seu aplicativo bancário.
+                  </p>
+                </div>
               )}
             </div>
           </div>
+        </div>
 
-          <Separator />
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <CreditCard className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold">Forma de Pagamento</h3>
-            </div>
-            
-            <RadioGroup 
-              value={paymentMethod.type} 
-              onValueChange={(value) => setPaymentMethod({ type: value as PaymentMethod['type'] })}
-            >
-              {availablePaymentMethods.map((method) => (
-                <div key={method.method_type} className="flex items-center space-x-2">
-                  <RadioGroupItem value={method.method_type} id={method.method_type} />
-                  <Label htmlFor={method.method_type}>
-                    {method.method_type === 'cash' && 'Dinheiro'}
-                    {method.method_type === 'card' && 'Cartão'}
-                    {method.method_type === 'pix' && 'PIX'}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-            
-            {paymentMethod.type === 'cash' && (
-              <div className="ml-6">
-                <Label htmlFor="change">Troco para (opcional)</Label>
-                <Input
-                  id="change"
-                  type="number"
-                  placeholder="50.00"
-                  value={changeAmount}
-                  onChange={(e) => setChangeAmount(e.target.value)}
-                  className="w-32"
-                />
-              </div>
-            )}
-
-            {paymentMethod.type === 'pix' && restaurantPixKey && (
-              <div className="mt-3 p-4 bg-muted rounded-lg">
-                <Label className="text-sm font-medium">Chave PIX para pagamento:</Label>
-                <div className="mt-2 flex items-center justify-between bg-background p-3 rounded border">
-                  <span className="text-sm font-mono break-all">{restaurantPixKey}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(restaurantPixKey);
-                    }}
-                  >
-                    Copiar
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Copie a chave PIX acima e faça o pagamento no seu aplicativo bancário.
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="flex space-x-3">
+        <div className="border-t px-4 sm:px-6 py-3 sm:py-4 bg-background sticky bottom-0">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
-              className="flex-1"
+              className="flex-1 h-10 sm:h-11 text-sm sm:text-base"
             >
               Continuar Comprando
             </Button>
             <Button 
               onClick={handleSendOrder}
-              className="flex-1 flex items-center space-x-2"
+              className="flex-1 h-10 sm:h-11 flex items-center justify-center gap-2 bg-[#4BA3C3] hover:bg-[#3d8aa8] text-white text-sm sm:text-base"
               disabled={cartEntries.length === 0 || !isAddressValid}
             >
               <Phone className="h-4 w-4" />
-              <span>Enviar para WhatsApp</span>
+              <span className="hidden sm:inline">Enviar para WhatsApp</span>
+              <span className="sm:hidden">Enviar Pedido</span>
               <ExternalLink className="h-4 w-4" />
             </Button>
           </div>
