@@ -8,28 +8,28 @@ import {
 export function FAQSection() {
   const faqs = [
     {
-      question: "O cardápio é realmente gratuito para sempre?",
-      answer: "Sim! É 100% gratuito até R$2.000 em vendas mensais. Se ultrapassar esse valor, você paga apenas R$29,90 no mês que passar. Não cobramos taxas de configuração ou comissões sobre vendas. Você pode usar todas as funcionalidades livremente."
+      question: "💬 O Cardápio Fácil tem fidelidade?",
+      answer: "Não. Você pode cancelar quando quiser, sem multas ou taxas. Não há período mínimo de contrato."
     },
     {
-      question: "Funciona no celular simples?", 
-      answer: "Sim! Nosso cardápio funciona em qualquer dispositivo com acesso à internet: celulares básicos, smartphones, tablets e computadores. A interface é responsiva e se adapta a qualquer tamanho de tela."
+      question: "💰 Tem comissão por pedido?",
+      answer: "Nenhuma! Valor fixo mensal de R$ 29,90. Você não paga nada além disso, independente de quantos pedidos receber. Todo o lucro é seu."
     },
     {
-      question: "Quantos produtos posso cadastrar?",
-      answer: "Não existe limite de produtos! Você pode cadastrar quantos produtos, categorias e adicionais precisar. Nossa plataforma suporta desde pequenos estabelecimentos até grandes redes."
+      question: "🧾 Funciona com qualquer impressora?",
+      answer: "Sim! O sistema funciona com impressoras térmicas (80mm) e impressoras comuns. A impressão é automática e você pode configurar o que deseja imprimir."
     },
     {
-      question: "Consigo receber pedido com adicionais?",
-      answer: "Sim! Seus clientes podem personalizar pedidos escolhendo adicionais, observações especiais e quantidades. Tudo é formatado automaticamente e enviado para o seu WhatsApp de forma organizada."
+      question: "💻 Precisa instalar aplicativo?",
+      answer: "Não! É 100% online e acessível pelo navegador. Você gerencia tudo pelo computador, tablet ou celular sem instalar nada."
     },
     {
-      question: "Precisa instalar algum app?",
-      answer: "Não precisa instalar nada! Você acessa o painel administrativo direto pelo seu navegador (Chrome, Safari, Firefox, etc.). Seus clientes também acessam o cardápio pelo navegador do celular."
+      question: "🎁 Posso testar antes de pagar?",
+      answer: "Claro! 7 dias grátis para testar tudo. Não pedimos cartão de crédito no cadastro. Só começa a pagar se decidir continuar."
     },
     {
-      question: "Como recebo os pedidos?",
-      answer: "Os pedidos chegam automaticamente no seu WhatsApp com todas as informações organizadas: produtos escolhidos, adicionais, quantidade, valor total, endereço de entrega e forma de pagamento. Tudo pronto para você processar!"
+      question: "📱 Como meus clientes fazem pedidos?",
+      answer: "Você compartilha o link do seu cardápio. Eles acessam, escolhem produtos, adicionam extras e finalizam. O pedido chega automaticamente no seu WhatsApp formatado e pronto."
     }
   ];
 

@@ -5,40 +5,40 @@ import { Star } from "lucide-react";
 export function TestimonialsSection() {
   const testimonials = [
     {
-      name: "Ana",
-      business: "Pizzaria da Vila",
-      avatar: "A",
-      text: "Muito fácil de usar. Meus clientes adoraram e eu não pago nada por isso!",
+      name: "João Silva",
+      business: "Pizzaria do Zé",
+      avatar: "JS",
+      text: "Organizei meus pedidos e nunca mais perdi cliente! O sistema é simples e o suporte é excelente.",
       rating: 5
     },
     {
-      name: "Rhuan",
-      business: "Espaço Vip",
-      avatar: "R",
-      text: "Estava me perdendo com as anotações, esse cardápio me salvou!",
+      name: "Ana Costa",
+      business: "Burguer City",
+      avatar: "AC",
+      text: "Vale cada centavo. Agora controlo tudo e vendo mais. O melhor é que não tem comissão por pedido!",
       rating: 5
     },
     {
-      name: "Carlos",
-      business: "Burguer House",
-      avatar: "C",
-      text: "Aumento de 40% nos pedidos depois que comecei a usar. Recomendo!",
+      name: "Rafael Santos",
+      business: "Lanches da Vila",
+      avatar: "RS",
+      text: "Os pedidos chegam no WhatsApp com todos os detalhes. Perfeito! Economizei muito tempo.",
       rating: 5
     }
   ];
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <div className="bg-green-50 p-2 rounded-lg inline-block mb-4">
-            <span className="text-green-600 font-medium text-sm">💬 Depoimentos</span>
+          <div className="bg-yellow-50 p-2 rounded-lg inline-block mb-4">
+            <span className="text-yellow-600 font-medium text-sm">⭐ Quem usa, recomenda!</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            O que nossos clientes dizem
+            Mais de 1.000 restaurantes confiam no Cardápio Fácil
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Depoimentos reais de restaurantes que já estão vendendo mais com nosso cardápio digital
+            Veja o que nossos clientes têm a dizer sobre o sistema
           </p>
         </div>
         

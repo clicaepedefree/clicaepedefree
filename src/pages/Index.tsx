@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { HeroSection } from "@/components/home/HeroSection";
-import { FeaturesSection } from "@/components/home/FeaturesSection";
+import { BenefitsSection } from "@/components/home/BenefitsSection";
+import { HowItWorksSection } from "@/components/home/HowItWorksSection";
+import { PricingSection } from "@/components/home/PricingSection";
 import { TestimonialsSection } from "@/components/home/TestimonialsSection";
+import { SEOSection } from "@/components/home/SEOSection";
 import { FAQSection } from "@/components/home/FAQSection";
 import { CTASection } from "@/components/home/CTASection";
 import { Footer } from "@/components/layout/Footer";
@@ -30,8 +33,11 @@ const Index = () => {
     <div className="min-h-screen">
       <Navbar />
       <HeroSection />
-      <FeaturesSection />
+      <BenefitsSection />
+      <HowItWorksSection />
+      <PricingSection />
       <TestimonialsSection />
+      <SEOSection />
       <FAQSection />
       <CTASection />
       <Footer />
