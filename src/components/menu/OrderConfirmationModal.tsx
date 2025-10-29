@@ -484,7 +484,7 @@ export function OrderConfirmationModal({
           </div>
         </div>
 
-        <div className="border-t px-4 sm:px-6 py-3 sm:py-4 bg-background sticky bottom-0">
+        <div className="border-t px-4 sm:px-6 py-3 sm:py-4 bg-background mt-auto">
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button 
               variant="outline" 
