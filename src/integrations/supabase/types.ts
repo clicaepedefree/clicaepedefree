@@ -62,6 +62,7 @@ export type Database = {
         Row: {
           addon_group_id: string
           created_at: string
+          description: string | null
           id: string
           name: string
           price: number | null
@@ -69,6 +70,7 @@ export type Database = {
         Insert: {
           addon_group_id: string
           created_at?: string
+          description?: string | null
           id?: string
           name: string
           price?: number | null
@@ -76,6 +78,7 @@ export type Database = {
         Update: {
           addon_group_id?: string
           created_at?: string
+          description?: string | null
           id?: string
           name?: string
           price?: number | null
@@ -161,7 +164,7 @@ export type Database = {
           accessed_by: string | null
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           order_id: string
           user_agent: string | null
         }
@@ -170,7 +173,7 @@ export type Database = {
           accessed_by?: string | null
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           order_id: string
           user_agent?: string | null
         }
@@ -179,7 +182,7 @@ export type Database = {
           accessed_by?: string | null
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           order_id?: string
           user_agent?: string | null
         }
@@ -498,10 +501,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      anonymize_old_orders: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      anonymize_old_orders: { Args: never; Returns: number }
       authenticate_super_admin: {
         Args: { admin_email: string; admin_password: string }
         Returns: {
@@ -510,24 +510,30 @@ export type Database = {
           success: boolean
         }[]
       }
-      check_revenue_limits: {
-        Args: { target_time?: string } | { target_time?: string; tz?: string }
-        Returns: number
-      }
+      check_revenue_limits:
+        | { Args: { target_time?: string }; Returns: number }
+        | { Args: { target_time?: string; tz?: string }; Returns: number }
       generate_unique_slug: {
         Args: { restaurant_name: string }
         Returns: string
       }
-      get_monthly_revenue: {
-        Args:
-          | {
+      get_monthly_revenue:
+        | {
+            Args: {
+              restaurant_id_param: string
+              target_time?: string
+              tz?: string
+            }
+            Returns: number
+          }
+        | {
+            Args: {
               restaurant_id_param: string
               target_month?: number
               target_year?: number
             }
-          | { restaurant_id_param: string; target_time?: string; tz?: string }
-        Returns: number
-      }
+            Returns: number
+          }
       get_public_restaurant_by_slug: {
         Args: { slug_input: string }
         Returns: {
@@ -541,7 +547,7 @@ export type Database = {
         }[]
       }
       get_restaurants_with_emails: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           banner_url: string
           created_at: string
@@ -568,10 +574,9 @@ export type Database = {
         }
         Returns: Json
       }
-      update_monthly_revenues: {
-        Args: Record<PropertyKey, never> | { target_time?: string; tz?: string }
-        Returns: number
-      }
+      update_monthly_revenues:
+        | { Args: never; Returns: number }
+        | { Args: { target_time?: string; tz?: string }; Returns: number }
       user_owns_order_restaurant: {
         Args: { order_id: string }
         Returns: boolean
