@@ -24,6 +24,7 @@ interface AddonOption {
   id: string;
   addon_group_id: string;
   name: string;
+  description?: string;
   price: number;
 }
 
@@ -303,11 +304,18 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                         >
                           {options.map((option) => (
                             <div key={option.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent">
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-2 flex-1">
                                 <RadioGroupItem value={option.id} id={option.id} />
-                                <Label htmlFor={option.id} className="cursor-pointer">
-                                  {option.name}
-                                </Label>
+                                <div className="flex-1">
+                                  <Label htmlFor={option.id} className="cursor-pointer">
+                                    {option.name}
+                                  </Label>
+                                  {option.description && (
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                      {option.description}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                               {option.price > 0 && (
                                 <span className="text-sm font-medium">
@@ -321,7 +329,7 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                         <div className="space-y-2">
                           {options.map((option) => (
                             <div key={option.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent">
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-2 flex-1">
                                 <Checkbox
                                   id={option.id}
                                   checked={selectedAddons[group.id]?.includes(option.id) || false}
@@ -332,9 +340,16 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                                     (selectedAddons[group.id]?.length || 0) >= group.max_selections
                                   }
                                 />
-                                <Label htmlFor={option.id} className="cursor-pointer">
-                                  {option.name}
-                                </Label>
+                                <div className="flex-1">
+                                  <Label htmlFor={option.id} className="cursor-pointer">
+                                    {option.name}
+                                  </Label>
+                                  {option.description && (
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                      {option.description}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                               {option.price > 0 && (
                                 <span className="text-sm font-medium">
