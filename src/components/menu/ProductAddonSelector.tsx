@@ -74,14 +74,17 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
             selection_type,
             is_required,
             min_selections,
-            max_selections
+            max_selections,
+            created_at
           )
         `)
         .eq('product_id', product.id);
 
       if (groupsError) throw groupsError;
 
-      const groups = productAddonGroups?.map(pag => pag.addon_groups).flat() || [];
+      // Ordenar grupos por ordem de criação
+      const groups = (productAddonGroups?.map(pag => pag.addon_groups).flat() || [])
+        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       setAddonGroups(groups);
 
       if (groups.length > 0) {
