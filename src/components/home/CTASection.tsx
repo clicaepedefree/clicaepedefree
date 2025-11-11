@@ -21,7 +21,7 @@ export function CTASection() {
           </h2>
           
           <p className="text-xl text-white/90 mb-4 leading-relaxed max-w-3xl mx-auto">
-            Comece agora por apenas <strong className="text-2xl">R$ 29,90/mês</strong> e transforme a forma como você recebe pedidos.
+            Comece agora <strong className="text-2xl">grátis até 100 pedidos/mês</strong> e transforme a forma como você recebe pedidos. Depois apenas R$ 29,90/mês.
           </p>
           
           <p className="text-lg text-white/80 mb-10">
@@ -50,8 +50,8 @@ export function CTASection() {
               <div className="text-white/80 text-sm">Restaurantes ativos</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-white mb-2">R$ 29,90</div>
-              <div className="text-white/80 text-sm">Por mês sem comissão</div>
+              <div className="text-3xl font-bold text-white mb-2">Grátis</div>
+              <div className="text-white/80 text-sm">Até 100 pedidos/mês</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-white mb-2">5 min</div>

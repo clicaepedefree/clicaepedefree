@@ -29,7 +29,7 @@ export function HeroSection() {
               </p>
               
               <p className="text-2xl font-bold text-blue-600 mb-8">
-                Apenas R$ 29,90/mês, sem taxas e sem comissão.
+                Grátis até 100 pedidos/mês. Depois apenas R$ 29,90/mês, sem taxas e sem comissão.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
@@ -104,7 +104,7 @@ export function HeroSection() {
                 Automático!
               </div>
               <div className="absolute -bottom-4 -left-4 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg font-bold text-sm">
-                R$ 29,90/mês
+                Grátis até 100/mês
               </div>
             </div>
           </div>

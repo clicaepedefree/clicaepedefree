@@ -258,9 +258,10 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
             </div>
 
             <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg">
-              <h3 className="font-semibold mb-2">Plano Premium - R$ 34,90/mês</h3>
+              <h3 className="font-semibold mb-2">Plano Atual - Grátis até 100 pedidos/mês</h3>
               <ul className="text-sm space-y-1">
-                <li>✅ Vendas ilimitadas</li>
+                <li>✅ Grátis até 100 pedidos mensais</li>
+                <li>✅ Após 100 pedidos: apenas R$ 29,90/mês</li>
                 <li>✅ Suporte prioritário</li>
                 <li>✅ Relatórios avançados</li>
                 <li>✅ Sem limites de faturamento</li>

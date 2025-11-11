@@ -33,11 +33,11 @@ export function PricingSection() {
           </div>
           
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            R$ 29,90/mês — sem taxas, sem comissão
+            Grátis até 100 pedidos/mês — depois R$ 29,90/mês
           </h2>
           
           <p className="text-xl text-white/90 max-w-3xl mx-auto">
-            Esqueça os apps que cobram comissão por pedido. No Cardápio Fácil, você paga um valor fixo e lucra 100% das suas vendas.
+            Esqueça os apps que cobram comissão por pedido. No Cardápio Fácil, você recebe até 100 pedidos grátis por mês e depois paga apenas R$ 29,90 — sem taxas, sem comissão, lucro 100% seu.
           </p>
         </div>
 
@@ -45,11 +45,11 @@ export function PricingSection() {
           <Card className="bg-white shadow-2xl border-0 overflow-hidden">
             <CardContent className="p-8 md:p-12">
               <div className="text-center mb-8">
-                <div className="text-6xl font-bold text-blue-600 mb-2">
-                  R$ 29,90
-                  <span className="text-2xl text-gray-500 font-normal">/mês</span>
+                <div className="text-6xl font-bold text-green-600 mb-2">
+                  Grátis
+                  <span className="text-2xl text-gray-500 font-normal"> até 100 pedidos/mês</span>
                 </div>
-                <p className="text-gray-600">Valor fixo mensal</p>
+                <p className="text-gray-600">Depois R$ 29,90/mês — valor fixo</p>
                 
                 <div className="mt-6 inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
                   🎁 7 dias de teste grátis

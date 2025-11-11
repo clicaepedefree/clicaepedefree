@@ -13,7 +13,7 @@ export function FAQSection() {
     },
     {
       question: "💰 Tem comissão por pedido?",
-      answer: "Nenhuma! Valor fixo mensal de R$ 29,90. Você não paga nada além disso, independente de quantos pedidos receber. Todo o lucro é seu."
+      answer: "Nenhuma! É grátis até 100 pedidos por mês. Após isso, apenas R$ 29,90/mês fixo. Você não paga nada além disso, independente de quantos pedidos receber. Todo o lucro é seu."
     },
     {
       question: "🧾 Funciona com qualquer impressora?",
