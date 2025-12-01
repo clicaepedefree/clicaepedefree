@@ -66,13 +66,51 @@ serve(async (req) => {
       errors: [] as any[],
     };
 
-    // Criar negócio para cada restaurante
+    // Criar organização e negócio para cada restaurante
     for (const restaurant of restaurants || []) {
       try {
         console.log(`Processing restaurant: ${restaurant.name}`);
 
-        const description = `
-**Restaurante Existente - Importação**
+        // Primeiro, criar uma organização para o restaurante
+        const organizationData = {
+          name: restaurant.name,
+          cnpj: restaurant.tax_id?.replace(/\D/g, ''), // Remove formatação
+          description: `Restaurante cadastrado via Cardápio Fácil`,
+          contact: {
+            email: restaurant.user_email,
+            whatsapp: restaurant.whatsapp,
+          },
+          allowToAllUsers: true,
+        };
+
+        console.log(`Creating organization for: ${restaurant.name}`);
+
+        const orgResponse = await fetch(`${AGENDOR_API_URL}/organizations`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Token ${AGENDOR_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(organizationData),
+        });
+
+        if (!orgResponse.ok) {
+          const orgError = await orgResponse.text();
+          console.error(`Error creating organization for ${restaurant.name}:`, orgError);
+          results.errors.push({
+            restaurant: restaurant.name,
+            error: `Failed to create organization: ${orgError}`,
+          });
+          continue; // Pula para o próximo restaurante
+        }
+
+        const orgResult = await orgResponse.json();
+        const organizationId = orgResult.data?.id;
+
+        console.log(`Organization created: ${organizationId}`);
+
+        // Agora criar o deal associado à organização
+        const dealDescription = `**Restaurante Existente - Importação**
 
 Nome do Restaurante: ${restaurant.name}
 Responsável: ${restaurant.responsible_name || 'Não informado'}
@@ -87,17 +125,20 @@ Faturamento Mensal Atual: R$ ${Number(restaurant.monthly_revenue || 0).toFixed(2
 Status: ${restaurant.is_open ? 'Aberto' : 'Fechado'}
 ${restaurant.is_blocked ? '⚠️ Bloqueado' : ''}
 
-Sincronizado via Cardápio Fácil
-        `.trim();
+Sincronizado via Cardápio Fácil`;
 
         const dealData = {
           title: `${restaurant.name} - Importação`,
-          description: description,
+          description: dealDescription,
           funnel: negociosFunnel.id,
           value: Number(restaurant.monthly_revenue || 0),
+          ranking: 3,
+          allowToAllUsers: true,
         };
 
-        const dealResponse = await fetch(`${AGENDOR_API_URL}/deals`, {
+        console.log(`Creating deal for organization: ${organizationId}`);
+
+        const dealResponse = await fetch(`${AGENDOR_API_URL}/organizations/${organizationId}/deals`, {
           method: 'POST',
           headers: {
             'Authorization': `Token ${AGENDOR_API_KEY}`,
