@@ -1,1 +1,4 @@
 project_id = "llfpytyqalbogadhdnzu"
+
+[functions.create-agendor-deal]
+verify_jwt = false
