@@ -25,9 +25,43 @@ serve(async (req) => {
       slug 
     } = await req.json();
 
-    console.log('Creating Agendor deal for:', restaurantName);
+    console.log('Creating Agendor organization and deal for:', restaurantName);
 
-    // Primeiro, vamos buscar o funnel ID do funil "Negócios"
+    // Primeiro, criar uma organização para o restaurante
+    const organizationData = {
+      name: restaurantName,
+      cnpj: taxId?.replace(/\D/g, ''), // Remove formatação
+      description: `Restaurante cadastrado via Cardápio Fácil`,
+      contact: {
+        email: email,
+        whatsapp: whatsapp,
+      },
+      allowToAllUsers: true,
+    };
+
+    console.log('Creating organization with data:', organizationData);
+
+    const orgResponse = await fetch(`${AGENDOR_API_URL}/organizations`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${AGENDOR_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(organizationData),
+    });
+
+    if (!orgResponse.ok) {
+      const orgError = await orgResponse.text();
+      console.error('Error creating organization:', orgError);
+      throw new Error(`Failed to create organization: ${orgError}`);
+    }
+
+    const orgResult = await orgResponse.json();
+    const organizationId = orgResult.data?.id;
+    
+    console.log('Organization created successfully:', organizationId);
+
+    // Agora buscar o funil "Negócios"
     const funnelsResponse = await fetch(`${AGENDOR_API_URL}/funnels`, {
       method: 'GET',
       headers: {
@@ -45,7 +79,6 @@ serve(async (req) => {
     const funnelsData = await funnelsResponse.json();
     console.log('Available funnels:', funnelsData);
 
-    // Procurar pelo funil "Negócios" (case insensitive)
     const negociosFunnel = funnelsData.data?.find(
       (funnel: any) => funnel.name?.toLowerCase() === 'negócios' || funnel.name?.toLowerCase() === 'negocios'
     );
@@ -57,9 +90,8 @@ serve(async (req) => {
 
     console.log('Found "Negócios" funnel:', negociosFunnel);
 
-    // Criar descrição com todos os dados
-    const description = `
-**Novo Restaurante Cadastrado**
+    // Criar o negócio associado à organização
+    const dealDescription = `**Novo Restaurante Cadastrado**
 
 Nome do Restaurante: ${restaurantName}
 Responsável: ${responsibleName}
@@ -68,22 +100,19 @@ WhatsApp: ${whatsapp}
 Email: ${email}
 Slug (URL): ${slug}
 
-Cadastro realizado via Cardápio Fácil
-    `.trim();
+Cadastro realizado via Cardápio Fácil`;
 
-    // Criar o negócio no Agendor
     const dealData = {
       title: `${restaurantName} - Novo Cadastro`,
-      description: description,
+      description: dealDescription,
       funnel: negociosFunnel.id,
-      // Opcionalmente, podemos adicionar mais campos:
-      // value: 29.90, // Valor do negócio
-      // ranking: 3, // Ranking/probabilidade (1-5)
+      ranking: 3,
+      allowToAllUsers: true,
     };
 
-    console.log('Creating deal with data:', dealData);
+    console.log('Creating deal for organization:', organizationId);
 
-    const dealResponse = await fetch(`${AGENDOR_API_URL}/deals`, {
+    const dealResponse = await fetch(`${AGENDOR_API_URL}/organizations/${organizationId}/deals`, {
       method: 'POST',
       headers: {
         'Authorization': `Token ${AGENDOR_API_KEY}`,
