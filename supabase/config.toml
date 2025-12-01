@@ -2,3 +2,6 @@ project_id = "llfpytyqalbogadhdnzu"
 
 [functions.create-agendor-deal]
 verify_jwt = false
+
+[functions.sync-all-agendor-deals]
+verify_jwt = false
