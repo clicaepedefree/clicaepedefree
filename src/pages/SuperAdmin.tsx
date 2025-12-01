@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Phone, Mail, Calendar, LogOut, Shield, DollarSign, Lock, Unlock, TrendingUp } from "lucide-react";
+import { Building2, Users, Phone, Mail, Calendar, LogOut, Shield, DollarSign, Lock, Unlock, TrendingUp, CloudUpload } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -32,6 +32,7 @@ interface RestaurantWithEmail {
 const SuperAdmin = () => {
   const [restaurants, setRestaurants] = useState<RestaurantWithEmail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncingAgendor, setSyncingAgendor] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isAuthenticated, session, loading: authLoading, logout } = useSuperAdmin();
@@ -183,6 +184,36 @@ const SuperAdmin = () => {
     navigate('/super-admin/auth');
   };
 
+  const handleSyncAgendor = async () => {
+    setSyncingAgendor(true);
+    try {
+      console.log('Starting Agendor sync...');
+      
+      const { data, error } = await supabase.functions.invoke('sync-all-agendor-deals');
+      
+      if (error) {
+        console.error('Error syncing with Agendor:', error);
+        throw error;
+      }
+
+      console.log('Agendor sync result:', data);
+
+      toast({
+        title: "Sincronização concluída!",
+        description: `${data.synced} negócios criados no Agendor${data.failed > 0 ? ` (${data.failed} falharam)` : ''}`,
+      });
+    } catch (error: any) {
+      console.error('Error:', error);
+      toast({
+        title: "Erro na sincronização",
+        description: error.message || "Erro ao sincronizar com Agendor",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncingAgendor(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -216,6 +247,16 @@ const SuperAdmin = () => {
               <Shield className="h-4 w-4" />
               <span>Logado como: {session?.email}</span>
             </div>
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={handleSyncAgendor}
+              disabled={syncingAgendor}
+              className="flex items-center gap-2"
+            >
+              <CloudUpload className="h-4 w-4" />
+              {syncingAgendor ? "Sincronizando..." : "Sincronizar Agendor"}
+            </Button>
             <Button 
               variant="outline" 
               size="sm" 
