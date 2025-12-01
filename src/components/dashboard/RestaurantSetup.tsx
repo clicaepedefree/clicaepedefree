@@ -117,6 +117,29 @@ export function RestaurantSetup({ user, onRestaurantCreated }: RestaurantSetupPr
 
       if (error) throw error;
 
+      // Criar negócio no Agendor (não-bloqueante)
+      supabase.functions
+        .invoke('create-agendor-deal', {
+          body: {
+            restaurantName,
+            responsibleName,
+            taxId: cleanedTaxId,
+            whatsapp: cleanedWhats,
+            email: user.email,
+            slug: slugData
+          }
+        })
+        .then(({ data: agendorData, error: agendorError }) => {
+          if (agendorError) {
+            console.error('Erro ao criar negócio no Agendor:', agendorError);
+          } else {
+            console.log('Negócio criado no Agendor:', agendorData);
+          }
+        })
+        .catch((err) => {
+          console.error('Erro na chamada ao Agendor:', err);
+        });
+
       toast({
         title: "Restaurante criado com sucesso!",
         description: `Seu link público: ${window.location.origin}/cardapio/${data.slug}`,
