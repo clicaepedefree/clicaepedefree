@@ -9,6 +9,41 @@ const corsHeaders = {
 const AGENDOR_API_KEY = Deno.env.get('AGENDOR_API_KEY');
 const AGENDOR_API_URL = 'https://api.agendor.com.br/v3';
 
+// Função para validar se é um CNPJ válido (14 dígitos numéricos)
+function isValidCNPJ(taxId: string | null | undefined): boolean {
+  if (!taxId) return false;
+  const digits = taxId.replace(/\D/g, '');
+  return digits.length === 14;
+}
+
+// Função para buscar organização existente pelo nome
+async function findOrganizationByName(name: string): Promise<number | null> {
+  try {
+    const response = await fetch(`${AGENDOR_API_URL}/organizations?nameExact=${encodeURIComponent(name)}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${AGENDOR_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.log('Error searching organization:', await response.text());
+      return null;
+    }
+
+    const data = await response.json();
+    if (data.data && data.data.length > 0) {
+      console.log(`Found existing organization: ${data.data[0].id}`);
+      return data.data[0].id;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error searching organization:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -27,39 +62,57 @@ serve(async (req) => {
 
     console.log('Creating Agendor organization and deal for:', restaurantName);
 
-    // Primeiro, criar uma organização para o restaurante
-    const organizationData = {
-      name: restaurantName,
-      cnpj: taxId?.replace(/\D/g, ''), // Remove formatação
-      description: `Restaurante cadastrado via Cardápio Fácil`,
-      contact: {
-        email: email,
-        whatsapp: whatsapp,
-      },
-      allowToAllUsers: true,
-    };
+    // Primeiro, verificar se já existe uma organização com esse nome
+    let organizationId = await findOrganizationByName(restaurantName);
 
-    console.log('Creating organization with data:', organizationData);
+    if (!organizationId) {
+      // Criar nova organização
+      const organizationData: any = {
+        name: restaurantName,
+        description: `Restaurante cadastrado via Cardápio Fácil`,
+        contact: {
+          email: email,
+          whatsapp: whatsapp,
+        },
+        allowToAllUsers: true,
+      };
 
-    const orgResponse = await fetch(`${AGENDOR_API_URL}/organizations`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Token ${AGENDOR_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(organizationData),
-    });
+      // Só adiciona CNPJ se for válido (14 dígitos)
+      if (isValidCNPJ(taxId)) {
+        organizationData.cnpj = taxId.replace(/\D/g, '');
+      }
 
-    if (!orgResponse.ok) {
-      const orgError = await orgResponse.text();
-      console.error('Error creating organization:', orgError);
-      throw new Error(`Failed to create organization: ${orgError}`);
+      console.log('Creating organization with data:', organizationData);
+
+      const orgResponse = await fetch(`${AGENDOR_API_URL}/organizations`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${AGENDOR_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(organizationData),
+      });
+
+      if (!orgResponse.ok) {
+        const orgError = await orgResponse.text();
+        console.error('Error creating organization:', orgError);
+        
+        // Se o erro for "Name has already been taken", tenta buscar novamente
+        if (orgError.includes('Name has already been taken')) {
+          console.log('Organization exists, trying to find by name...');
+          organizationId = await findOrganizationByName(restaurantName);
+        }
+        
+        if (!organizationId) {
+          throw new Error(`Failed to create organization: ${orgError}`);
+        }
+      } else {
+        const orgResult = await orgResponse.json();
+        organizationId = orgResult.data?.id;
+      }
     }
-
-    const orgResult = await orgResponse.json();
-    const organizationId = orgResult.data?.id;
     
-    console.log('Organization created successfully:', organizationId);
+    console.log('Organization ID:', organizationId);
 
     // Agora buscar o funil "Negócios"
     const funnelsResponse = await fetch(`${AGENDOR_API_URL}/funnels`, {
