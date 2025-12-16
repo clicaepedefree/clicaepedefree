@@ -521,16 +521,16 @@ export type Database = {
         | {
             Args: {
               restaurant_id_param: string
-              target_time?: string
-              tz?: string
+              target_month?: number
+              target_year?: number
             }
             Returns: number
           }
         | {
             Args: {
               restaurant_id_param: string
-              target_month?: number
-              target_year?: number
+              target_time?: string
+              tz?: string
             }
             Returns: number
           }

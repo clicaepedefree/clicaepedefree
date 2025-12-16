@@ -67,7 +67,7 @@ export function HowItWorksSection() {
             asChild
           >
             <Link to="/criar-conta">
-              Quero testar agora por 7 dias
+              COMECE AGORA GRÁTIS
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
