@@ -25,7 +25,7 @@ export function FAQSection() {
     },
     {
       question: "🎁 Posso testar antes de pagar?",
-      answer: "Claro! 7 dias grátis para testar tudo. Não pedimos cartão de crédito no cadastro. Só começa a pagar se decidir continuar."
+      answer: "Claro! Você tem até 100 pedidos grátis por mês para testar tudo. Não pedimos cartão de crédito no cadastro. Só começa a pagar se passar dos 100 pedidos."
     },
     {
       question: "📱 Como meus clientes fazem pedidos?",

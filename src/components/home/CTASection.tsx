@@ -25,13 +25,13 @@ export function CTASection() {
           </p>
           
           <p className="text-lg text-white/80 mb-10">
-            ✓ Sem comissão por pedido • ✓ Sem fidelidade • ✓ 7 dias de teste grátis
+            ✓ Sem comissão por pedido • ✓ Sem fidelidade • ✓ Grátis até 100 pedidos/mês
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-10">
             <Button variant="default" size="lg" className="text-lg px-10 py-6 bg-white text-green-600 hover:bg-gray-50 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300" asChild>
               <Link to="/criar-conta">
-                💚 Criar meu cardápio agora — 7 dias grátis
+                💚 COMECE AGORA GRÁTIS
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>

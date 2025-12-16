@@ -15,10 +15,6 @@ export function HeroSection() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Content */}
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium mb-6 animate-pulse">
-                🚀 Teste 7 dias grátis
-              </div>
-              
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-gray-900">
                 Seu restaurante vendendo mais com o{" "}
                 <span className="text-blue-600">Cardápio Fácil</span> 🍔
@@ -35,7 +31,7 @@ export function HeroSection() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
                 <Button variant="default" size="lg" className="text-lg px-10 py-6 bg-green-600 hover:bg-green-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all" asChild>
                   <Link to="/criar-conta">
-                    💚 Comece agora — 7 dias grátis
+                    💚 COMECE AGORA GRÁTIS
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -104,7 +100,7 @@ export function HeroSection() {
                 Automático!
               </div>
               <div className="absolute -bottom-4 -left-4 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg font-bold text-sm">
-                Grátis até 100/mês
+                Grátis até 100 pedidos/mês
               </div>
             </div>
           </div>

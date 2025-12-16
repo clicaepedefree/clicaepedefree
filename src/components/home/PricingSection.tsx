@@ -52,7 +52,7 @@ export function PricingSection() {
                 <p className="text-gray-600">Depois R$ 29,90/mês — valor fixo</p>
                 
                 <div className="mt-6 inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
-                  🎁 7 dias de teste grátis
+                  🎁 Grátis até 100 pedidos/mês
                 </div>
               </div>
 
@@ -88,7 +88,7 @@ export function PricingSection() {
                 asChild
               >
                 <Link to="/criar-conta">
-                  💚 Quero começar agora — 7 dias grátis
+                  💚 COMECE AGORA GRÁTIS
                 </Link>
               </Button>
 
