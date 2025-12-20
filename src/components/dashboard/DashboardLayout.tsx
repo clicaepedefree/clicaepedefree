@@ -60,6 +60,7 @@ interface DashboardLayoutProps {
 const menuItems = [
   { title: "Financeiro", value: "dashboard", icon: BarChart3 },
   { title: "Pedidos", value: "orders", icon: ShoppingCart },
+  { title: "Relatórios", value: "analytics", icon: ChefHat },
   { title: "Marketing", value: "marketing", icon: Send, isGreen: true },
   { title: "Ajustes", value: "settings", icon: Settings },
 ];
@@ -286,6 +287,8 @@ function AppSidebar({
       navigate("/admin/orders");
     } else if (item.value === "settings") {
       navigate("/admin/settings");
+    } else if (item.value === "analytics") {
+      navigate("/admin/analytics");
     } else {
       onSectionChange(item.value);
     }

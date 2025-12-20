@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Orders from "./pages/Orders";
 import Settings from "./pages/Settings";
+import Analytics from "./pages/Analytics";
 import SuperAdmin from "./pages/SuperAdmin";
 import SuperAdminAuth from "./pages/SuperAdminAuth";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/admin" element={<Dashboard />} />
           <Route path="/admin/orders" element={<Orders />} />
           <Route path="/admin/settings" element={<Settings />} />
+          <Route path="/admin/analytics" element={<Analytics />} />
           <Route path="/super-admin" element={<SuperAdmin />} />
           <Route path="/super-admin/auth" element={<SuperAdminAuth />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
