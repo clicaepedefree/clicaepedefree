@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +72,7 @@ export default function Auth() {
   const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const authIntentRef = useRef<"signup" | "signin" | null>(null);
 
   useEffect(() => {
     // Verificar se o usuário já está logado
@@ -92,8 +93,10 @@ export default function Auth() {
 
     // Escutar mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        navigate("/admin");
+      if (event === "SIGNED_IN" && session) {
+        const intent = authIntentRef.current;
+        authIntentRef.current = null;
+        navigate(intent === "signup" ? "/cadastro-pendente" : "/admin");
       }
     });
 
@@ -123,11 +126,13 @@ export default function Auth() {
         throw new Error("WhatsApp inválido. Use DDD + 9 dígitos e evite repetições (ex.: 11987654321).");
       }
 
+      authIntentRef.current = "signup";
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/admin`,
+          emailRedirectTo: `${window.location.origin}/cadastro-pendente`,
           data: {
             restaurant_name: restaurantName,
             responsible_name: responsibleName,
@@ -149,7 +154,13 @@ export default function Auth() {
         throw error;
       }
 
-      // Redirecionar para página de cadastro pendente
+      // Garante que o usuário não seja direcionado para dentro do sistema mesmo quando o Supabase cria sessão automaticamente
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        // ignore
+      }
+
       navigate("/cadastro-pendente");
     } catch (error: any) {
       toast({
@@ -165,6 +176,7 @@ export default function Auth() {
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    authIntentRef.current = "signin";
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;

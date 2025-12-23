@@ -32,6 +32,10 @@
     --accent: 204 71% 63%;
     --accent-foreground: 0 0% 100%;
 
+    /* WhatsApp green (CTA) */
+    --whatsapp: 142 70% 45%;
+    --whatsapp-foreground: 0 0% 100%;
+
     /* Food red for deals/offers */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -94,6 +98,9 @@
 
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
+
+    --whatsapp: 142 70% 45%;
+    --whatsapp-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
