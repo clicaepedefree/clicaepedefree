@@ -12,6 +12,7 @@ import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
 import SuperAdmin from "./pages/SuperAdmin";
 import SuperAdminAuth from "./pages/SuperAdminAuth";
+import RegistrationPending from "./pages/RegistrationPending";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/admin/analytics" element={<Analytics />} />
           <Route path="/super-admin" element={<SuperAdmin />} />
           <Route path="/super-admin/auth" element={<SuperAdminAuth />} />
+          <Route path="/cadastro-pendente" element={<RegistrationPending />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -149,13 +149,8 @@ export default function Auth() {
         throw error;
       }
 
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar a conta e faça login.",
-      });
-
-      // Limpar formulário
-      (e.target as HTMLFormElement).reset();
+      // Redirecionar para página de cadastro pendente
+      navigate("/cadastro-pendente");
     } catch (error: any) {
       toast({
         variant: "destructive",
