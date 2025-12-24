@@ -47,7 +47,7 @@ interface DeliveryZone {
 }
 
 interface PaymentMethod {
-  type: 'debit' | 'credit' | 'pix' | 'cash';
+  type: 'debit' | 'credit' | 'pix' | 'cash' | 'card';
   changeAmount?: number;
 }
 
@@ -89,9 +89,7 @@ export function OrderConfirmationModal({
     deliveryZoneId: ''
   });
   
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>({
-    type: 'pix'
-  });
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   
   const [changeAmount, setChangeAmount] = useState('');
   const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>([]);
@@ -125,17 +123,23 @@ export function OrderConfirmationModal({
       const { data, error } = await supabase
         .from('payment_methods')
         .select('*')
-        .eq('restaurant_id', restaurant.id)
+        .eq('restaurant_id', restaurant!.id)
         .eq('is_active', true);
 
       if (error) throw error;
 
-      setAvailablePaymentMethods(data || []);
+      const methods = data || [];
+      setAvailablePaymentMethods(methods);
       
       // Buscar chave PIX se disponível
-      const pixMethod = data?.find(method => method.method_type === 'pix');
+      const pixMethod = methods.find(method => method.method_type === 'pix');
       if (pixMethod?.pix_key) {
         setRestaurantPixKey(pixMethod.pix_key);
+      }
+
+      // Definir o primeiro método disponível como selecionado
+      if (methods.length > 0 && !paymentMethod) {
+        setPaymentMethod({ type: methods[0].method_type as PaymentMethod['type'] });
       }
     } catch (error) {
       console.error('Erro ao buscar formas de pagamento:', error);
@@ -153,6 +157,8 @@ export function OrderConfirmationModal({
   };
   
   const handleSendOrder = () => {
+    if (!paymentMethod) return;
+    
     const payment: PaymentMethod = {
       type: paymentMethod.type,
       changeAmount: paymentMethod.type === 'cash' && changeAmount ? parseFloat(changeAmount) : undefined
@@ -166,6 +172,8 @@ export function OrderConfirmationModal({
   const isAddressValid = orderType === 'pickup' 
     ? deliveryAddress.name && deliveryAddress.phone
     : deliveryAddress.street && deliveryAddress.number && deliveryAddress.name && deliveryAddress.phone && deliveryAddress.deliveryZoneId;
+  
+  const isPaymentValid = paymentMethod !== null;
   
   const deliveryFee = orderType === 'delivery' ? (selectedDeliveryZone?.delivery_fee || 0) : 0;
   const totalWithDelivery = getCartTotal() + deliveryFee;
@@ -429,7 +437,7 @@ export function OrderConfirmationModal({
               </div>
               
               <RadioGroup 
-                value={paymentMethod.type} 
+                value={paymentMethod?.type || ''} 
                 onValueChange={(value) => setPaymentMethod({ type: value as PaymentMethod['type'] })}
                 className="space-y-2"
               >
@@ -445,7 +453,13 @@ export function OrderConfirmationModal({
                 ))}
               </RadioGroup>
               
-              {paymentMethod.type === 'cash' && (
+              {availablePaymentMethods.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma forma de pagamento configurada pelo estabelecimento.
+                </p>
+              )}
+              
+              {paymentMethod?.type === 'cash' && (
                 <div className="ml-6">
                   <Label htmlFor="change" className="text-sm">Troco para (opcional)</Label>
                   <Input
@@ -459,7 +473,7 @@ export function OrderConfirmationModal({
                 </div>
               )}
 
-              {paymentMethod.type === 'pix' && restaurantPixKey && (
+              {paymentMethod?.type === 'pix' && restaurantPixKey && (
                 <div className="mt-3 p-3 sm:p-4 bg-muted rounded-lg">
                   <Label className="text-xs sm:text-sm font-medium">Chave PIX para pagamento:</Label>
                   <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-background p-2 sm:p-3 rounded border">
@@ -496,7 +510,7 @@ export function OrderConfirmationModal({
             <Button 
               onClick={handleSendOrder}
               className="flex-1 h-10 sm:h-11 flex items-center justify-center gap-2 bg-[#4BA3C3] hover:bg-[#3d8aa8] text-white text-sm sm:text-base"
-              disabled={cartEntries.length === 0 || !isAddressValid}
+              disabled={cartEntries.length === 0 || !isAddressValid || !isPaymentValid}
             >
               <Phone className="h-4 w-4" />
               <span className="hidden sm:inline">Enviar para WhatsApp</span>
