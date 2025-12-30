@@ -155,27 +155,31 @@ serve(async (req) => {
               f.name?.toLowerCase().includes('negocio')
             );
 
-            if (negociosFunnel) {
-              const dealDescription = `
-📧 Email: ${email || 'N/A'}
-📱 WhatsApp: ${whatsapp}
-👤 Responsável: ${responsibleName}
-📄 CPF/CNPJ: ${taxId}
-🔗 Slug: ${slug}
-📅 Data de cadastro: ${new Date().toLocaleDateString('pt-BR')}
-              `.trim();
+        if (negociosFunnel) {
+              const dealDescription = `**Novo Restaurante Cadastrado**
+
+Nome do Restaurante: ${restaurantName}
+Responsável: ${responsibleName}
+CPF/CNPJ: ${taxId}
+WhatsApp: ${whatsapp}
+Email: ${email || 'N/A'}
+Slug (URL): ${slug}
+Data de cadastro: ${new Date().toLocaleDateString('pt-BR')}
+
+Cadastro realizado via Clica e Pede`;
 
               const dealPayload = {
-                funnel_id: negociosFunnel.id,
-                organization_id: organizationId,
-                title: `Clica e Pede - ${restaurantName}`,
+                title: `${restaurantName} - Novo Cadastro`,
                 description: dealDescription,
-                value: 0,
+                funnel: negociosFunnel.id,
+                ranking: 3,
+                allowToAllUsers: true,
               };
 
               console.log('Criando deal no Agendor:', dealPayload);
 
-              const dealResponse = await fetch(`${AGENDOR_API_URL}/deals`, {
+              // IMPORTANTE: Criar deal associado à organização usando a URL correta
+              const dealResponse = await fetch(`${AGENDOR_API_URL}/organizations/${organizationId}/deals`, {
                 method: 'POST',
                 headers: {
                   'Authorization': `Token ${AGENDOR_API_KEY}`,
