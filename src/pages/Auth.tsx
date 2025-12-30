@@ -128,7 +128,8 @@ export default function Auth() {
 
       authIntentRef.current = "signup";
 
-      const { error } = await supabase.auth.signUp({
+      // 1. Criar usuário no Supabase Auth
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -154,7 +155,26 @@ export default function Auth() {
         throw error;
       }
 
-      // Garante que o usuário não seja direcionado para dentro do sistema mesmo quando o Supabase cria sessão automaticamente
+      // 2. Chamar edge function para criar restaurante e enviar para Agendor
+      if (signUpData.user) {
+        const { error: registerError } = await supabase.functions.invoke('register-restaurant', {
+          body: {
+            userId: signUpData.user.id,
+            email: email,
+            restaurantName: restaurantName,
+            responsibleName: responsibleName,
+            whatsapp: cleanedWhats,
+            taxId: cleanedTaxId,
+          }
+        });
+
+        if (registerError) {
+          console.error('Erro ao registrar restaurante:', registerError);
+          // Não bloquear o fluxo, apenas logar o erro
+        }
+      }
+
+      // 3. Fazer signOut para impedir acesso ao sistema antes da aprovação
       try {
         await supabase.auth.signOut();
       } catch {

@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.sync-all-agendor-deals]
 verify_jwt = false
+
+[functions.register-restaurant]
+verify_jwt = false
