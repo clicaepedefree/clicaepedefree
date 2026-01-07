@@ -64,6 +64,24 @@
 
       gtag('config', 'G-CPLTHTNZ32');
     </script>
+
+    <!-- Agendor Chat Widget -->
+    <script>
+      (function(d,t) {
+        var BASE_URL="https://chat.agendor.com.br";
+        var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=BASE_URL+"/packs/js/sdk.js";
+        g.defer = true;
+        g.async = true;
+        s.parentNode.insertBefore(g,s);
+        g.onload=function(){
+          window.chatwootSDK.run({
+            websiteToken: '2BeaMXc9WCoQMi69C2LKwDDT',
+            baseUrl: BASE_URL
+          })
+        }
+      })(document,"script");
+    </script>
   
   
   
