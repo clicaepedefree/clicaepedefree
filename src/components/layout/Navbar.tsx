@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Phone, User, LogIn, ShoppingBag } from "lucide-react";
+import { User, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
-import logo from "/lovable-uploads/1ddc24de-f742-4120-83ea-1a47a09aa99a.png";
 
 export function Navbar() {
   return (
@@ -15,13 +14,6 @@ export function Navbar() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 text-white shadow-md" asChild>
-            <a href="https://wa.me/5511916924490?text=Quero%20saber%20mais%20sobre%20o%20cardápio%20grátis" target="_blank" rel="noopener noreferrer" className="hidden sm:flex">
-              <Phone className="mr-2 h-4 w-4" />
-              WhatsApp
-            </a>
-          </Button>
-          
           <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 hover:bg-gray-50" asChild>
             <Link to="/admin">
               <User className="mr-2 h-4 w-4" />
