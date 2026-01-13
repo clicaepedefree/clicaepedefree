@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-
 export function HeroSection() {
-  return (
-    <section className="min-h-screen flex items-center bg-gradient-to-br from-blue-50 via-white to-blue-50 relative overflow-hidden">
+  return <section className="min-h-screen flex items-center bg-gradient-to-br from-blue-50 via-white to-blue-50 relative overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234F46E5' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-      }} />
+      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234F46E5' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+    }} />
       
       <div className="container mx-auto px-4 relative z-10 py-20">
         <div className="max-w-6xl mx-auto">
@@ -24,9 +22,7 @@ export function HeroSection() {
                 Receba pedidos direto no WhatsApp, imprima automaticamente e gerencie tudo em um só painel.
               </p>
               
-              <p className="text-2xl font-bold text-blue-600 mb-8">
-                Grátis até 100 pedidos/mês. Depois apenas R$ 29,90/mês, sem taxas e sem comissão.
-              </p>
+              <p className="text-2xl font-bold text-blue-600 mb-8">Grátis até 100 pedidos/mês</p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
                 <Button variant="default" size="lg" className="text-lg px-10 py-6 bg-green-600 hover:bg-green-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all" asChild>
@@ -106,6 +102,5 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
