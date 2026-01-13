@@ -33,11 +33,11 @@ export function PricingSection() {
           </div>
           
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Grátis até 100 pedidos/mês — depois R$ 29,90/mês
+            Grátis até 100 pedidos/mês
           </h2>
           
           <p className="text-xl text-white/90 max-w-3xl mx-auto">
-            Esqueça os apps que cobram comissão por pedido. No Cardápio Fácil, você recebe até 100 pedidos grátis por mês e depois paga apenas R$ 29,90 — sem taxas, sem comissão, lucro 100% seu.
+            Esqueça os apps que cobram comissão por pedido. No Cardápio Fácil, você recebe até 100 pedidos grátis por mês — sem taxas, sem comissão, lucro 100% seu.
           </p>
         </div>
 
@@ -49,7 +49,6 @@ export function PricingSection() {
                   Grátis
                   <span className="text-2xl text-gray-500 font-normal"> até 100 pedidos/mês</span>
                 </div>
-                <p className="text-gray-600">Depois R$ 29,90/mês — valor fixo</p>
                 
                 <div className="mt-6 inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
                   🎁 Grátis até 100 pedidos/mês
