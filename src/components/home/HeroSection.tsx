@@ -15,7 +15,7 @@ export function HeroSection() {
             <div className="text-center lg:text-left">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-gray-900">
                 Seu restaurante vendendo mais com o{" "}
-                <span className="text-blue-600">Cardápio Fácil</span> 🍔
+                <span className="text-blue-600">Cardápio Fácil Delivery</span> 🍔
               </h1>
               
               <p className="text-xl text-gray-600 leading-relaxed mb-4 max-w-2xl mx-auto lg:mx-0">
