@@ -21,7 +21,7 @@ export function CTASection() {
           </h2>
           
           <p className="text-xl text-white/90 mb-4 leading-relaxed max-w-3xl mx-auto">
-            Comece agora <strong className="text-2xl">grátis até 100 pedidos/mês</strong> e transforme a forma como você recebe pedidos. Depois apenas R$ 29,90/mês.
+            Comece agora <strong className="text-2xl">grátis até 100 pedidos/mês</strong> e transforme a forma como você recebe pedidos.
           </p>
           
           <p className="text-lg text-white/80 mb-10">

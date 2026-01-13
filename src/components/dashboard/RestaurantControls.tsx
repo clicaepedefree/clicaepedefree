@@ -261,7 +261,6 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
               <h3 className="font-semibold mb-2">Plano Atual - Grátis até 100 pedidos/mês</h3>
               <ul className="text-sm space-y-1">
                 <li>✅ Grátis até 100 pedidos mensais</li>
-                <li>✅ Após 100 pedidos: apenas R$ 29,90/mês</li>
                 <li>✅ Suporte prioritário</li>
                 <li>✅ Relatórios avançados</li>
                 <li>✅ Sem limites de faturamento</li>
