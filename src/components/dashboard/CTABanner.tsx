@@ -3,7 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ExternalLink, MessageCircle, Sparkles } from "lucide-react";
 export function CTABanner() {
   const handleUpgradeClick = () => {
-    window.open('https://clicaepede.online', '_blank');
+    const message = encodeURIComponent("quero conhecer o sistema completo");
+    window.open(`https://wa.me/5511916924490?text=${message}`, '_blank');
   };
   const handleWhatsAppClick = () => {
     window.open('https://wa.me/5511916924490', '_blank');

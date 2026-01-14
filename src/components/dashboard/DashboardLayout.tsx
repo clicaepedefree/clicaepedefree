@@ -47,6 +47,7 @@ import { RestaurantControls } from "./RestaurantControls";
 import { OrdersKanban } from "../orders/OrdersKanban";
 import { OnboardingHelpDialog } from "./OnboardingHelpDialog";
 import { UpsellPopup } from "./UpsellPopup";
+import { FloatingWhatsAppButton } from "./FloatingWhatsAppButton";
 
 
 interface DashboardLayoutProps {
@@ -108,6 +109,7 @@ export function DashboardLayout({
       <div className="min-h-screen flex w-full">
         <OnboardingHelpDialog restaurantId={restaurant.id} />
         <UpsellPopup />
+        <FloatingWhatsAppButton />
         <AppSidebar
           activeSection={propActiveSection || activeSection}
           onSectionChange={handleSectionChange}
