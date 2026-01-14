@@ -46,6 +46,7 @@ import { CTABanner } from "./CTABanner";
 import { RestaurantControls } from "./RestaurantControls";
 import { OrdersKanban } from "../orders/OrdersKanban";
 import { OnboardingHelpDialog } from "./OnboardingHelpDialog";
+import { UpsellPopup } from "./UpsellPopup";
 
 
 interface DashboardLayoutProps {
@@ -106,6 +107,7 @@ export function DashboardLayout({
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <OnboardingHelpDialog restaurantId={restaurant.id} />
+        <UpsellPopup />
         <AppSidebar
           activeSection={propActiveSection || activeSection}
           onSectionChange={handleSectionChange}
