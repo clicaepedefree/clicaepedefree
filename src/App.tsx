@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Menu from "./pages/Menu";
-import Auth from "./pages/Auth";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Orders from "./pages/Orders";
 import Settings from "./pages/Settings";
@@ -26,7 +27,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/cardapio/:slug" element={<Menu />} />
-          <Route path="/criar-conta" element={<Auth />} />
+          <Route path="/criar-conta" element={<Signup />} />
+          <Route path="/entrar" element={<Login />} />
           <Route path="/admin" element={<Dashboard />} />
           <Route path="/admin/orders" element={<Orders />} />
           <Route path="/admin/settings" element={<Settings />} />
