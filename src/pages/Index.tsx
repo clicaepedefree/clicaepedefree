@@ -11,9 +11,39 @@ import { CTASection } from "@/components/home/CTASection";
 import { Footer } from "@/components/layout/Footer";
 import { MessageCircle } from "lucide-react";
 
+// Declare Tawk.to global types
+declare global {
+  interface Window {
+    Tawk_API?: Record<string, unknown>;
+    Tawk_LoadStart?: Date;
+  }
+}
+
 const Index = () => {
   const [showPulse, setShowPulse] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+
+  // Load Tawk.to only on landing page
+  useEffect(() => {
+    if (!window.Tawk_API) {
+      window.Tawk_API = {};
+      window.Tawk_LoadStart = new Date();
+      
+      const script = document.createElement("script");
+      script.async = true;
+      script.src = 'https://embed.tawk.to/670d2b904304e3196ad16200/1ia5n4bn7';
+      script.charset = 'UTF-8';
+      script.setAttribute('crossorigin', '*');
+      document.head.appendChild(script);
+    }
+
+    // Cleanup: hide Tawk.to when leaving the page
+    return () => {
+      if (window.Tawk_API && typeof window.Tawk_API.hideWidget === 'function') {
+        (window.Tawk_API as { hideWidget: () => void }).hideWidget();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
