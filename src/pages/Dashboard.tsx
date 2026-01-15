@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { RestaurantSetup } from "@/components/dashboard/RestaurantSetup";
 import { useSuperAdminAccess } from "@/hooks/useSuperAdminAccess";
@@ -15,6 +15,11 @@ export default function Dashboard() {
   const [restaurant, setRestaurant] = useState<any>(null);
   const [ownRestaurant, setOwnRestaurant] = useState<any>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  // Verificar se veio do super admin via localStorage
+  const [isSuperAdminMode, setIsSuperAdminMode] = useState(false);
+  const [superAdminSelectedId, setSuperAdminSelectedId] = useState<string | null>(null);
   
   const { 
     isSuperAdmin, 
@@ -25,13 +30,35 @@ export default function Dashboard() {
     loading: superAdminLoading 
   } = useSuperAdminAccess(user?.id);
 
+  // Verificar super admin session do localStorage (sistema /super-admin)
+  useEffect(() => {
+    const superAdminSession = localStorage.getItem('superAdminSession');
+    const selectedRestaurant = localStorage.getItem('superAdminSelectedRestaurant');
+    
+    if (superAdminSession && selectedRestaurant) {
+      try {
+        const session = JSON.parse(superAdminSession);
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        const sessionAge = Date.now() - session.loginTime;
+        
+        if (sessionAge < twentyFourHours) {
+          setIsSuperAdminMode(true);
+          setSuperAdminSelectedId(selectedRestaurant);
+          fetchRestaurantById(selectedRestaurant);
+        }
+      } catch (e) {
+        console.error('Erro ao verificar super admin session:', e);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     // Verificar sessão atual
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchRestaurant(session.user.id);
-      } else {
+      } else if (!isSuperAdminMode) {
         setLoading(false);
       }
     });
@@ -41,13 +68,13 @@ export default function Dashboard() {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchRestaurant(session.user.id);
-      } else {
+      } else if (!isSuperAdminMode) {
         setLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isSuperAdminMode]);
 
   // Quando super admin seleciona um restaurante, busca os dados dele
   useEffect(() => {
@@ -86,17 +113,20 @@ export default function Dashboard() {
 
   const fetchRestaurantById = async (restaurantId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('id', restaurantId)
-        .single();
+      // Para super admin, buscar via RPC que tem acesso a todos
+      const { data: restaurantsData, error } = await supabase.rpc('get_restaurants_with_emails');
 
       if (error) {
         throw error;
       }
 
-      setRestaurant(data);
+      const foundRestaurant = restaurantsData?.find((r: any) => r.id === restaurantId);
+      
+      if (foundRestaurant) {
+        setRestaurant(foundRestaurant);
+      } else {
+        throw new Error('Restaurante não encontrado');
+      }
     } catch (error: any) {
       console.error('Erro ao buscar restaurante:', error);
       toast({
@@ -104,12 +134,22 @@ export default function Dashboard() {
         title: "Erro ao carregar restaurante",
         description: error.message,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleLogout = async () => {
     try {
       clearSelection();
+      
+      // Se for super admin mode (via localStorage), limpar e voltar para super-admin
+      if (isSuperAdminMode) {
+        localStorage.removeItem('superAdminSelectedRestaurant');
+        navigate('/super-admin');
+        return;
+      }
+      
       await supabase.auth.signOut();
       toast({
         title: "Logout realizado",
@@ -124,18 +164,70 @@ export default function Dashboard() {
     }
   };
 
-  if (loading || superAdminLoading) {
+  const handleBackToSuperAdmin = () => {
+    navigate('/super-admin');
+  };
+
+  // Loading state
+  if (loading && !isSuperAdminMode) {
+    if (superAdminLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Carregando...</p>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  // Super admin mode via localStorage (veio da página /super-admin)
+  if (isSuperAdminMode && superAdminSelectedId && restaurant) {
+    return (
+      <>
+        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500/10 border-b border-amber-500/30 px-4 py-3">
+          <div className="container mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-600 font-semibold">🛡️ Modo Super Admin</span>
+              <span className="text-muted-foreground">|</span>
+              <span className="font-medium">{restaurant.name}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleBackToSuperAdmin}
+            >
+              ← Voltar ao Painel Super Admin
+            </Button>
+          </div>
+        </div>
+        <div className="pt-16">
+          <DashboardLayout 
+            restaurant={restaurant} 
+            user={user} 
+            onLogout={handleLogout}
+            onRestaurantUpdate={setRestaurant}
+            isSuperAdminMode={true}
+          />
+        </div>
+      </>
+    );
+  }
+
+  // Loading para super admin mode
+  if (isSuperAdminMode && !restaurant) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregando...</p>
+          <p>Carregando restaurante...</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
+  if (!user && !isSuperAdminMode) {
     return <Navigate to="/criar-conta" replace />;
   }
 
@@ -172,7 +264,7 @@ export default function Dashboard() {
   }
 
   if (!restaurant && !isSuperAdmin) {
-    return <RestaurantSetup user={user} onRestaurantCreated={setRestaurant} />;
+    return <RestaurantSetup user={user!} onRestaurantCreated={setRestaurant} />;
   }
 
   return (
