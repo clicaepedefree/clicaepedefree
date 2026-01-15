@@ -74,6 +74,9 @@ serve(async (req) => {
           email: email,
           whatsapp: whatsapp,
         },
+        phones: [
+          { number: whatsapp, type: 5 } // type 5 = WhatsApp
+        ],
         allowToAllUsers: true,
       };
 

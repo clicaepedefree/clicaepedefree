@@ -109,7 +109,13 @@ serve(async (req) => {
           const orgPayload: any = {
             name: restaurantName,
             description: `Responsável: ${responsibleName}\nWhatsApp: ${whatsapp}\nEmail: ${email || 'N/A'}`,
-            phones: [{ number: whatsapp, type: 1 }],
+            contact: {
+              email: email || undefined,
+              whatsapp: whatsapp,
+            },
+            phones: [
+              { number: whatsapp, type: 5 } // type 5 = WhatsApp
+            ],
           };
 
           // Adicionar CNPJ se válido
