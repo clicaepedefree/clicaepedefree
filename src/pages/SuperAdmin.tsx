@@ -10,7 +10,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
-import { useSuperAdminAccess } from "@/hooks/useSuperAdminAccess";
+import { useSuperAdminRestaurantAccess } from "@/hooks/useSuperAdminAccess";
 import { SuperAdminRestaurantSelector } from "@/components/dashboard/SuperAdminRestaurantSelector";
 
 interface RestaurantWithEmail {
@@ -45,7 +45,7 @@ const SuperAdmin = () => {
     selectedRestaurantId, 
     selectRestaurant, 
     clearSelection 
-  } = useSuperAdminAccess(session?.id);
+  } = useSuperAdminRestaurantAccess();
 
   // Redirect to login if not authenticated
   useEffect(() => {

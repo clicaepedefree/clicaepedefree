@@ -7,6 +7,7 @@ interface Restaurant {
   slug: string;
 }
 
+// Hook para super admins do Supabase Auth (user_id)
 export const useSuperAdminAccess = (userId: string | undefined) => {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
@@ -82,6 +83,62 @@ export const useSuperAdminAccess = (userId: string | undefined) => {
 
   return {
     isSuperAdmin,
+    allRestaurants,
+    selectedRestaurantId,
+    selectRestaurant,
+    clearSelection,
+    loading
+  };
+};
+
+// Hook simplificado para a página /super-admin (já autenticada via localStorage)
+export const useSuperAdminRestaurantAccess = () => {
+  const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAllRestaurants();
+    
+    // Recuperar seleção do localStorage
+    const savedSelection = localStorage.getItem('superAdminSelectedRestaurant');
+    if (savedSelection) {
+      setSelectedRestaurantId(savedSelection);
+    }
+  }, []);
+
+  const fetchAllRestaurants = async () => {
+    try {
+      // Usar a função RPC que já existe para super admins
+      const { data, error } = await supabase.rpc('get_restaurants_with_emails');
+
+      if (error) {
+        console.error('Erro ao buscar restaurantes:', error);
+      } else {
+        setAllRestaurants((data || []).map(r => ({
+          id: r.id,
+          name: r.name,
+          slug: r.slug
+        })));
+      }
+    } catch (error) {
+      console.error('Erro ao buscar restaurantes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectRestaurant = (restaurantId: string) => {
+    setSelectedRestaurantId(restaurantId);
+    localStorage.setItem('superAdminSelectedRestaurant', restaurantId);
+  };
+
+  const clearSelection = () => {
+    setSelectedRestaurantId(null);
+    localStorage.removeItem('superAdminSelectedRestaurant');
+  };
+
+  return {
     allRestaurants,
     selectedRestaurantId,
     selectRestaurant,
