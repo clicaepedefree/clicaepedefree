@@ -4,12 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Phone, Mail, Calendar, LogOut, Shield, DollarSign, Lock, Unlock, TrendingUp, CloudUpload } from "lucide-react";
+import { Building2, Users, Phone, Mail, Calendar, LogOut, Shield, DollarSign, Lock, Unlock, TrendingUp, CloudUpload, ExternalLink } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
+import { useSuperAdminAccess } from "@/hooks/useSuperAdminAccess";
+import { SuperAdminRestaurantSelector } from "@/components/dashboard/SuperAdminRestaurantSelector";
 
 interface RestaurantWithEmail {
   id: string;
@@ -36,6 +38,14 @@ const SuperAdmin = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isAuthenticated, session, loading: authLoading, logout } = useSuperAdmin();
+  
+  // Hook para gerenciar acesso a qualquer restaurante
+  const { 
+    allRestaurants, 
+    selectedRestaurantId, 
+    selectRestaurant, 
+    clearSelection 
+  } = useSuperAdminAccess(session?.id);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -267,6 +277,26 @@ const SuperAdmin = () => {
               Sair
             </Button>
           </div>
+        </div>
+
+        {/* Super Admin Restaurant Access */}
+        <div className="mb-8">
+          <SuperAdminRestaurantSelector
+            restaurants={allRestaurants}
+            selectedRestaurantId={selectedRestaurantId}
+            onSelect={selectRestaurant}
+            onClear={clearSelection}
+          />
+          
+          {selectedRestaurantId && (
+            <Button 
+              onClick={() => navigate('/admin')}
+              className="mt-3 flex items-center gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Acessar Dashboard do Restaurante
+            </Button>
+          )}
         </div>
 
         {/* Stats Cards */}
