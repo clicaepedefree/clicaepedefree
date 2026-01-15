@@ -57,6 +57,7 @@ interface DashboardLayoutProps {
   onRestaurantUpdate: (restaurant: any) => void;
   activeSection?: string;
   onSectionChange?: (section: string) => void;
+  isSuperAdminMode?: boolean;
 }
 
 const menuItems = [
@@ -73,7 +74,8 @@ export function DashboardLayout({
   onLogout, 
   onRestaurantUpdate, 
   activeSection: propActiveSection,
-  onSectionChange: propOnSectionChange 
+  onSectionChange: propOnSectionChange,
+  isSuperAdminMode = false
 }: DashboardLayoutProps) {
   const [activeSection, setActiveSection] = useState(propActiveSection || "dashboard");
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);

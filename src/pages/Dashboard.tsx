@@ -6,12 +6,24 @@ import { User } from "@supabase/supabase-js";
 import { Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { RestaurantSetup } from "@/components/dashboard/RestaurantSetup";
+import { useSuperAdminAccess } from "@/hooks/useSuperAdminAccess";
+import { SuperAdminRestaurantSelector } from "@/components/dashboard/SuperAdminRestaurantSelector";
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [restaurant, setRestaurant] = useState<any>(null);
+  const [ownRestaurant, setOwnRestaurant] = useState<any>(null);
   const { toast } = useToast();
+  
+  const { 
+    isSuperAdmin, 
+    allRestaurants, 
+    selectedRestaurantId, 
+    selectRestaurant, 
+    clearSelection,
+    loading: superAdminLoading 
+  } = useSuperAdminAccess(user?.id);
 
   useEffect(() => {
     // Verificar sessão atual
@@ -37,6 +49,15 @@ export default function Dashboard() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Quando super admin seleciona um restaurante, busca os dados dele
+  useEffect(() => {
+    if (isSuperAdmin && selectedRestaurantId) {
+      fetchRestaurantById(selectedRestaurantId);
+    } else if (isSuperAdmin && !selectedRestaurantId && ownRestaurant) {
+      setRestaurant(ownRestaurant);
+    }
+  }, [isSuperAdmin, selectedRestaurantId, ownRestaurant]);
+
   const fetchRestaurant = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -50,6 +71,7 @@ export default function Dashboard() {
       }
 
       setRestaurant(data);
+      setOwnRestaurant(data);
     } catch (error: any) {
       console.error('Erro ao buscar restaurante:', error);
       toast({
@@ -62,8 +84,32 @@ export default function Dashboard() {
     }
   };
 
+  const fetchRestaurantById = async (restaurantId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('id', restaurantId)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      setRestaurant(data);
+    } catch (error: any) {
+      console.error('Erro ao buscar restaurante:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao carregar restaurante",
+        description: error.message,
+      });
+    }
+  };
+
   const handleLogout = async () => {
     try {
+      clearSelection();
       await supabase.auth.signOut();
       toast({
         title: "Logout realizado",
@@ -78,7 +124,7 @@ export default function Dashboard() {
     }
   };
 
-  if (loading) {
+  if (loading || superAdminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -93,16 +139,63 @@ export default function Dashboard() {
     return <Navigate to="/criar-conta" replace />;
   }
 
-  if (!restaurant) {
+  // Super admin sem restaurante próprio, mas pode acessar outros
+  if (isSuperAdmin && !ownRestaurant) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-2xl mx-auto mt-20">
+          <SuperAdminRestaurantSelector
+            restaurants={allRestaurants}
+            selectedRestaurantId={selectedRestaurantId}
+            onSelect={selectRestaurant}
+            onClear={clearSelection}
+          />
+          
+          {selectedRestaurantId && restaurant && (
+            <DashboardLayout 
+              restaurant={restaurant} 
+              user={user} 
+              onLogout={handleLogout}
+              onRestaurantUpdate={setRestaurant}
+              isSuperAdminMode={true}
+            />
+          )}
+          
+          {!selectedRestaurantId && (
+            <div className="text-center text-muted-foreground mt-8">
+              Selecione um restaurante para começar a gerenciar.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!restaurant && !isSuperAdmin) {
     return <RestaurantSetup user={user} onRestaurantCreated={setRestaurant} />;
   }
 
   return (
-    <DashboardLayout 
-      restaurant={restaurant} 
-      user={user} 
-      onLogout={handleLogout}
-      onRestaurantUpdate={setRestaurant}
-    />
+    <>
+      {isSuperAdmin && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b px-4 py-2">
+          <SuperAdminRestaurantSelector
+            restaurants={allRestaurants}
+            selectedRestaurantId={selectedRestaurantId}
+            onSelect={selectRestaurant}
+            onClear={clearSelection}
+          />
+        </div>
+      )}
+      <div className={isSuperAdmin ? "pt-32" : ""}>
+        <DashboardLayout 
+          restaurant={restaurant} 
+          user={user} 
+          onLogout={handleLogout}
+          onRestaurantUpdate={setRestaurant}
+          isSuperAdminMode={isSuperAdmin && selectedRestaurantId !== null}
+        />
+      </div>
+    </>
   );
 }
