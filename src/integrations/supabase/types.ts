@@ -413,6 +413,24 @@ export type Database = {
         }
         Relationships: []
       }
+      super_admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       super_admins: {
         Row: {
           created_at: string
@@ -566,6 +584,7 @@ export type Database = {
           whatsapp: string
         }[]
       }
+      is_super_admin: { Args: { check_user_id?: string }; Returns: boolean }
       mask_customer_data: {
         Args: {
           customer_name: string
