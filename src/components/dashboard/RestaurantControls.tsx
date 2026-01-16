@@ -1,14 +1,21 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Store, AlertTriangle, ExternalLink, TrendingUp, MessageCircle } from "lucide-react";
+import { 
+  DollarSign, 
+  Store, 
+  AlertTriangle, 
+  ExternalLink, 
+  TrendingUp, 
+  MessageCircle,
+  Wallet
+} from "lucide-react";
 
 interface RestaurantControlsProps {
   restaurant: any;
@@ -31,10 +38,8 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
 
   const fetchRevenue = async () => {
     try {
-      // Usar data atual para calcular faturamento do mês corrente
       const currentDate = new Date();
       
-      // Get monthly revenue with current date
       const { data: monthlyData, error: monthlyError } = await supabase
         .rpc('get_monthly_revenue', { 
           restaurant_id_param: restaurant.id,
@@ -44,7 +49,6 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
       if (monthlyError) throw monthlyError;
       setMonthlyRevenue(Number(monthlyData || 0));
 
-      // Get total revenue
       const { data: totalData, error: totalError } = await supabase
         .from('orders')
         .select('total')
@@ -67,16 +71,13 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
 
   const checkRevenueLimit = async () => {
     try {
-      // Usar data atual para verificar limites de receita
       const currentDate = new Date();
       
-      // Check and update restaurant status based on revenue
       const { error } = await supabase.rpc('check_revenue_limits', {
         target_time: currentDate.toISOString()
       });
       if (error) throw error;
 
-      // Refresh restaurant data
       const { data, error: fetchError } = await supabase
         .from('restaurants')
         .select('*')
@@ -88,7 +89,6 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
         setIsBlocked(data.is_blocked);
         setMonthlyRevenue(Number(data.monthly_revenue || 0));
         
-        // Show upgrade modal if blocked and revenue >= 1800
         if (data.is_blocked && Number(data.monthly_revenue || 0) >= 1800) {
           setShowUpgradeModal(true);
         }
@@ -148,88 +148,24 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
     }).format(value);
   };
 
+  const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* Monthly Revenue */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Faturamento do Mês</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(monthlyRevenue)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-            </p>
-            {monthlyRevenue >= 1800 && (
-              <Badge variant="destructive" className="mt-2">
-                Limite atingido
-              </Badge>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Total Revenue */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Faturamento Total</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(totalRevenue)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Desde o início
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Store Status Control */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Status da Loja</CardTitle>
-            <Store className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={isOpen && !isBlocked}
-                    onCheckedChange={toggleStoreStatus}
-                    disabled={loading || isBlocked}
-                  />
-                  <Label htmlFor="store-status">
-                    {isBlocked ? "Bloqueada" : isOpen ? "Aberta" : "Fechada"}
-                  </Label>
-                </div>
-                <Badge 
-                  variant={isBlocked ? "destructive" : isOpen ? "default" : "secondary"}
-                  className="text-xs"
-                >
-                  {isBlocked ? "Bloqueada pelo sistema" : isOpen ? "Recebendo pedidos" : "Apenas visualização"}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Blocked Store Alert */}
       {isBlocked && (
-        <Alert className="mb-6 border-red-500">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Sua loja está bloqueada!</strong> Você atingiu o limite de R$ 1.800 em vendas no plano gratuito. 
-            Realize o upgrade para continuar vendendo.
+        <Alert className="mb-4 border-destructive/50 bg-destructive/5">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <AlertDescription className="flex flex-wrap items-center gap-2">
+            <span className="font-medium text-destructive">Sua loja está bloqueada!</span>
+            <span className="text-muted-foreground">
+              Você atingiu o limite de R$ 1.800 em vendas no plano gratuito.
+            </span>
             <Button 
               onClick={() => setShowUpgradeModal(true)}
-              className="ml-2 h-auto p-1 text-xs"
+              size="sm"
               variant="outline"
+              className="border-destructive/30 text-destructive hover:bg-destructive/10"
             >
               Ver detalhes
             </Button>
@@ -237,17 +173,113 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
         </Alert>
       )}
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Monthly Revenue */}
+        <Card className="group relative overflow-hidden border-border/50 bg-card hover:shadow-md transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Faturamento do Mês</p>
+                <p className="text-2xl font-bold text-whatsapp tracking-tight">
+                  {formatCurrency(monthlyRevenue)}
+                </p>
+                <p className="text-xs text-muted-foreground capitalize">{currentMonth}</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl bg-whatsapp/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="h-5 w-5 text-whatsapp" />
+              </div>
+            </div>
+            {monthlyRevenue >= 1800 && (
+              <Badge variant="destructive" className="mt-3 text-xs">
+                Limite atingido
+              </Badge>
+            )}
+          </CardContent>
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-whatsapp/50 to-whatsapp opacity-0 group-hover:opacity-100 transition-opacity" />
+        </Card>
+
+        {/* Total Revenue */}
+        <Card className="group relative overflow-hidden border-border/50 bg-card hover:shadow-md transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Faturamento Total</p>
+                <p className="text-2xl font-bold text-primary tracking-tight">
+                  {formatCurrency(totalRevenue)}
+                </p>
+                <p className="text-xs text-muted-foreground">Desde o início</p>
+              </div>
+              <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Wallet className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+          </CardContent>
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-primary/50 to-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+        </Card>
+
+        {/* Store Status Control */}
+        <Card className="group relative overflow-hidden border-border/50 bg-card hover:shadow-md transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-muted-foreground">Status da Loja</p>
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={isOpen && !isBlocked}
+                    onCheckedChange={toggleStoreStatus}
+                    disabled={loading || isBlocked}
+                    className="data-[state=checked]:bg-whatsapp"
+                  />
+                  <span className="text-sm font-medium text-foreground">
+                    {isBlocked ? "Bloqueada" : isOpen ? "Aberta" : "Fechada"}
+                  </span>
+                </div>
+                <Badge 
+                  variant={isBlocked ? "destructive" : isOpen ? "default" : "secondary"}
+                  className={`text-xs ${isOpen && !isBlocked ? "bg-whatsapp hover:bg-whatsapp/90" : ""}`}
+                >
+                  {isBlocked ? "Bloqueada pelo sistema" : isOpen ? "Recebendo pedidos" : "Apenas visualização"}
+                </Badge>
+              </div>
+              <div className={`h-11 w-11 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
+                isBlocked 
+                  ? "bg-destructive/10" 
+                  : isOpen 
+                    ? "bg-whatsapp/10" 
+                    : "bg-muted"
+              }`}>
+                <Store className={`h-5 w-5 ${
+                  isBlocked 
+                    ? "text-destructive" 
+                    : isOpen 
+                      ? "text-whatsapp" 
+                      : "text-muted-foreground"
+                }`} />
+              </div>
+            </div>
+          </CardContent>
+          <div className={`absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity ${
+            isBlocked 
+              ? "from-destructive/50 to-destructive" 
+              : isOpen 
+                ? "from-whatsapp/50 to-whatsapp" 
+                : "from-muted-foreground/30 to-muted-foreground/50"
+          }`} />
+        </Card>
+      </div>
+
       {/* Upgrade Modal */}
       <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-orange-600">
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
               <AlertTriangle className="h-5 w-5" />
               Upgrade Necessário
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div className="text-center">
               <p className="text-muted-foreground mb-2">
                 Você ultrapassou o limite de <strong>R$ 1.800</strong> do plano gratuito.
@@ -257,20 +289,27 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
               </p>
             </div>
 
-            <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg">
-              <h3 className="font-semibold mb-2">Plano Atual - Grátis até 100 pedidos/mês</h3>
-              <ul className="text-sm space-y-1">
-                <li>✅ Grátis até 100 pedidos mensais</li>
-                <li>✅ Suporte prioritário</li>
-                <li>✅ Relatórios avançados</li>
-                <li>✅ Sem limites de faturamento</li>
+            <div className="bg-gradient-to-br from-primary/5 to-whatsapp/5 p-5 rounded-xl border border-border/50">
+              <h3 className="font-semibold mb-3 text-foreground">Plano Atual - Grátis até 100 pedidos/mês</h3>
+              <ul className="text-sm space-y-2 text-muted-foreground">
+                {[
+                  "Grátis até 100 pedidos mensais",
+                  "Suporte prioritário",
+                  "Relatórios avançados",
+                  "Sem limites de faturamento"
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <span className="text-whatsapp">✓</span>
+                    {feature}
+                  </li>
+                ))}
               </ul>
             </div>
 
             <div className="flex flex-col gap-2">
               <Button 
                 asChild
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full bg-whatsapp hover:bg-whatsapp/90 h-12 rounded-xl"
               >
                 <a 
                   href="https://www.asaas.com/c/s9mw6vv5r3ik8sdi" 
@@ -286,7 +325,7 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
               <Button 
                 variant="outline" 
                 onClick={() => setShowUpgradeModal(false)}
-                className="w-full"
+                className="w-full h-11 rounded-xl"
               >
                 Fechar
               </Button>
@@ -294,7 +333,7 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
               <Button 
                 asChild
                 variant="ghost" 
-                className="w-full border border-green-600 text-green-600 hover:bg-green-50"
+                className="w-full border border-whatsapp/30 text-whatsapp hover:bg-whatsapp/5 h-11 rounded-xl"
               >
                 <a 
                   href="https://wa.me/5511999999999?text=Preciso%20liberar%20meu%20cardápio" 

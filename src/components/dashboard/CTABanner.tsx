@@ -1,38 +1,71 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ExternalLink, MessageCircle, Sparkles } from "lucide-react";
+import { ExternalLink, MessageCircle, Sparkles, X } from "lucide-react";
+import { useState } from "react";
+
 export function CTABanner() {
+  const [isVisible, setIsVisible] = useState(true);
+
   const handleUpgradeClick = () => {
     const message = encodeURIComponent("quero conhecer o sistema completo");
     window.open(`https://wa.me/5511916924490?text=${message}`, '_blank');
   };
+
   const handleWhatsAppClick = () => {
     window.open('https://wa.me/5511916924490', '_blank');
   };
-  return <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 mb-6">
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">
-            <Sparkles className="h-8 w-8 text-primary" />
+
+  if (!isVisible) return null;
+
+  return (
+    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-whatsapp/5 mb-6">
+      <button 
+        onClick={() => setIsVisible(false)}
+        className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted/50 transition-colors z-10"
+        aria-label="Fechar"
+      >
+        <X className="h-4 w-4 text-muted-foreground" />
+      </button>
+      
+      <CardContent className="p-5 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start gap-4">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-whatsapp/20 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-6 w-6 text-primary" />
           </div>
           
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-foreground mb-2">Precisa de mais recursos? Conheça o Clica e Pede completo!</h3>
-            <p className="text-muted-foreground mb-4">Com robô de WhatsApp, integração com Ifood, pagamento online, controle de estoque, PDV, atendimento de mesas e App do Garçom, relatórios e controle financeiro. Conheça todas as funcionalidades avançadas!</p>
+          <div className="flex-1 space-y-3">
+            <div>
+              <h3 className="text-base font-semibold text-foreground">
+                Precisa de mais recursos?
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                Robô de WhatsApp, integração com iFood, pagamento online, controle de estoque, PDV e muito mais!
+              </p>
+            </div>
             
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={handleUpgradeClick} className="flex items-center gap-2">
-                <ExternalLink className="h-4 w-4" />
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                onClick={handleUpgradeClick} 
+                size="sm"
+                className="bg-primary hover:bg-primary/90 shadow-sm"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
                 Conhecer Sistema Completo
               </Button>
               
-              <Button variant="outline" onClick={handleWhatsAppClick} className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4" />
-                Fale com Nossa Equipe
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleWhatsAppClick} 
+                className="border-whatsapp/30 text-whatsapp hover:bg-whatsapp/5 hover:text-whatsapp"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Falar com Equipe
               </Button>
             </div>
           </div>
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 }
