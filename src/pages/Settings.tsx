@@ -26,7 +26,8 @@ import {
   ShoppingCart,
   Send,
   MessageCircle,
-  LogOut
+  LogOut,
+  ArrowRight
 } from "lucide-react";
 import { CategoryManager } from "@/components/dashboard/CategoryManager";
 import { ProductManager } from "@/components/dashboard/ProductManager";
@@ -37,9 +38,9 @@ import { DeliveryZoneManager } from "@/components/dashboard/DeliveryZoneManager"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const mainMenuItems = [
-  { title: "Financeiro", value: "dashboard", icon: BarChart3, path: "/admin" },
+  { title: "Dashboard", value: "dashboard", icon: BarChart3, path: "/admin" },
   { title: "Pedidos", value: "orders", icon: ShoppingCart, path: "/admin/orders" },
-  { title: "Marketing", value: "marketing", icon: Send, isGreen: true, path: "/admin" },
+  { title: "Marketing", value: "marketing", icon: Send, accent: true, path: "/admin" },
   { title: "Ajustes", value: "settings", icon: SettingsIcon, path: "/admin/settings" },
 ];
 
@@ -48,37 +49,43 @@ const settingsCards = [
     title: "Cardápio", 
     description: "Gerencie produtos e preços",
     icon: ChefHat, 
-    value: "products" 
+    value: "products",
+    color: "primary"
   },
   { 
     title: "Categorias", 
     description: "Organize seu cardápio",
     icon: List, 
-    value: "categories" 
+    value: "categories",
+    color: "secondary"
   },
   { 
     title: "Adicionais", 
     description: "Configure complementos",
     icon: Plus, 
-    value: "addons" 
+    value: "addons",
+    color: "accent"
   },
   { 
     title: "Área de Entrega", 
     description: "Defina zonas e taxas",
     icon: MapPin, 
-    value: "delivery" 
+    value: "delivery",
+    color: "whatsapp"
   },
   { 
     title: "Formas de Pagamento", 
     description: "Configure métodos de pagamento",
     icon: CreditCard, 
-    value: "payment" 
+    value: "payment",
+    color: "primary"
   },
   { 
     title: "Configurações", 
     description: "Ajustes gerais do restaurante",
     icon: SettingsIcon, 
-    value: "settings" 
+    value: "settings",
+    color: "secondary"
   },
 ];
 
@@ -88,7 +95,6 @@ export default function Settings() {
   const [restaurant, setRestaurant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
-  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -134,12 +140,22 @@ export default function Settings() {
     setRestaurant(updatedRestaurant);
   };
 
+  const getColorClasses = (color: string) => {
+    const colors: Record<string, { bg: string; text: string; border: string }> = {
+      primary: { bg: "bg-primary/10", text: "text-primary", border: "hover:border-primary/50" },
+      secondary: { bg: "bg-secondary/10", text: "text-secondary", border: "hover:border-secondary/50" },
+      accent: { bg: "bg-accent/10", text: "text-accent-foreground", border: "hover:border-accent/50" },
+      whatsapp: { bg: "bg-whatsapp/10", text: "text-whatsapp", border: "hover:border-whatsapp/50" }
+    };
+    return colors[color] || colors.primary;
+  };
+
   if (loading || !restaurant) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Carregando...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-sm text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
@@ -171,11 +187,11 @@ export default function Settings() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <Sidebar collapsible="none" className="w-[100px] border-r">
-          <SidebarContent className="p-2">
+      <div className="min-h-screen flex w-full bg-muted/30">
+        <Sidebar collapsible="none" className="w-20 lg:w-[220px] border-r bg-sidebar transition-all duration-300">
+          <SidebarContent className="flex flex-col h-full py-4">
             {/* Logo */}
-            <div className="flex items-center justify-center py-4 mb-2">
+            <div className="flex items-center justify-center lg:justify-start px-4 mb-6">
               <img 
                 src="/lovable-uploads/df0ab910-5641-4faf-b0dc-3743be76338e.png" 
                 alt="Logo" 
@@ -183,92 +199,125 @@ export default function Settings() {
               />
             </div>
             
-            <SidebarGroup>
+            <SidebarGroup className="flex-1">
               <SidebarGroupContent>
-                <SidebarMenu className="space-y-2">
-                  {mainMenuItems.map((item) => (
-                    <SidebarMenuItem key={item.value}>
-                      <SidebarMenuButton
-                        onClick={() => navigate(item.path)}
-                        className={`flex flex-col items-center justify-center h-16 w-full rounded-lg gap-1 p-2 ${
-                          item.isGreen
-                            ? "settings" === item.value
-                              ? "bg-green-600 text-white hover:bg-green-700"
-                              : "text-green-600 hover:bg-green-50 hover:text-green-700"
-                            : "settings" === item.value
-                              ? "bg-accent text-accent-foreground"
-                              : "hover:bg-accent/50"
-                        }`}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        <span className="text-xs font-medium">{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                <SidebarMenu className="space-y-1 px-2">
+                  {mainMenuItems.map((item) => {
+                    const isActive = item.value === "settings";
+                    const isAccent = item.accent;
+                    
+                    return (
+                      <SidebarMenuItem key={item.value}>
+                        <SidebarMenuButton
+                          onClick={() => navigate(item.path)}
+                          className={`
+                            flex items-center justify-center lg:justify-start gap-3 
+                            h-12 w-full rounded-xl px-3 
+                            transition-all duration-200
+                            ${isActive 
+                              ? isAccent
+                                ? "bg-whatsapp text-white shadow-sm"
+                                : "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                              : isAccent
+                                ? "text-whatsapp hover:bg-whatsapp/10"
+                                : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                            }
+                          `}
+                        >
+                          <item.icon className="h-5 w-5 flex-shrink-0" />
+                          <span className="hidden lg:block text-sm font-medium">{item.title}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
 
             {/* WhatsApp Robot Button */}
-            <div className="px-2 pb-4">
+            <div className="px-2 mb-2">
               <Button 
                 onClick={handleWhatsAppClick}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-2 rounded-lg flex flex-col items-center justify-center gap-0.5 h-16"
+                className="w-full bg-whatsapp hover:bg-whatsapp/90 text-white font-medium rounded-xl 
+                           flex items-center justify-center lg:justify-start gap-2 h-12 px-3 shadow-sm"
               >
-                <MessageCircle className="h-5 w-5" />
-                <span className="text-xs leading-tight text-center">Robô de<br />WhatsApp</span>
+                <MessageCircle className="h-5 w-5 flex-shrink-0" />
+                <span className="hidden lg:block text-sm">Robô WhatsApp</span>
               </Button>
             </div>
 
-            <div className="mt-auto p-2">
+            {/* Logout Button */}
+            <div className="px-2">
               <Button 
                 variant="ghost" 
                 onClick={handleLogout}
-                className="w-full flex flex-col items-center justify-center gap-1 h-16 rounded-lg"
+                className="w-full flex items-center justify-center lg:justify-start gap-2 h-12 px-3 rounded-xl
+                           text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
               >
-                <LogOut className="h-5 w-5" />
-                <span className="text-xs">Sair</span>
+                <LogOut className="h-5 w-5 flex-shrink-0" />
+                <span className="hidden lg:block text-sm">Sair</span>
               </Button>
             </div>
           </SidebarContent>
         </Sidebar>
         
-        <div className="flex-1">
-          <header className="h-16 border-b bg-background flex items-center justify-between px-6">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
+        <main className="flex-1 flex flex-col min-h-screen">
+          {/* Header */}
+          <header className="sticky top-0 z-40 h-16 bg-background/80 backdrop-blur-lg border-b border-border/50 flex items-center px-4 md:px-6">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="lg:hidden" />
               <div className="flex items-center gap-3">
-                <SettingsIcon className="h-6 w-6 text-primary" />
-                <h1 className="text-xl font-semibold text-foreground">{restaurant?.name || "Ajustes"}</h1>
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <SettingsIcon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-base font-semibold text-foreground">Ajustes</h1>
+                  <p className="text-xs text-muted-foreground">{restaurant?.name}</p>
+                </div>
               </div>
             </div>
           </header>
 
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {settingsCards.map((card) => (
-                <Card 
-                  key={card.value}
-                  className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50"
-                  onClick={() => setActiveDialog(card.value)}
-                >
-                  <CardHeader className="text-center pb-4">
-                    <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <card.icon className="h-8 w-8 text-primary" />
-                    </div>
-                    <CardTitle className="text-lg">{card.title}</CardTitle>
-                    <CardDescription>{card.description}</CardDescription>
-                  </CardHeader>
-                </Card>
-              ))}
+          {/* Content */}
+          <div className="flex-1 p-4 md:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {settingsCards.map((card) => {
+                const colors = getColorClasses(card.color);
+                return (
+                  <Card 
+                    key={card.value}
+                    className={`group cursor-pointer border-border/50 bg-card hover:shadow-lg transition-all duration-300 ${colors.border}`}
+                    onClick={() => setActiveDialog(card.value)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-3">
+                          <div className={`h-12 w-12 rounded-xl ${colors.bg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                            <card.icon className={`h-6 w-6 ${colors.text}`} />
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg text-foreground group-hover:text-primary transition-colors">
+                              {card.title}
+                            </CardTitle>
+                            <CardDescription className="mt-1">
+                              {card.description}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
-        </div>
+        </main>
 
         <Dialog open={!!activeDialog} onOpenChange={(open) => !open && setActiveDialog(null)}>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{getDialogTitle()}</DialogTitle>
+              <DialogTitle className="text-xl">{getDialogTitle()}</DialogTitle>
             </DialogHeader>
             {renderDialogContent()}
           </DialogContent>

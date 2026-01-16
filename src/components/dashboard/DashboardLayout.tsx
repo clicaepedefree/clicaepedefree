@@ -7,40 +7,27 @@ import {
   SidebarContent, 
   SidebarGroup, 
   SidebarGroupContent, 
-  SidebarGroupLabel, 
   SidebarMenu, 
   SidebarMenuButton, 
   SidebarMenuItem,
   useSidebar 
 } from "@/components/ui/sidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { 
-  Store, 
-  Menu as MenuIcon, 
-  Plus, 
-  Settings, 
-  LogOut, 
-  Link as LinkIcon,
-  Package,
-  MapPin,
   BarChart3,
   MessageCircle,
   Send,
-  CreditCard,
   ShoppingCart,
-  Home,
-  List,
-  ChefHat
+  Settings,
+  LogOut,
+  Link as LinkIcon,
+  ExternalLink,
+  ChefHat,
+  Sparkles
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
-import { CategoryManager } from "./CategoryManager";
-import { ProductManager } from "./ProductManager";
-import { AddonManager } from "./AddonManager";
-import { RestaurantSettings } from "./RestaurantSettings";
-import { DeliveryZoneManager } from "./DeliveryZoneManager";
-import { PaymentMethodsManager } from "./PaymentMethodsManager";
 import { SalesDashboard } from "./SalesDashboard";
 import { CTABanner } from "./CTABanner";
 import { RestaurantControls } from "./RestaurantControls";
@@ -48,7 +35,6 @@ import { OrdersKanban } from "../orders/OrdersKanban";
 import { OnboardingHelpDialog } from "./OnboardingHelpDialog";
 import { UpsellPopup } from "./UpsellPopup";
 import { FloatingWhatsAppButton } from "./FloatingWhatsAppButton";
-
 
 interface DashboardLayoutProps {
   restaurant: any;
@@ -61,10 +47,10 @@ interface DashboardLayoutProps {
 }
 
 const menuItems = [
-  { title: "Financeiro", value: "dashboard", icon: BarChart3 },
+  { title: "Dashboard", value: "dashboard", icon: BarChart3 },
   { title: "Pedidos", value: "orders", icon: ShoppingCart },
   { title: "Relatórios", value: "analytics", icon: ChefHat },
-  { title: "Marketing", value: "marketing", icon: Send, isGreen: true },
+  { title: "Marketing", value: "marketing", icon: Send, accent: true },
   { title: "Ajustes", value: "settings", icon: Settings },
 ];
 
@@ -108,10 +94,11 @@ export function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-muted/30">
         <OnboardingHelpDialog restaurantId={restaurant.id} />
         <UpsellPopup />
         <FloatingWhatsAppButton />
+        
         <AppSidebar
           activeSection={propActiveSection || activeSection}
           onSectionChange={handleSectionChange}
@@ -120,94 +107,154 @@ export function DashboardLayout({
           onWhatsAppClick={() => setShowWhatsAppModal(true)}
         />
         
-        <main className="flex-1 bg-background">
-          <header className="h-16 border-b bg-background flex items-center justify-between px-6">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <h1 className="text-xl font-semibold text-foreground">{restaurant.name}</h1>
+        <main className="flex-1 flex flex-col min-h-screen">
+          {/* Modern Header */}
+          <header className="sticky top-0 z-40 h-16 bg-background/80 backdrop-blur-lg border-b border-border/50 flex items-center justify-between px-4 md:px-6">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="lg:hidden" />
+              <div className="flex items-center gap-3">
+                {restaurant.logo_url ? (
+                  <img 
+                    src={restaurant.logo_url} 
+                    alt={restaurant.name}
+                    className="h-8 w-8 rounded-full object-cover ring-2 ring-primary/20"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
+                    <span className="text-sm font-bold text-primary-foreground">
+                      {restaurant.name?.charAt(0)?.toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="hidden sm:block">
+                  <h1 className="text-base font-semibold text-foreground leading-tight">{restaurant.name}</h1>
+                  <p className="text-xs text-muted-foreground">Painel de Gestão</p>
+                </div>
+              </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="default" size="sm" onClick={copyLink} className="bg-blue-600 hover:bg-blue-700 text-white">
-                <LinkIcon className="h-4 w-4 mr-2" />
-                Copiar Link
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={copyLink}
+                className="hidden sm:flex gap-2 border-primary/30 hover:bg-primary/5 hover:border-primary/50 transition-all"
+              >
+                <LinkIcon className="h-4 w-4 text-primary" />
+                <span className="text-foreground">Copiar Link</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={openLink}>
-                Ver Cardápio
+              <Button 
+                size="sm" 
+                onClick={openLink}
+                className="gap-2 bg-primary hover:bg-primary/90 shadow-sm"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span className="hidden sm:inline">Ver Cardápio</span>
               </Button>
             </div>
           </header>
 
-          <div className="p-6">
+          {/* Main Content */}
+          <div className="flex-1 p-4 md:p-6 space-y-6 overflow-auto">
+            {/* Quick Help Banner - Simplified */}
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                variant="outline"
+                size="sm"
+                className="bg-background hover:bg-primary/5 border-primary/20"
+                asChild
+              >
+                <a 
+                  href="https://www.youtube.com/watch?v=XHJScS_YEMo" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <span className="text-lg">📺</span>
+                  <span className="text-sm">Como configurar</span>
+                </a>
+              </Button>
+              
+              <Button 
+                variant="outline"
+                size="sm"
+                className="bg-background hover:bg-whatsapp/5 border-whatsapp/30 text-whatsapp hover:text-whatsapp"
+                asChild
+              >
+                <a 
+                  href="https://wa.me/5511916924490?text=Preciso%20de%20ajuda%20no%20cardápio%20grátis" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span className="text-sm">Preciso de ajuda</span>
+                </a>
+              </Button>
+            </div>
+
             <CTABanner />
             
-            {/* Restaurant Controls */}
+            {/* Dashboard Section */}
             {activeSection === "dashboard" && (
-              <RestaurantControls 
-                restaurant={restaurant}
-                onRestaurantUpdate={onRestaurantUpdate}
-              />
+              <div className="space-y-6 animate-fade-in-up">
+                <RestaurantControls 
+                  restaurant={restaurant}
+                  onRestaurantUpdate={onRestaurantUpdate}
+                />
+                <SalesDashboard restaurant={restaurant} />
+              </div>
             )}
             
-            {/* Mini Banner Tutorial */}
-            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
-                  variant="default"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  asChild
-                >
-                  <a 
-                    href="https://www.youtube.com/watch?v=XHJScS_YEMo" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2"
-                  >
-                    📺 Veja como configurar o sistema
-                  </a>
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  className="border-green-600 text-green-600 hover:bg-green-50"
-                  asChild
-                >
-                  <a 
-                    href="https://wa.me/5511916924490?text=Preciso%20de%20ajuda%20no%20cardápio%20grátis" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2"
-                  >
-                    💬 Preciso de ajuda
-                  </a>
-                </Button>
+            {/* Orders Section */}
+            {activeSection === "orders" && (
+              <div className="animate-fade-in-up">
+                <OrdersKanban restaurant={restaurant} />
               </div>
-            </div>
+            )}
             
-            {activeSection === "dashboard" && <SalesDashboard restaurant={restaurant} />}
-            {activeSection === "orders" && <OrdersKanban restaurant={restaurant} />}
+            {/* Marketing Section */}
             {activeSection === "marketing" && (
-              <div className="bg-card rounded-lg p-6">
-                <h2 className="text-2xl font-bold mb-6 text-foreground">Marketing</h2>
-                
-                <div className="space-y-6">
-                  {/* Disparar Mensagens */}
-                  <div className="border border-border rounded-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-foreground">Disparar Mensagens</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Para liberar esta funcionalidade, entre em contato conosco.
-                    </p>
-                    <Button 
-                      onClick={() => {
-                        const message = "Quero liberar a função de disparar mensagens";
-                        const whatsappUrl = `https://wa.me/5511916924490?text=${encodeURIComponent(message)}`;
-                        window.open(whatsappUrl, '_blank');
-                      }}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      Solicitar Liberação
-                    </Button>
+              <div className="animate-fade-in-up">
+                <div className="bg-card rounded-xl border border-border/50 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-border/50 bg-gradient-to-r from-whatsapp/5 to-transparent">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-whatsapp/10 flex items-center justify-center">
+                        <Send className="h-5 w-5 text-whatsapp" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold text-foreground">Marketing</h2>
+                        <p className="text-sm text-muted-foreground">Alcance mais clientes</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="bg-muted/30 rounded-xl p-6 border border-border/50">
+                      <div className="flex items-start gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-whatsapp/20 to-whatsapp/5 flex items-center justify-center flex-shrink-0">
+                          <Sparkles className="h-6 w-6 text-whatsapp" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-foreground mb-2">Disparar Mensagens</h3>
+                          <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
+                            Envie promoções e novidades diretamente para seus clientes via WhatsApp. 
+                            Entre em contato para liberar esta funcionalidade.
+                          </p>
+                          <Button 
+                            onClick={() => {
+                              const message = "Quero liberar a função de disparar mensagens";
+                              const whatsappUrl = `https://wa.me/5511916924490?text=${encodeURIComponent(message)}`;
+                              window.open(whatsappUrl, '_blank');
+                            }}
+                            className="bg-whatsapp hover:bg-whatsapp/90 text-white shadow-sm"
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            Solicitar Liberação
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -215,52 +262,49 @@ export function DashboardLayout({
           </div>
         </main>
         
+        {/* WhatsApp Robot Modal */}
         <Dialog open={showWhatsAppModal} onOpenChange={setShowWhatsAppModal}>
-          <DialogContent className="max-w-4xl p-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px]">
-              {/* Left Content */}
+          <DialogContent className="max-w-4xl p-0 overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-2 min-h-[450px]">
               <div className="p-8 flex flex-col justify-center">
                 <DialogHeader className="mb-6">
-                  <DialogTitle className="text-2xl font-bold text-gray-900">
-                    Robô de WhatsApp da Clica e Pede
+                  <DialogTitle className="text-2xl font-bold text-foreground">
+                    Robô de WhatsApp
                   </DialogTitle>
                 </DialogHeader>
                 
-                <p className="text-gray-700 mb-6 leading-relaxed">
+                <p className="text-muted-foreground mb-6 leading-relaxed">
                   Uma ferramenta poderosa para vender e responder automaticamente aos seus clientes. 
                   Use facilmente, sem necessidade de conhecimentos de programação!
                 </p>
                 
-                <ul className="space-y-3 mb-8 text-gray-700">
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-600 font-bold">•</span>
-                    Mensagens automáticas totalmente editáveis.
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-600 font-bold">•</span>
-                    Respostas instantâneas e inteligentes impulsionadas por IA.
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-600 font-bold">•</span>
-                    Informações chave do seu negócio 24/7 para seus clientes.
-                  </li>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    "Mensagens automáticas totalmente editáveis",
+                    "Respostas instantâneas e inteligentes com IA",
+                    "Atendimento 24/7 para seus clientes"
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-center gap-3 text-foreground">
+                      <span className="h-2 w-2 rounded-full bg-whatsapp" />
+                      {feature}
+                    </li>
+                  ))}
                 </ul>
                 
                 <Button 
                   onClick={handleWhatsAppClick}
-                  className="bg-green-600 hover:bg-green-700 text-white text-lg py-6 px-8 rounded-lg font-semibold"
+                  className="bg-whatsapp hover:bg-whatsapp/90 text-white text-lg py-6 px-8 rounded-xl font-semibold shadow-lg"
                 >
                   <MessageCircle className="mr-2 h-5 w-5" />
                   Conectar Robô de WhatsApp
                 </Button>
               </div>
               
-              {/* Right Banner */}
-              <div className="bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+              <div className="bg-gradient-to-br from-primary/5 to-whatsapp/5 flex items-center justify-center p-6 hidden md:flex">
                 <img 
                   src="/lovable-uploads/71f177cc-fd8b-47d3-a73c-fadf7e48e36d.png" 
                   alt="WhatsApp Robot Banner" 
-                  className="max-w-full max-h-full object-contain"
+                  className="max-w-full max-h-full object-contain rounded-lg"
                 />
               </div>
             </div>
@@ -288,7 +332,7 @@ function AppSidebar({
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
 
-  const handleMenuClick = (item: any) => {
+  const handleMenuClick = (item: typeof menuItems[0]) => {
     if (item.value === "orders") {
       navigate("/admin/orders");
     } else if (item.value === "settings") {
@@ -301,10 +345,10 @@ function AppSidebar({
   };
 
   return (
-    <Sidebar collapsible="none" className="w-[100px] border-r">
-      <SidebarContent className="p-2">
+    <Sidebar collapsible="none" className="w-20 lg:w-[220px] border-r bg-sidebar transition-all duration-300">
+      <SidebarContent className="flex flex-col h-full py-4">
         {/* Logo */}
-        <div className="flex items-center justify-center py-4 mb-2">
+        <div className="flex items-center justify-center lg:justify-start px-4 mb-6">
           <img 
             src="/lovable-uploads/df0ab910-5641-4faf-b0dc-3743be76338e.png" 
             alt="Logo" 
@@ -312,51 +356,63 @@ function AppSidebar({
           />
         </div>
         
-        <SidebarGroup>
+        <SidebarGroup className="flex-1">
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.value}>
-                  <SidebarMenuButton
-                    onClick={() => handleMenuClick(item)}
-                    className={`flex flex-col items-center justify-center h-16 w-full rounded-lg gap-1 p-2 ${
-                      item.isGreen
-                        ? activeSection === item.value
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "text-green-600 hover:bg-green-50 hover:text-green-700"
-                        : activeSection === item.value
-                          ? "bg-accent text-accent-foreground"
-                          : "hover:bg-accent/50"
-                    }`}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span className="text-xs font-medium">{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+            <SidebarMenu className="space-y-1 px-2">
+              {menuItems.map((item) => {
+                const isActive = activeSection === item.value;
+                const isAccent = item.accent;
+                
+                return (
+                  <SidebarMenuItem key={item.value}>
+                    <SidebarMenuButton
+                      onClick={() => handleMenuClick(item)}
+                      className={`
+                        flex items-center justify-center lg:justify-start gap-3 
+                        h-12 w-full rounded-xl px-3 
+                        transition-all duration-200
+                        ${isActive 
+                          ? isAccent
+                            ? "bg-whatsapp text-white shadow-sm"
+                            : "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                          : isAccent
+                            ? "text-whatsapp hover:bg-whatsapp/10"
+                            : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                        }
+                      `}
+                    >
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      <span className="hidden lg:block text-sm font-medium">{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* WhatsApp Robot Button */}
-        <div className="px-2 pb-4">
+        <div className="px-2 mb-2">
           <Button 
             onClick={onWhatsAppClick}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-2 rounded-lg flex flex-col items-center justify-center gap-0.5 h-16"
+            className="w-full bg-whatsapp hover:bg-whatsapp/90 text-white font-medium rounded-xl 
+                       flex items-center justify-center lg:justify-start gap-2 h-12 px-3 shadow-sm"
           >
-            <MessageCircle className="h-5 w-5" />
-            <span className="text-xs leading-tight text-center">Robô de<br />WhatsApp</span>
+            <MessageCircle className="h-5 w-5 flex-shrink-0" />
+            <span className="hidden lg:block text-sm">Robô WhatsApp</span>
           </Button>
         </div>
 
-        <div className="mt-auto p-2">
+        {/* Logout Button */}
+        <div className="px-2">
           <Button 
             variant="ghost" 
             onClick={onLogout}
-            className="w-full flex flex-col items-center justify-center gap-1 h-16 rounded-lg"
+            className="w-full flex items-center justify-center lg:justify-start gap-2 h-12 px-3 rounded-xl
+                       text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30"
           >
-            <LogOut className="h-5 w-5" />
-            <span className="text-xs">Sair</span>
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            <span className="hidden lg:block text-sm">Sair</span>
           </Button>
         </div>
       </SidebarContent>
