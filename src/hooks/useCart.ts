@@ -21,17 +21,18 @@ interface Restaurant {
 }
 
 export function useCart() {
-  const [cart, setCart] = useState<{ [key: string]: { quantity: number; addons: any[]; unitPrice: number } }>({});
+  const [cart, setCart] = useState<{ [key: string]: { quantity: number; addons: any[]; unitPrice: number; observations?: string } }>({});
 
-  const addToCart = (product: Product, selectedAddons: any[], totalPrice: number) => {
-    const cartKey = `${product.id}-${JSON.stringify(selectedAddons.map(a => a.option?.id).sort())}`;
+  const addToCart = (product: Product, selectedAddons: any[], totalPrice: number, observations?: string) => {
+    const cartKey = `${product.id}-${JSON.stringify(selectedAddons.map(a => a.option?.id).sort())}-${observations || ''}`;
     
     setCart(prev => ({
       ...prev,
       [cartKey]: {
         quantity: (prev[cartKey]?.quantity || 0) + 1,
         addons: selectedAddons,
-        unitPrice: totalPrice
+        unitPrice: totalPrice,
+        observations: observations || prev[cartKey]?.observations
       }
     }));
   };
@@ -85,8 +86,9 @@ export function useCart() {
     message += `*Tipo:* ${isDelivery ? 'Entrega' : 'Retirada'}\n\n`;
     
     Object.entries(cart).forEach(([cartKey, item]) => {
-      const lastHyphenIndex = cartKey.lastIndexOf('-[');
-      const productId = lastHyphenIndex !== -1 ? cartKey.substring(0, lastHyphenIndex) : cartKey.split('-').slice(0, 5).join('-');
+      // Extract product ID - format is: productId-[addons]-observations
+      const parts = cartKey.split('-');
+      const productId = parts.slice(0, 5).join('-');
       const product = products.find(p => p.id === productId);
       console.log('Processing cart item:', { cartKey, item, productId, product });
       
@@ -100,7 +102,14 @@ export function useCart() {
           }
         }
         
-        message += ` - R$ ${numberToCurrency(item.unitPrice * item.quantity)}\n`;
+        message += ` - R$ ${numberToCurrency(item.unitPrice * item.quantity)}`;
+        
+        // Add observations if present
+        if (item.observations) {
+          message += `\n   📝 _${item.observations}_`;
+        }
+        
+        message += `\n`;
       }
     });
 
@@ -157,8 +166,9 @@ export function useCart() {
 
     try {
       const orderItems = Object.entries(cart).map(([cartKey, item]) => {
-        const lastHyphenIndex = cartKey.lastIndexOf('-[');
-        const productId = lastHyphenIndex !== -1 ? cartKey.substring(0, lastHyphenIndex) : cartKey.split('-').slice(0, 5).join('-');
+        // Extract product ID - format is: productId-[addons]-observations
+        const parts = cartKey.split('-');
+        const productId = parts.slice(0, 5).join('-');
         const product = products.find(p => p.id === productId);
         
         return {
@@ -167,6 +177,7 @@ export function useCart() {
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           addons: item.addons,
+          observations: item.observations,
           total: item.unitPrice * item.quantity
         };
       });

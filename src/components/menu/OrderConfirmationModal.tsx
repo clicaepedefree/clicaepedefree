@@ -54,7 +54,7 @@ interface PaymentMethod {
 interface OrderConfirmationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cart: { [key: string]: { quantity: number; addons: any[]; unitPrice: number } };
+  cart: { [key: string]: { quantity: number; addons: any[]; unitPrice: number; observations?: string } };
   products: Product[];
   restaurant: Restaurant | null;
   onUpdateQuantity: (cartKey: string, newQuantity: number) => void;
@@ -201,9 +201,9 @@ export function OrderConfirmationModal({
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
           <div className="space-y-4">
         {cartEntries.map(([cartKey, item]) => {
-          // O productId é toda a parte antes do último hífen que precede o JSON dos addons
-          const lastHyphenIndex = cartKey.lastIndexOf('-[');
-          const productId = lastHyphenIndex !== -1 ? cartKey.substring(0, lastHyphenIndex) : cartKey.split('-').slice(0, 5).join('-');
+          // Extract product ID - format is: productId-[addons]-observations
+          const parts = cartKey.split('-');
+          const productId = parts.slice(0, 5).join('-');
           const product = products.find(p => p.id === productId);
             
             if (!product) return null;
@@ -240,6 +240,15 @@ export function OrderConfirmationModal({
                         </Badge>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {item.observations && (
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">📝 Observações:</p>
+                    <p className="text-sm italic text-muted-foreground bg-muted/50 p-2 rounded">
+                      {item.observations}
+                    </p>
                   </div>
                 )}
 
