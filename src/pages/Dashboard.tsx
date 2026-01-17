@@ -53,12 +53,17 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    // Se já está em modo super admin, não precisa verificar auth do Supabase
+    if (isSuperAdminMode) {
+      return;
+    }
+    
     // Verificar sessão atual
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchRestaurant(session.user.id);
-      } else if (!isSuperAdminMode) {
+      } else {
         setLoading(false);
       }
     });
@@ -68,7 +73,7 @@ export default function Dashboard() {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchRestaurant(session.user.id);
-      } else if (!isSuperAdminMode) {
+      } else {
         setLoading(false);
       }
     });
@@ -168,18 +173,16 @@ export default function Dashboard() {
     navigate('/super-admin');
   };
 
-  // Loading state
+  // Loading state - só para usuários normais (não super admin mode)
   if (loading && !isSuperAdminMode) {
-    if (superAdminLoading) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Carregando...</p>
-          </div>
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Carregando...</p>
         </div>
-      );
-    }
+      </div>
+    );
   }
 
   // Super admin mode via localStorage (veio da página /super-admin)
