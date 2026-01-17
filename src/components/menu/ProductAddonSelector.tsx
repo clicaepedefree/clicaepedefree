@@ -40,7 +40,7 @@ interface ProductAddonSelectorProps {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddToCart: (product: Product, selectedAddons: any[], totalPrice: number) => void;
+  onAddToCart: (product: Product, selectedAddons: any[], totalPrice: number, observations?: string) => void;
 }
 
 export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart }: ProductAddonSelectorProps) {
@@ -218,9 +218,9 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
 
     const unitPrice = calculateTotalPrice();
     
-    // Add to cart multiple times based on quantity
+    // Add to cart multiple times based on quantity, passing observations
     for (let i = 0; i < quantity; i++) {
-      onAddToCart(product, selectedAddonItems, unitPrice);
+      onAddToCart(product, selectedAddonItems, unitPrice, observations);
     }
     
     setQuantity(1);
