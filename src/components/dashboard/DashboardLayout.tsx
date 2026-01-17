@@ -50,6 +50,7 @@ const menuItems = [
   { title: "Dashboard", value: "dashboard", icon: BarChart3 },
   { title: "Pedidos", value: "orders", icon: ShoppingCart },
   { title: "Relatórios", value: "analytics", icon: ChefHat },
+  { title: "Robô WhatsApp", value: "whatsapp-robot", icon: MessageCircle, accent: true },
   { title: "Marketing", value: "marketing", icon: Send, accent: true },
   { title: "Ajustes", value: "settings", icon: Settings },
 ];
@@ -339,6 +340,8 @@ function AppSidebar({
       navigate("/admin/settings");
     } else if (item.value === "analytics") {
       navigate("/admin/analytics");
+    } else if (item.value === "whatsapp-robot") {
+      onWhatsAppClick();
     } else {
       onSectionChange(item.value);
     }
@@ -390,18 +393,6 @@ function AppSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* WhatsApp Robot Button */}
-        <div className="px-2 mb-2">
-          <Button 
-            onClick={onWhatsAppClick}
-            className="w-full bg-whatsapp hover:bg-whatsapp/90 text-white font-medium rounded-xl 
-                       flex items-center justify-center lg:justify-start gap-2 h-12 px-3 shadow-sm"
-          >
-            <MessageCircle className="h-5 w-5 flex-shrink-0" />
-            <span className="hidden lg:block text-sm">Robô WhatsApp</span>
-          </Button>
-        </div>
 
         {/* Logout Button */}
         <div className="px-2">
