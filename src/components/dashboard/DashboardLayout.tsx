@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar 
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -24,7 +25,14 @@ import {
   Link as LinkIcon,
   ExternalLink,
   ChefHat,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  Package,
+  List,
+  Plus,
+  MapPin,
+  CreditCard,
+  Store
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -46,13 +54,39 @@ interface DashboardLayoutProps {
   isSuperAdminMode?: boolean;
 }
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  value: string;
+  icon: any;
+  accent?: boolean;
+  subItems?: { title: string; value: string; icon: any }[];
+}
+
+const menuItems: MenuItem[] = [
   { title: "Dashboard", value: "dashboard", icon: BarChart3 },
   { title: "Pedidos", value: "orders", icon: ShoppingCart },
-  { title: "Relatórios", value: "analytics", icon: ChefHat },
-  { title: "Robô WhatsApp", value: "whatsapp-robot", icon: MessageCircle, accent: true },
+  { 
+    title: "Cardápio", 
+    value: "cardapio", 
+    icon: ChefHat,
+    subItems: [
+      { title: "Produtos", value: "products", icon: Package },
+      { title: "Categorias", value: "categories", icon: List },
+      { title: "Adicionais", value: "addons", icon: Plus },
+    ]
+  },
+  { title: "Robô de WhatsApp", value: "whatsapp-robot", icon: MessageCircle, accent: true },
   { title: "Marketing", value: "marketing", icon: Send, accent: true },
-  { title: "Ajustes", value: "settings", icon: Settings },
+  { 
+    title: "Configurações", 
+    value: "configuracoes", 
+    icon: Settings,
+    subItems: [
+      { title: "Áreas de entrega", value: "delivery", icon: MapPin },
+      { title: "Formas de pagamento", value: "payment", icon: CreditCard },
+      { title: "Perfil do restaurante", value: "profile", icon: Store },
+    ]
+  },
 ];
 
 export function DashboardLayout({ 
@@ -332,19 +366,35 @@ function AppSidebar({
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
+  const [openMenus, setOpenMenus] = useState<string[]>([]);
 
-  const handleMenuClick = (item: typeof menuItems[0]) => {
-    if (item.value === "orders") {
+  const toggleMenu = (value: string) => {
+    setOpenMenus(prev => 
+      prev.includes(value) 
+        ? prev.filter(v => v !== value)
+        : [...prev, value]
+    );
+  };
+
+  const handleMenuClick = (item: MenuItem, subValue?: string) => {
+    const value = subValue || item.value;
+    
+    if (value === "orders") {
       navigate("/admin/orders");
-    } else if (item.value === "settings") {
-      navigate("/admin/settings");
-    } else if (item.value === "analytics") {
-      navigate("/admin/analytics");
-    } else if (item.value === "whatsapp-robot") {
+    } else if (value === "whatsapp-robot") {
       onWhatsAppClick();
+    } else if (value === "products" || value === "categories" || value === "addons" || 
+               value === "delivery" || value === "payment" || value === "profile") {
+      navigate(`/admin/settings?tab=${value}`);
+    } else if (item.subItems) {
+      toggleMenu(item.value);
     } else {
-      onSectionChange(item.value);
+      onSectionChange(value);
     }
+  };
+
+  const isSubItemActive = (item: MenuItem) => {
+    return item.subItems?.some(sub => activeSection === sub.value);
   };
 
   return (
@@ -363,8 +413,66 @@ function AppSidebar({
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1 px-2">
               {menuItems.map((item) => {
-                const isActive = activeSection === item.value;
+                const isActive = activeSection === item.value || isSubItemActive(item);
                 const isAccent = item.accent;
+                const isOpen = openMenus.includes(item.value);
+                const hasSubItems = item.subItems && item.subItems.length > 0;
+                
+                if (hasSubItems) {
+                  return (
+                    <Collapsible 
+                      key={item.value} 
+                      open={isOpen} 
+                      onOpenChange={() => toggleMenu(item.value)}
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            className={`
+                              flex items-center justify-center lg:justify-start gap-3 
+                              h-12 w-full rounded-xl px-3 
+                              transition-all duration-200
+                              ${isActive 
+                                ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                                : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                              }
+                            `}
+                          >
+                            <item.icon className="h-5 w-5 flex-shrink-0" />
+                            <span className="hidden lg:block text-sm font-medium flex-1 text-left">{item.title}</span>
+                            <ChevronDown className={`hidden lg:block h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        
+                        <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+                          <div className="mt-1 ml-4 lg:ml-6 space-y-1 border-l-2 border-sidebar-accent/50 pl-3">
+                            {item.subItems?.map((subItem) => {
+                              const isSubActive = activeSection === subItem.value;
+                              return (
+                                <SidebarMenuButton
+                                  key={subItem.value}
+                                  onClick={() => handleMenuClick(item, subItem.value)}
+                                  className={`
+                                    flex items-center justify-center lg:justify-start gap-2 
+                                    h-10 w-full rounded-lg px-2
+                                    transition-all duration-200
+                                    ${isSubActive 
+                                      ? "bg-primary/10 text-primary font-medium"
+                                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground"
+                                    }
+                                  `}
+                                >
+                                  <subItem.icon className="h-4 w-4 flex-shrink-0" />
+                                  <span className="hidden lg:block text-sm">{subItem.title}</span>
+                                </SidebarMenuButton>
+                              );
+                            })}
+                          </div>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  );
+                }
                 
                 return (
                   <SidebarMenuItem key={item.value}>
