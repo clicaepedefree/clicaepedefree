@@ -27,6 +27,8 @@ interface Restaurant {
   name: string;
   whatsapp: string;
   slug: string;
+  delivery_enabled?: boolean;
+  pickup_enabled?: boolean;
 }
 
 interface DeliveryAddress {
@@ -77,7 +79,13 @@ export function OrderConfirmationModal({
   const cartEntries = Object.entries(cart);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [selectedDeliveryZone, setSelectedDeliveryZone] = useState<DeliveryZone | null>(null);
-  const [orderType, setOrderType] = useState<'delivery' | 'pickup'>('delivery');
+  
+  // Determine default order type based on enabled options
+  const deliveryEnabled = restaurant?.delivery_enabled ?? true;
+  const pickupEnabled = restaurant?.pickup_enabled ?? true;
+  const defaultOrderType = deliveryEnabled ? 'delivery' : (pickupEnabled ? 'pickup' : 'delivery');
+  
+  const [orderType, setOrderType] = useState<'delivery' | 'pickup'>(defaultOrderType);
   
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
     street: '',
@@ -99,8 +107,14 @@ export function OrderConfirmationModal({
     if (restaurant?.id && open) {
       fetchDeliveryZones();
       fetchPaymentMethods();
+      // Reset order type based on enabled options
+      if (deliveryEnabled) {
+        setOrderType('delivery');
+      } else if (pickupEnabled) {
+        setOrderType('pickup');
+      }
     }
-  }, [restaurant?.id, open]);
+  }, [restaurant?.id, open, deliveryEnabled, pickupEnabled]);
 
   const fetchDeliveryZones = async () => {
     try {
@@ -311,33 +325,51 @@ export function OrderConfirmationModal({
 
             <Separator className="my-4" />
 
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <h3 className="text-base sm:text-lg font-semibold">Tipo de Pedido</h3>
+            {(deliveryEnabled || pickupEnabled) && (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  <h3 className="text-base sm:text-lg font-semibold">Tipo de Pedido</h3>
+                </div>
+                
+                {deliveryEnabled && pickupEnabled ? (
+                  <RadioGroup 
+                    value={orderType} 
+                    onValueChange={(value) => setOrderType(value as 'delivery' | 'pickup')}
+                    className="flex flex-col space-y-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="delivery" id="delivery" />
+                      <Label htmlFor="delivery" className="flex items-center space-x-2 text-sm sm:text-base">
+                        <Truck className="h-4 w-4" />
+                        <span>Entrega</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="pickup" id="pickup" />
+                      <Label htmlFor="pickup" className="flex items-center space-x-2 text-sm sm:text-base">
+                        <ShoppingBag className="h-4 w-4" />
+                        <span>Retirada</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                ) : (
+                  <div className="flex items-center space-x-2 p-2 bg-muted rounded-md">
+                    {deliveryEnabled ? (
+                      <>
+                        <Truck className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">Apenas Entrega disponível</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">Apenas Retirada disponível</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-              
-              <RadioGroup 
-                value={orderType} 
-                onValueChange={(value) => setOrderType(value as 'delivery' | 'pickup')}
-                className="flex flex-col space-y-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="delivery" id="delivery" />
-                  <Label htmlFor="delivery" className="flex items-center space-x-2 text-sm sm:text-base">
-                    <Truck className="h-4 w-4" />
-                    <span>Entrega</span>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="pickup" id="pickup" />
-                  <Label htmlFor="pickup" className="flex items-center space-x-2 text-sm sm:text-base">
-                    <ShoppingBag className="h-4 w-4" />
-                    <span>Retirada</span>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
+            )}
 
             <Separator className="my-4" />
 

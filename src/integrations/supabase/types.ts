@@ -404,12 +404,14 @@ export type Database = {
         Row: {
           banner_url: string | null
           created_at: string
+          delivery_enabled: boolean | null
           id: string
           is_blocked: boolean | null
           is_open: boolean | null
           logo_url: string | null
           monthly_revenue: number | null
           name: string
+          pickup_enabled: boolean | null
           responsible_name: string | null
           revenue_block_exempt_until: string | null
           slug: string
@@ -421,12 +423,14 @@ export type Database = {
         Insert: {
           banner_url?: string | null
           created_at?: string
+          delivery_enabled?: boolean | null
           id?: string
           is_blocked?: boolean | null
           is_open?: boolean | null
           logo_url?: string | null
           monthly_revenue?: number | null
           name: string
+          pickup_enabled?: boolean | null
           responsible_name?: string | null
           revenue_block_exempt_until?: string | null
           slug: string
@@ -438,12 +442,14 @@ export type Database = {
         Update: {
           banner_url?: string | null
           created_at?: string
+          delivery_enabled?: boolean | null
           id?: string
           is_blocked?: boolean | null
           is_open?: boolean | null
           logo_url?: string | null
           monthly_revenue?: number | null
           name?: string
+          pickup_enabled?: boolean | null
           responsible_name?: string | null
           revenue_block_exempt_until?: string | null
           slug?: string
