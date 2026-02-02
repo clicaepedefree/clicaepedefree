@@ -607,10 +607,12 @@ export type Database = {
         Args: { slug_input: string }
         Returns: {
           banner_url: string
+          delivery_enabled: boolean
           id: string
           is_open: boolean
           logo_url: string
           name: string
+          pickup_enabled: boolean
           slug: string
           whatsapp: string
         }[]

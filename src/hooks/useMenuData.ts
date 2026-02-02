@@ -10,6 +10,8 @@ interface Restaurant {
   banner_url?: string;
   is_open?: boolean;
   is_blocked?: boolean;
+  delivery_enabled?: boolean;
+  pickup_enabled?: boolean;
 }
 
 interface Category {
