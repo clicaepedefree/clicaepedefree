@@ -139,22 +139,20 @@ export function useCart() {
 
     if (payment) {
       message += `\n\n💳 *Forma de Pagamento:* `;
-      switch (payment.type) {
-        case 'debit':
-          message += 'Cartão de Débito';
-          break;
-        case 'credit':
-          message += 'Cartão de Crédito';
-          break;
-        case 'pix':
-          message += 'PIX';
-          break;
-        case 'cash':
-          message += 'Dinheiro';
-          if (payment.changeAmount) {
-            message += ` (Troco para R$ ${payment.changeAmount.toFixed(2).replace('.', ',')})`;
-          }
-          break;
+      const paymentLabels: Record<string, string> = {
+        debit_card: 'Cartão de Débito',
+        credit_card: 'Cartão de Crédito',
+        food_voucher: 'Vale Alimentação',
+        meal_voucher: 'Vale Refeição',
+        pix: 'PIX',
+        cash: 'Dinheiro',
+        card: 'Cartão', // Legacy support
+        debit: 'Cartão de Débito', // Legacy support
+        credit: 'Cartão de Crédito' // Legacy support
+      };
+      message += paymentLabels[payment.type] || payment.type;
+      if (payment.type === 'cash' && payment.changeAmount) {
+        message += ` (Troco para R$ ${payment.changeAmount.toFixed(2).replace('.', ',')})`;
       }
     }
     
