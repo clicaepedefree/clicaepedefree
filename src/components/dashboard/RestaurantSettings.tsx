@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUpload } from "./ImageUpload";
+import { Truck, ShoppingBag } from "lucide-react";
 
 interface RestaurantSettingsProps {
   restaurant: any;
@@ -15,6 +17,8 @@ interface RestaurantSettingsProps {
 export function RestaurantSettings({ restaurant, onUpdate }: RestaurantSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [deliveryEnabled, setDeliveryEnabled] = useState(restaurant.delivery_enabled ?? true);
+  const [pickupEnabled, setPickupEnabled] = useState(restaurant.pickup_enabled ?? true);
   const { toast } = useToast();
 
   const handleImageUpdate = async (field: 'logo_url' | 'banner_url', url: string) => {
@@ -38,6 +42,42 @@ export function RestaurantSettings({ restaurant, onUpdate }: RestaurantSettingsP
       toast({
         variant: "destructive",
         title: "Erro ao atualizar imagem",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleOrderTypeToggle = async (type: 'delivery' | 'pickup', enabled: boolean) => {
+    try {
+      const updateData = type === 'delivery' 
+        ? { delivery_enabled: enabled }
+        : { pickup_enabled: enabled };
+
+      const { data, error } = await supabase
+        .from('restaurants')
+        .update(updateData)
+        .eq('id', restaurant.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (type === 'delivery') {
+        setDeliveryEnabled(enabled);
+      } else {
+        setPickupEnabled(enabled);
+      }
+
+      toast({
+        title: enabled ? "Modalidade ativada!" : "Modalidade desativada!",
+        description: `${type === 'delivery' ? 'Delivery' : 'Retirada'} foi ${enabled ? 'ativado' : 'desativado'}.`,
+      });
+
+      onUpdate(data);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar",
         description: error.message,
       });
     }
@@ -161,6 +201,54 @@ export function RestaurantSettings({ restaurant, onUpdate }: RestaurantSettingsP
                 restaurantId={restaurant.id}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Modalidades de Pedido</CardTitle>
+            <CardDescription>
+              Configure quais tipos de pedido seu estabelecimento aceita
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Truck className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <Label className="text-base font-medium">Delivery</Label>
+                  <p className="text-sm text-muted-foreground">Entrega no endereço do cliente</p>
+                </div>
+              </div>
+              <Switch 
+                checked={deliveryEnabled}
+                onCheckedChange={(checked) => handleOrderTypeToggle('delivery', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <ShoppingBag className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <Label className="text-base font-medium">Retirada</Label>
+                  <p className="text-sm text-muted-foreground">Cliente retira no local</p>
+                </div>
+              </div>
+              <Switch 
+                checked={pickupEnabled}
+                onCheckedChange={(checked) => handleOrderTypeToggle('pickup', checked)}
+              />
+            </div>
+            
+            {!deliveryEnabled && !pickupEnabled && (
+              <p className="text-sm text-destructive">
+                ⚠️ Atenção: Nenhuma modalidade está ativa. Os clientes não poderão fazer pedidos.
+              </p>
+            )}
           </CardContent>
         </Card>
 
