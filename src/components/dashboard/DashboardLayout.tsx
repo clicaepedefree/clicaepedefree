@@ -32,7 +32,8 @@ import {
   Plus,
   MapPin,
   CreditCard,
-  Store
+  Store,
+  Clock
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -82,6 +83,7 @@ const menuItems: MenuItem[] = [
     value: "configuracoes", 
     icon: Settings,
     subItems: [
+      { title: "Horário de funcionamento", value: "hours", icon: Clock },
       { title: "Áreas de entrega", value: "delivery", icon: MapPin },
       { title: "Formas de pagamento", value: "payment", icon: CreditCard },
       { title: "Perfil do restaurante", value: "profile", icon: Store },
@@ -384,7 +386,7 @@ function AppSidebar({
     } else if (value === "whatsapp-robot") {
       onWhatsAppClick();
     } else if (value === "products" || value === "categories" || value === "addons" || 
-               value === "delivery" || value === "payment" || value === "profile") {
+               value === "delivery" || value === "hours" || value === "payment" || value === "profile") {
       navigate(`/admin/settings?tab=${value}`);
     } else if (item.subItems) {
       toggleMenu(item.value);

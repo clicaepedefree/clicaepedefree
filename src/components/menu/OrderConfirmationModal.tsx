@@ -47,7 +47,7 @@ interface DeliveryZone {
 }
 
 interface PaymentMethod {
-  type: 'debit' | 'credit' | 'pix' | 'cash' | 'card';
+  type: 'debit_card' | 'credit_card' | 'food_voucher' | 'meal_voucher' | 'pix' | 'cash';
   changeAmount?: number;
 }
 
@@ -450,16 +450,25 @@ export function OrderConfirmationModal({
                 onValueChange={(value) => setPaymentMethod({ type: value as PaymentMethod['type'] })}
                 className="space-y-2"
               >
-                {availablePaymentMethods.map((method) => (
-                  <div key={method.method_type} className="flex items-center space-x-2">
-                    <RadioGroupItem value={method.method_type} id={method.method_type} />
-                    <Label htmlFor={method.method_type} className="text-sm sm:text-base">
-                      {method.method_type === 'cash' && 'Dinheiro'}
-                      {method.method_type === 'card' && 'Cartão'}
-                      {method.method_type === 'pix' && 'PIX'}
-                    </Label>
-                  </div>
-                ))}
+                {availablePaymentMethods.map((method) => {
+                  const labels: Record<string, string> = {
+                    cash: 'Dinheiro',
+                    debit_card: 'Cartão de Débito',
+                    credit_card: 'Cartão de Crédito',
+                    food_voucher: 'Vale Alimentação',
+                    meal_voucher: 'Vale Refeição',
+                    pix: 'PIX',
+                    card: 'Cartão' // Legacy support
+                  };
+                  return (
+                    <div key={method.method_type} className="flex items-center space-x-2">
+                      <RadioGroupItem value={method.method_type} id={method.method_type} />
+                      <Label htmlFor={method.method_type} className="text-sm sm:text-base">
+                        {labels[method.method_type] || method.method_type}
+                      </Label>
+                    </div>
+                  );
+                })}
               </RadioGroup>
               
               {availablePaymentMethods.length === 0 && (

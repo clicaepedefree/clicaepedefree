@@ -10,7 +10,7 @@ import { CreditCard, DollarSign, Smartphone } from "lucide-react";
 
 interface PaymentMethod {
   id: string;
-  method_type: 'cash' | 'card' | 'pix';
+  method_type: 'cash' | 'debit_card' | 'credit_card' | 'food_voucher' | 'meal_voucher' | 'pix';
   is_active: boolean;
   pix_key?: string;
 }
@@ -27,7 +27,10 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
 
   const methodLabels = {
     cash: { label: "Dinheiro", icon: DollarSign },
-    card: { label: "Cartão", icon: CreditCard },
+    debit_card: { label: "Cartão de Débito", icon: CreditCard },
+    credit_card: { label: "Cartão de Crédito", icon: CreditCard },
+    food_voucher: { label: "Vale Alimentação", icon: CreditCard },
+    meal_voucher: { label: "Vale Refeição", icon: CreditCard },
     pix: { label: "PIX", icon: Smartphone }
   };
 

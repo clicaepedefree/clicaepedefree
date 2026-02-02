@@ -158,6 +158,47 @@ export type Database = {
         }
         Relationships: []
       }
+      operating_hours: {
+        Row: {
+          close_time: string
+          created_at: string
+          day_of_week: number
+          id: string
+          is_active: boolean
+          open_time: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          close_time?: string
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_active?: boolean
+          open_time?: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          close_time?: string
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_active?: boolean
+          open_time?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operating_hours_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_access_logs: {
         Row: {
           access_type: string
@@ -528,6 +569,10 @@ export type Database = {
           success: boolean
         }[]
       }
+      check_restaurant_open_status: {
+        Args: { check_time?: string; restaurant_id_param: string }
+        Returns: boolean
+      }
       check_revenue_limits:
         | { Args: { target_time?: string }; Returns: number }
         | { Args: { target_time?: string; tz?: string }; Returns: number }
@@ -596,6 +641,7 @@ export type Database = {
       update_monthly_revenues:
         | { Args: never; Returns: number }
         | { Args: { target_time?: string; tz?: string }; Returns: number }
+      update_restaurants_open_status: { Args: never; Returns: number }
       user_owns_order_restaurant: {
         Args: { order_id: string }
         Returns: boolean
