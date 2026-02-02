@@ -33,7 +33,8 @@ import {
   ArrowLeft,
   Package,
   Store,
-  ChevronDown
+  ChevronDown,
+  Clock
 } from "lucide-react";
 import { CategoryManager } from "@/components/dashboard/CategoryManager";
 import { ProductManager } from "@/components/dashboard/ProductManager";
@@ -41,6 +42,7 @@ import { AddonManager } from "@/components/dashboard/AddonManager";
 import { PaymentMethodsManager } from "@/components/dashboard/PaymentMethodsManager";
 import { RestaurantSettings } from "@/components/dashboard/RestaurantSettings";
 import { DeliveryZoneManager } from "@/components/dashboard/DeliveryZoneManager";
+import { OperatingHoursManager } from "@/components/dashboard/OperatingHoursManager";
 
 interface MenuItem {
   title: string;
@@ -70,6 +72,7 @@ const menuItems: MenuItem[] = [
     value: "configuracoes", 
     icon: SettingsIcon,
     subItems: [
+      { title: "Horário de funcionamento", value: "hours", icon: Clock },
       { title: "Áreas de entrega", value: "delivery", icon: MapPin },
       { title: "Formas de pagamento", value: "payment", icon: CreditCard },
       { title: "Perfil do restaurante", value: "profile", icon: Store },
@@ -105,6 +108,13 @@ const settingsCards = [
     icon: MapPin, 
     value: "delivery",
     color: "whatsapp"
+  },
+  { 
+    title: "Horário de Funcionamento", 
+    description: "Configure dias e horários",
+    icon: Clock, 
+    value: "hours",
+    color: "accent"
   },
   { 
     title: "Formas de Pagamento", 
@@ -212,6 +222,8 @@ export default function Settings() {
         return <AddonManager restaurant={restaurant} />;
       case "delivery":
         return <DeliveryZoneManager restaurant={restaurant} />;
+      case "hours":
+        return <OperatingHoursManager restaurant={restaurant} />;
       case "payment":
         return <PaymentMethodsManager restaurant={restaurant} />;
       case "profile":
@@ -348,7 +360,7 @@ function SettingsSidebar({
     } else if (value === "whatsapp-robot") {
       onWhatsAppClick();
     } else if (value === "products" || value === "categories" || value === "addons" || 
-               value === "delivery" || value === "payment" || value === "profile") {
+               value === "delivery" || value === "hours" || value === "payment" || value === "profile") {
       navigate(`/admin/settings?tab=${value}`);
     } else if (item.subItems) {
       toggleMenu(item.value);
@@ -376,7 +388,7 @@ function SettingsSidebar({
             <SidebarMenu className="space-y-1 px-2">
               {menuItems.map((item) => {
                 const isActive = isSubItemActive(item) || 
-                  (item.value === 'configuracoes' && ['delivery', 'payment', 'profile'].includes(activeTab || '')) ||
+                  (item.value === 'configuracoes' && ['delivery', 'hours', 'payment', 'profile'].includes(activeTab || '')) ||
                   (item.value === 'cardapio' && ['products', 'categories', 'addons'].includes(activeTab || ''));
                 const isAccent = item.accent;
                 const isOpen = openMenus.includes(item.value);
