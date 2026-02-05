@@ -4,51 +4,72 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useEffect, useRef, useState } from "react";
 
 export function FAQSection() {
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   const faqs = [
     {
-      question: "💬 O Cardápio Fácil tem fidelidade?",
-      answer: "Não. Você pode cancelar quando quiser, sem multas ou taxas. Não há período mínimo de contrato."
+      question: "💬 Isso substitui o WhatsApp?",
+      answer: "Não! O Cardápio Fácil funciona junto com o WhatsApp. Seu cliente acessa o link do cardápio, escolhe os produtos e finaliza o pedido. O pedido chega formatado direto no seu WhatsApp, pronto para você responder e confirmar. Você continua usando o WhatsApp normalmente."
     },
     {
-      question: "💰 Tem comissão por pedido?",
-      answer: "Nenhuma! É grátis até 100 pedidos por mês. Você não paga comissão por pedido, todo o lucro é seu."
+      question: "📱 Meu cliente precisa baixar aplicativo?",
+      answer: "Não! Seus clientes não precisam baixar nada. O cardápio funciona direto no navegador do celular. É só clicar no link e fazer o pedido. Simples assim!"
     },
     {
-      question: "🧾 Funciona com qualquer impressora?",
-      answer: "Sim! O sistema funciona com impressoras térmicas (80mm) e impressoras comuns. A impressão é automática e você pode configurar o que deseja imprimir."
+      question: "💰 Preciso pagar depois?",
+      answer: "Você usa grátis até 100 pedidos por mês ou R$2.000 em vendas. Se passar desse limite, aí conversamos sobre o plano pago. Mas pra começar, é 100% grátis e não pedimos cartão de crédito."
     },
     {
-      question: "💻 Precisa instalar aplicativo?",
-      answer: "Não! É 100% online e acessível pelo navegador. Você gerencia tudo pelo computador, tablet ou celular sem instalar nada."
+      question: "🛵 Funciona para delivery próprio?",
+      answer: "Perfeito para delivery próprio! Você recebe o pedido completo com endereço, forma de pagamento e tudo mais. Basta entregar com seu próprio entregador. Sem intermediários, sem comissões."
     },
     {
-      question: "🎁 Posso testar antes de pagar?",
-      answer: "Claro! Você tem até 100 pedidos grátis por mês para testar tudo. Não pedimos cartão de crédito no cadastro. Só começa a pagar se passar dos 100 pedidos."
+      question: "🧾 Consigo imprimir pedidos?",
+      answer: "Sim! O sistema imprime automaticamente na sua impressora térmica ou comum. O pedido sai formatado e pronto para a cozinha. Você também pode configurar o que quer que apareça na impressão."
     },
     {
-      question: "📱 Como meus clientes fazem pedidos?",
-      answer: "Você compartilha o link do seu cardápio. Eles acessam, escolhem produtos, adicionam extras e finalizam. O pedido chega automaticamente no seu WhatsApp formatado e pronto."
+      question: "🔄 E se eu não gostar?",
+      answer: "Sem problema! Não tem contrato nem fidelidade. Você pode parar de usar quando quiser, sem multas ou taxas. Mas a maioria dos restaurantes que testam acabam ficando porque realmente simplifica a vida."
     }
   ];
 
   return (
-    <section id="faq" className="py-20 bg-white">
+    <section id="faq" className="py-20 bg-white" ref={sectionRef}>
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+        <div className={`text-center mb-16 ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
           <div className="bg-indigo-50 p-2 rounded-lg inline-block mb-4">
-            <span className="text-indigo-600 font-medium text-sm">❓ Dúvidas Frequentes</span>
+            <span className="text-indigo-600 font-medium text-sm">❓ Tire suas dúvidas</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Perguntas Frequentes
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Tire suas dúvidas sobre nosso cardápio digital gratuito
+            Tudo o que você precisa saber antes de começar
           </p>
         </div>
         
-        <div className="max-w-4xl mx-auto">
+        <div className={`max-w-4xl mx-auto ${isVisible ? 'animate-fade-in-up animation-delay-200' : 'opacity-0'}`}>
           <Accordion type="single" collapsible className="w-full space-y-4">
             {faqs.map((faq, index) => (
               <AccordionItem key={index} value={`item-${index}`} className="bg-gray-50 rounded-xl px-6 border-0 shadow-sm hover:shadow-md transition-shadow">

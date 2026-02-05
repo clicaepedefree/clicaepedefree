@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, Sparkles, Shield, Zap } from "lucide-react";
+import { Check, Sparkles, Shield, Zap, CreditCard, FileText, Percent } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
@@ -30,20 +30,18 @@ export function PricingSection() {
     "Pedidos automáticos no WhatsApp",
     "Impressão de pedidos",
     "Gestão de pedidos (kanban)",
-    "Controle financeiro completo",
     "Adicionais e personalizações",
     "Relatórios de vendas",
     "Painel administrativo",
-    "Suporte completo",
+    "Suporte via WhatsApp",
     "Sem limite de produtos",
-    "Sem comissão por pedido",
     "Atualizações gratuitas"
   ];
 
   const guarantees = [
-    { icon: Shield, text: "Sem fidelidade", subtext: "Cancele quando quiser" },
-    { icon: Zap, text: "Sem taxas ocultas", subtext: "Preço transparente" },
-    { icon: Sparkles, text: "Sem comissão", subtext: "Lucro 100% seu" },
+    { icon: CreditCard, text: "Sem cartão", subtext: "Não pedimos cartão no cadastro" },
+    { icon: FileText, text: "Sem contrato", subtext: "Cancele quando quiser" },
+    { icon: Percent, text: "Sem taxa por pedido", subtext: "100% do lucro é seu" },
   ];
 
   return (
@@ -67,8 +65,8 @@ export function PricingSection() {
       <div className="container mx-auto px-4 relative z-10">
         <div className={`text-center mb-12 ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-full px-6 py-3 mb-6 border border-white/30">
-            <span className="text-2xl">🎁</span>
-            <span className="font-semibold text-white">Oferta Especial</span>
+            <span className="text-2xl">🎯</span>
+            <span className="font-semibold text-white">Comece sem risco nenhum</span>
           </div>
           
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6">
@@ -76,8 +74,9 @@ export function PricingSection() {
           </h2>
           
           <p className="text-xl text-white/90 max-w-3xl mx-auto">
-            Esqueça os apps que cobram comissão por pedido. No Cardápio Fácil, 
-            <strong> você não paga comissão e o lucro é 100% seu.</strong>
+            Ideal para pequenos restaurantes, delivery próprio e vendas pelo WhatsApp.
+            <br />
+            <strong>Você não paga comissão e o lucro é 100% seu.</strong>
           </p>
         </div>
 
@@ -85,7 +84,7 @@ export function PricingSection() {
           <Card className="bg-white/95 backdrop-blur-xl shadow-2xl border-0 rounded-3xl overflow-hidden">
             {/* Highlight bar */}
             <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 text-white text-center py-3 font-semibold">
-              ⚡ Mais popular • Usado por 1.000+ restaurantes
+              ⚡ Mais de 1.000 restaurantes já usam todos os dias
             </div>
             
             <CardContent className="p-8 md:p-12">
@@ -97,7 +96,7 @@ export function PricingSection() {
                   </span>
                 </div>
                 <p className="text-xl text-gray-600 font-medium">
-                  até 100 pedidos por mês
+                  até 100 pedidos ou R$2.000/mês
                 </p>
                 
                 <div className="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 px-6 py-3 rounded-full text-sm font-semibold">
@@ -106,8 +105,23 @@ export function PricingSection() {
                 </div>
               </div>
 
+              {/* Guarantees - Prominent */}
+              <div className="grid sm:grid-cols-3 gap-4 mb-10 p-6 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-2xl border-2 border-emerald-100">
+                {guarantees.map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 justify-center sm:justify-start">
+                    <div className="bg-white p-2.5 rounded-xl shadow-sm">
+                      <item.icon className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900">{item.text}</div>
+                      <div className="text-xs text-gray-500">{item.subtext}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {/* Features grid */}
-              <div className="grid md:grid-cols-2 gap-4 mb-10">
+              <div className="grid md:grid-cols-2 gap-3 mb-10">
                 {features.map((feature, index) => (
                   <div 
                     key={index} 
@@ -121,21 +135,6 @@ export function PricingSection() {
                 ))}
               </div>
 
-              {/* Guarantees */}
-              <div className="grid sm:grid-cols-3 gap-4 mb-10 p-6 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-2xl">
-                {guarantees.map((item, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="bg-white p-2 rounded-xl shadow-sm">
-                      <item.icon className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900 text-sm">{item.text}</div>
-                      <div className="text-xs text-gray-500">{item.subtext}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
               {/* CTA */}
               <Button 
                 size="lg" 
@@ -143,13 +142,13 @@ export function PricingSection() {
                 asChild
               >
                 <Link to="/criar-conta">
-                  💚 COMECE AGORA GRÁTIS
+                  Criar meu cardápio grátis agora
                 </Link>
               </Button>
 
               <p className="text-center text-sm text-gray-500 mt-4 flex items-center justify-center gap-2">
                 <Shield className="w-4 h-4" />
-                Não precisa cadastrar cartão de crédito para testar
+                Leva menos de 5 minutos • Sem cartão • Grátis todo mês
               </p>
             </CardContent>
           </Card>

@@ -9,6 +9,8 @@ import { SEOSection } from "@/components/home/SEOSection";
 import { FAQSection } from "@/components/home/FAQSection";
 import { CTASection } from "@/components/home/CTASection";
 import { Footer } from "@/components/layout/Footer";
+import { MobileStickyCtA } from "@/components/home/MobileStickyCta";
+import { ExitIntentPopup } from "@/components/home/ExitIntentPopup";
 import { MessageCircle } from "lucide-react";
 
 // Declare Tawk.to global types
@@ -60,7 +62,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20 md:pb-0">
       <Navbar />
       <HeroSection />
       <BenefitsSection />
@@ -72,8 +74,14 @@ const Index = () => {
       <CTASection />
       <Footer />
       
+      {/* Mobile Sticky CTA */}
+      <MobileStickyCtA />
+      
+      {/* Exit Intent Popup */}
+      <ExitIntentPopup />
+      
       {/* Floating WhatsApp Button with Effects */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-24 md:bottom-6 right-6 z-50">
         {/* Popup */}
         {showPopup && (
           <div className="absolute bottom-16 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-3 mb-2 animate-fade-in whitespace-nowrap">
@@ -102,6 +110,4 @@ const Index = () => {
   );
 };
 
-
-     
 export default Index;

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronRight, Smartphone, Share2, MessageCircle } from "lucide-react";
+import { ArrowRight, ChevronRight, Smartphone, Share2, MessageCircle, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
@@ -38,24 +38,29 @@ export function HowItWorksSection() {
     {
       number: "01",
       icon: Smartphone,
-      title: "Crie seu cardápio digital",
-      description: "Cadastre produtos, categorias, adicionais e preços pelo painel. Leva menos de 5 minutos.",
+      title: "Crie seu cardápio",
+      description: "Cadastre produtos, preços e adicionais em poucos minutos",
       color: "blue"
     },
     {
       number: "02",
       icon: Share2,
-      title: "Compartilhe o link",
-      description: "Divulgue seu cardápio nas redes sociais, WhatsApp, Instagram e Google Meu Negócio.",
+      title: "Envie o link",
+      description: "Coloque na bio, status ou envie direto no WhatsApp",
       color: "purple"
     },
     {
       number: "03",
       icon: MessageCircle,
-      title: "Receba pedidos no WhatsApp",
-      description: "Pedidos formatados automaticamente com todos os detalhes, prontos para processar.",
+      title: "Receba pedidos organizados",
+      description: "Pedido chega no WhatsApp e no painel do restaurante",
       color: "emerald"
     }
+  ];
+
+  const highlights = [
+    "Sem baixar app",
+    "Funciona direto no WhatsApp"
   ];
 
   const colorClasses: Record<string, { gradient: string; bg: string; text: string; shadow: string }> = {
@@ -105,7 +110,7 @@ export function HowItWorksSection() {
           </p>
         </div>
         
-        <div className="max-w-5xl mx-auto mb-16">
+        <div className="max-w-5xl mx-auto mb-12">
           <div className="grid md:grid-cols-3 gap-8">
             {steps.map((step, index) => {
               const colors = colorClasses[step.color];
@@ -157,6 +162,16 @@ export function HowItWorksSection() {
           </div>
         </div>
 
+        {/* Highlights */}
+        <div className={`flex flex-wrap gap-4 justify-center mb-12 ${isVisible ? 'animate-fade-in-up animation-delay-400' : 'opacity-0'}`}>
+          {highlights.map((highlight, index) => (
+            <div key={index} className="flex items-center gap-2 bg-emerald-100 text-emerald-700 px-5 py-2.5 rounded-full text-sm font-semibold">
+              <CheckCircle2 className="w-5 h-5" />
+              {highlight}
+            </div>
+          ))}
+        </div>
+
         {/* CTA */}
         <div className={`text-center ${isVisible ? 'animate-fade-in-up animation-delay-500' : 'opacity-0'}`}>
           <Button 
@@ -165,12 +180,12 @@ export function HowItWorksSection() {
             asChild
           >
             <Link to="/criar-conta">
-              COMECE AGORA GRÁTIS
+              Criar meu cardápio grátis agora
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
           <p className="mt-4 text-sm text-gray-500">
-            Não precisa de cartão de crédito
+            Leva menos de 5 minutos • Sem cartão de crédito
           </p>
         </div>
       </div>
