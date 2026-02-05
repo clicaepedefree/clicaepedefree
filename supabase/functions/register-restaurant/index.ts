@@ -175,7 +175,7 @@ Data de cadastro: ${new Date().toLocaleDateString('pt-BR')}
 Cadastro realizado via Clica e Pede`;
 
               const dealPayload = {
-                title: `${restaurantName} - Novo Cadastro`,
+                title: `${responsibleName} - ${restaurantName}`,
                 description: dealDescription,
                 funnel: negociosFunnel.id,
                 ranking: 3,
