@@ -25,30 +25,30 @@ export function TestimonialsSection() {
 
   const testimonials = [
     {
-      name: "João Silva",
-      business: "Pizzaria do Zé",
-      avatar: "JS",
-      text: "Organizei meus pedidos e nunca mais perdi cliente! O sistema é simples e o suporte é excelente. Recomendo demais!",
+      name: "João",
+      business: "Hamburgueria",
+      location: "Campinas",
+      avatar: "JO",
+      text: "Depois do Cardápio Fácil, parei de anotar pedido errado no WhatsApp. Agora chega tudo organizado e não perco mais vendas!",
       rating: 5,
-      revenue: "+42%",
       color: "blue"
     },
     {
-      name: "Ana Costa",
-      business: "Burguer City",
-      avatar: "AC",
-      text: "Vale cada centavo. Agora controlo tudo e vendo mais. O melhor é que não tem comissão por pedido! Meu lucro aumentou muito.",
+      name: "Ana",
+      business: "Pizzaria",
+      location: "São Paulo",
+      avatar: "AN",
+      text: "Meus clientes adoram fazer pedido pelo link. É rápido, fácil e eu não preciso ficar perguntando endereço ou forma de pagamento.",
       rating: 5,
-      revenue: "+68%",
       color: "emerald"
     },
     {
-      name: "Rafael Santos",
-      business: "Lanches da Vila",
-      avatar: "RS",
-      text: "Os pedidos chegam no WhatsApp com todos os detalhes. Perfeito! Economizei muito tempo e diminuí erros.",
+      name: "Rafael",
+      business: "Marmitaria",
+      location: "Belo Horizonte",
+      avatar: "RA",
+      text: "O melhor é que não tem comissão! Todo o lucro fica comigo. E o suporte no WhatsApp é muito rápido.",
       rating: 5,
-      revenue: "+35%",
       color: "purple"
     }
   ];
@@ -73,10 +73,10 @@ export function TestimonialsSection() {
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-6">
             Mais de <span className="text-yellow-500">1.000 restaurantes</span>
             <br />
-            já transformaram suas vendas
+            já usam todos os dias
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Veja o que nossos clientes têm a dizer sobre o Cardápio Fácil
+            Veja o que donos de restaurantes têm a dizer
           </p>
         </div>
         
@@ -112,20 +112,13 @@ export function TestimonialsSection() {
                   </blockquote>
                   
                   {/* Author */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${colors.gradient} flex items-center justify-center text-white text-lg font-bold shadow-lg`}>
-                        {testimonial.avatar}
-                      </div>
-                      <div>
-                        <div className="font-bold text-gray-900">{testimonial.name}</div>
-                        <div className="text-sm text-gray-500">{testimonial.business}</div>
-                      </div>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${colors.gradient} flex items-center justify-center text-white text-lg font-bold shadow-lg`}>
+                      {testimonial.avatar}
                     </div>
-                    
-                    {/* Revenue increase badge */}
-                    <div className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full text-sm font-bold">
-                      {testimonial.revenue} vendas
+                    <div>
+                      <div className="font-bold text-gray-900">{testimonial.name}</div>
+                      <div className="text-sm text-gray-500">{testimonial.business} em {testimonial.location}</div>
                     </div>
                   </div>
                 </CardContent>

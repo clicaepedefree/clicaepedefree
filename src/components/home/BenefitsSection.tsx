@@ -1,12 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageSquare, Printer, DollarSign, LayoutDashboard, Plus, BarChart3, LucideIcon } from "lucide-react";
+import { MessageSquare, LayoutDashboard, ClipboardCheck, ShoppingCart, Smartphone, DownloadCloud, BarChart3, CalendarDays, TrendingUp, LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-interface Benefit {
-  icon: LucideIcon;
+interface BenefitGroup {
   title: string;
-  description: string;
+  emoji: string;
   color: string;
+  benefits: {
+    icon: LucideIcon;
+    title: string;
+    description: string;
+  }[];
 }
 
 export function BenefitsSection() {
@@ -30,52 +34,79 @@ export function BenefitsSection() {
     return () => observer.disconnect();
   }, []);
 
-  const benefits: Benefit[] = [
+  const benefitGroups: BenefitGroup[] = [
     {
-      icon: MessageSquare,
-      title: "Pedidos direto no WhatsApp",
-      description: "Pedidos completos com produtos, adicionais, endereço e forma de pagamento chegam formatados no seu WhatsApp",
-      color: "emerald"
+      title: "Receba pedidos sem erro",
+      emoji: "✅",
+      color: "emerald",
+      benefits: [
+        {
+          icon: MessageSquare,
+          title: "Pedido formatado no WhatsApp",
+          description: "Pedido completo com produtos, adicionais, endereço e pagamento"
+        },
+        {
+          icon: LayoutDashboard,
+          title: "Painel de pedidos em tempo real",
+          description: "Acompanhe todos os pedidos em um painel visual organizado"
+        },
+        {
+          icon: ClipboardCheck,
+          title: "Status do pedido",
+          description: "Em preparo, saiu para entrega, finalizado - controle total"
+        }
+      ]
     },
     {
-      icon: Printer,
-      title: "Impressão automática",
-      description: "Impressão automática de pedidos para sua cozinha. Funciona com impressoras térmicas e comuns",
-      color: "blue"
+      title: "Venda mais sem esforço",
+      emoji: "🚀",
+      color: "blue",
+      benefits: [
+        {
+          icon: ShoppingCart,
+          title: "Cardápio com adicionais e combos",
+          description: "Configure extras e aumente seu ticket médio automaticamente"
+        },
+        {
+          icon: Smartphone,
+          title: "Checkout rápido no celular",
+          description: "Cliente finaliza o pedido em segundos pelo celular"
+        },
+        {
+          icon: DownloadCloud,
+          title: "Cliente não precisa baixar app",
+          description: "Funciona direto no navegador, sem instalar nada"
+        }
+      ]
     },
     {
-      icon: DollarSign,
-      title: "Controle financeiro",
-      description: "Acompanhe vendas diárias, semanais e mensais. Relatórios detalhados de faturamento e lucros",
-      color: "purple"
-    },
-    {
-      icon: LayoutDashboard,
-      title: "Painel Kanban",
-      description: "Gerencie status de pedidos (recebido, em preparo, pronto, entregue) em um painel kanban visual",
-      color: "orange"
-    },
-    {
-      icon: Plus,
-      title: "Adicionais ilimitados",
-      description: "Configure adicionais e personalizações ilimitadas. Aumente seu ticket médio automaticamente",
-      color: "pink"
-    },
-    {
-      icon: BarChart3,
-      title: "Relatórios inteligentes",
-      description: "Veja produtos mais vendidos, horários de pico e insights para aumentar suas vendas",
-      color: "cyan"
+      title: "Controle básico do negócio",
+      emoji: "📊",
+      color: "purple",
+      benefits: [
+        {
+          icon: BarChart3,
+          title: "Relatório simples de vendas",
+          description: "Veja seus produtos mais vendidos e horários de pico"
+        },
+        {
+          icon: CalendarDays,
+          title: "Faturamento por período",
+          description: "Acompanhe vendas por dia, semana e mês"
+        },
+        {
+          icon: TrendingUp,
+          title: "Histórico de pedidos",
+          description: "Acesse todos os pedidos e analise seu desempenho"
+        }
+      ]
     }
   ];
 
-  const colorClasses: Record<string, { bg: string; iconBg: string; iconColor: string }> = {
-    emerald: { bg: "from-emerald-50 to-emerald-100/30", iconBg: "bg-emerald-500", iconColor: "text-white" },
-    blue: { bg: "from-blue-50 to-blue-100/30", iconBg: "bg-blue-500", iconColor: "text-white" },
-    purple: { bg: "from-purple-50 to-purple-100/30", iconBg: "bg-purple-500", iconColor: "text-white" },
-    orange: { bg: "from-orange-50 to-orange-100/30", iconBg: "bg-orange-500", iconColor: "text-white" },
-    pink: { bg: "from-pink-50 to-pink-100/30", iconBg: "bg-pink-500", iconColor: "text-white" },
-    cyan: { bg: "from-cyan-50 to-cyan-100/30", iconBg: "bg-cyan-500", iconColor: "text-white" },
+  const colorClasses: Record<string, { bg: string; iconBg: string; border: string }> = {
+    emerald: { bg: "from-emerald-50 to-emerald-100/30", iconBg: "bg-emerald-500", border: "border-emerald-200" },
+    blue: { bg: "from-blue-50 to-blue-100/30", iconBg: "bg-blue-500", border: "border-blue-200" },
+    purple: { bg: "from-purple-50 to-purple-100/30", iconBg: "bg-purple-500", border: "border-purple-200" },
   };
 
   return (
@@ -88,46 +119,57 @@ export function BenefitsSection() {
         <div className={`text-center mb-16 ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-emerald-500 text-white rounded-full px-5 py-2 mb-6">
             <span className="text-lg">✨</span>
-            <span className="font-semibold text-sm">A solução completa para delivery</span>
+            <span className="font-semibold text-sm">Tudo que você precisa</span>
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-6">
-            Tudo o que seu restaurante precisa
+            Simplifique seu delivery
             <br />
             <span className="bg-gradient-to-r from-blue-600 to-emerald-500 bg-clip-text text-transparent">
-              para vender mais
+              e venda mais
             </span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Sistema completo de gestão de pedidos e delivery. Simples, moderno e sem complicação.
+            Pedidos organizados, clientes satisfeitos, vendas no controle.
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          {benefits.map((benefit, index) => {
-            const colors = colorClasses[benefit.color];
+        <div className="space-y-12 max-w-6xl mx-auto">
+          {benefitGroups.map((group, groupIndex) => {
+            const colors = colorClasses[group.color];
             return (
-              <Card 
-                key={index} 
-                className={`group relative bg-gradient-to-br ${colors.bg} border-0 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 rounded-2xl overflow-hidden ${
-                  isVisible ? 'animate-fade-in-up' : 'opacity-0'
-                }`}
-                style={{ animationDelay: `${index * 100}ms` }}
+              <div 
+                key={groupIndex}
+                className={`${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}
+                style={{ animationDelay: `${groupIndex * 150}ms` }}
               >
-                {/* Hover gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* Group header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="text-3xl">{group.emoji}</span>
+                  <h3 className="text-2xl font-bold text-gray-900">{group.title}</h3>
+                </div>
                 
-                <CardContent className="p-8 relative z-10">
-                  <div className={`${colors.iconBg} p-4 rounded-2xl w-fit mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                    <benefit.icon className={`h-7 w-7 ${colors.iconColor}`} />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-gray-800 transition-colors">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {benefit.description}
-                  </p>
-                </CardContent>
-              </Card>
+                {/* Benefits cards */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  {group.benefits.map((benefit, benefitIndex) => (
+                    <Card 
+                      key={benefitIndex} 
+                      className={`group relative bg-gradient-to-br ${colors.bg} border ${colors.border} shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden`}
+                    >
+                      <CardContent className="p-6">
+                        <div className={`${colors.iconBg} p-3 rounded-xl w-fit mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                          <benefit.icon className="h-5 w-5 text-white" />
+                        </div>
+                        <h4 className="text-lg font-bold text-gray-900 mb-2">
+                          {benefit.title}
+                        </h4>
+                        <p className="text-gray-600 text-sm leading-relaxed">
+                          {benefit.description}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             );
           })}
         </div>

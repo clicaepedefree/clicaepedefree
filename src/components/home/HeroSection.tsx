@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, CheckCircle2, Users, Clock, Star } from "lucide-react";
+import { ArrowRight, Play, CheckCircle2, Users, Clock, Star, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -31,12 +31,6 @@ function useCountUp(target: number, duration: number = 2000, startDelay: number 
 export function HeroSection() {
   const restaurantCount = useCountUp(1247, 2500, 800);
   const orderCount = useCountUp(48750, 2500, 1000);
-  
-  const trustBadges = [
-    "Sem comissão por pedido",
-    "Pronto em 5 minutos",
-    "Suporte humano",
-  ];
 
   return (
     <section className="min-h-screen flex items-center relative overflow-hidden">
@@ -77,10 +71,10 @@ export function HeroSection() {
               </div>
 
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-gray-900 animate-fade-in-up animation-delay-100">
-                Seu restaurante vendendo mais com o{" "}
+                Receba pedidos no WhatsApp{" "}
                 <span className="relative">
                   <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500 bg-clip-text text-transparent">
-                    Cardápio Fácil Delivery
+                    sem bagunça, sem taxa e sem mensalidade
                   </span>
                   <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none">
                     <path d="M2 10C50 2 150 2 298 10" stroke="url(#gradient)" strokeWidth="4" strokeLinecap="round"/>
@@ -95,17 +89,19 @@ export function HeroSection() {
               </h1>
               
               <p className="text-xl text-gray-600 leading-relaxed max-w-xl mx-auto lg:mx-0 animate-fade-in-up animation-delay-200">
-                Receba pedidos direto no WhatsApp, imprima automaticamente e gerencie tudo em um só painel. <strong className="text-gray-800">Simples assim.</strong>
+                Envie um link, o cliente escolhe, e o pedido chega <strong className="text-gray-800">organizado no WhatsApp e no painel do restaurante.</strong>
               </p>
 
               {/* Trust badges */}
               <div className="flex flex-wrap gap-3 justify-center lg:justify-start animate-fade-in-up animation-delay-300">
-                {trustBadges.map((badge, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium">
-                    <CheckCircle2 className="w-4 h-4" />
-                    {badge}
-                  </div>
-                ))}
+                <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Grátis até 100 pedidos ou R$2.000/mês
+                </div>
+                <div className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-full text-sm font-medium">
+                  <X className="w-4 h-4" />
+                  Sem cartão de crédito
+                </div>
               </div>
 
               {/* CTA Buttons */}
@@ -117,7 +113,7 @@ export function HeroSection() {
                 >
                   <Link to="/criar-conta">
                     <span className="flex items-center gap-2">
-                      💚 COMECE AGORA GRÁTIS
+                      Criar meu cardápio grátis agora
                       <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </span>
                   </Link>
@@ -139,7 +135,7 @@ export function HeroSection() {
               {/* Micro-copy */}
               <p className="text-sm text-gray-500 flex items-center gap-2 justify-center lg:justify-start animate-fade-in-up animation-delay-500">
                 <Clock className="w-4 h-4" />
-                Teste grátis, sem precisar de cartão • Pronto em 5 minutos
+                Pronto em 5 minutos • Funciona direto no WhatsApp
               </p>
             </div>
 
@@ -191,9 +187,9 @@ export function HeroSection() {
                 {/* Feature icons */}
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { icon: "🧾", label: "Impressão Auto", color: "emerald" },
-                    { icon: "💬", label: "WhatsApp", color: "blue" },
-                    { icon: "📊", label: "Relatórios", color: "purple" },
+                    { icon: "💬", label: "WhatsApp", color: "emerald" },
+                    { icon: "📱", label: "Sem App", color: "blue" },
+                    { icon: "📊", label: "Painel", color: "purple" },
                   ].map((feature, index) => (
                     <div 
                       key={index} 
