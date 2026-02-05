@@ -159,7 +159,7 @@ Slug (URL): ${slug}
 Cadastro realizado via Cardápio Fácil`;
 
     const dealData = {
-      title: `${restaurantName} - Novo Cadastro`,
+      title: `${responsibleName} - ${restaurantName}`,
       description: dealDescription,
       funnel: negociosFunnel.id,
       ranking: 3,
