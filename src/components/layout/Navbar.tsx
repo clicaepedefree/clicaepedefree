@@ -34,10 +34,10 @@ export function Navbar() {
             className="text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 rounded-xl" 
             asChild
           >
-            <Link to="/entrar">
+            <a href="https://cardapiofacil.site/entrar">
               <User className="mr-2 h-4 w-4" />
               Entrar
-            </Link>
+            </a>
           </Button>
 
           <Button 
@@ -75,10 +75,10 @@ export function Navbar() {
               asChild
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <Link to="/entrar">
+              <a href="https://cardapiofacil.site/entrar">
                 <User className="mr-2 h-4 w-4" />
                 Entrar
-              </Link>
+              </a>
             </Button>
 
             <Button 
