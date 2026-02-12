@@ -56,9 +56,18 @@ serve(async (req) => {
         menuText = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
           .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
           .replace(/<[^>]+>/g, " ")
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&nbsp;/g, " ")
+          .replace(/&#\d+;/g, "")
+          .replace(/&\w+;/g, "")
+          .replace(/[^\x20-\x7E\xC0-\xFF\u00C0-\u024F\n]/g, " ")
           .replace(/\s+/g, " ")
           .trim()
-          .slice(0, 30000); // Limit input size
+          .slice(0, 30000);
       } catch (e) {
         throw new Error(`Não foi possível acessar o link: ${e.message}`);
       }
@@ -75,12 +84,14 @@ serve(async (req) => {
 
     console.log("Sending to Gemini, content length:", menuText.length);
 
-    const systemPrompt = `Você é um assistente especializado em extrair cardápios de restaurantes.
+    const systemPrompt = `Você é um assistente especializado em extrair cardápios de restaurantes brasileiros.
 Analise o conteúdo fornecido e extraia TODAS as categorias e produtos encontrados.
 
 REGRAS:
 - Extraia o nome de cada categoria (ex: Lanches, Bebidas, Pizzas, Sobremesas)
 - Para cada produto, extraia: nome, descrição (se houver), preço
+- IMPORTANTE: Os nomes dos produtos e categorias devem estar em português brasileiro, usando apenas caracteres latinos (A-Z, a-z, acentos como á, é, ç, etc). NUNCA use caracteres asiáticos, símbolos estranhos ou caracteres não-latinos.
+- Se algum texto parecer corrompido ou ilegível, tente interpretar o nome correto do produto pelo contexto.
 - Se o preço não for claro, coloque 0
 - Mantenha a ordem original do cardápio
 - Ignore informações que não são itens do cardápio (endereço, telefone, etc)
