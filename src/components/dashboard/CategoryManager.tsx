@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { MenuImporter } from "./MenuImporter";
 
 interface Category {
   id: string;
@@ -114,13 +115,20 @@ export function CategoryManager({ restaurant }: CategoryManagerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-3">
         <div>
           <h2 className="text-2xl font-bold">Categorias</h2>
           <p className="text-muted-foreground">Organize seus produtos em categorias</p>
         </div>
         
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <div className="flex gap-2 flex-wrap">
+          <MenuImporter
+            restaurantId={restaurant.id}
+            onImportComplete={fetchCategories}
+            hasExistingData={categories.length > 0}
+          />
+        
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditingCategory(null)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -153,6 +161,7 @@ export function CategoryManager({ restaurant }: CategoryManagerProps) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-4">

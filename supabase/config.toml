@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.register-restaurant]
 verify_jwt = false
+
+[functions.import-menu]
+verify_jwt = true
