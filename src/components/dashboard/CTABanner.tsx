@@ -8,11 +8,11 @@ export function CTABanner() {
 
   const handleUpgradeClick = () => {
     const message = encodeURIComponent("quero conhecer o sistema completo");
-    window.open(`https://wa.me/5511951986641?text=${message}`, '_blank');
+    window.open(`https://wa.me/551151986641?text=${message}`, '_blank');
   };
 
   const handleWhatsAppClick = () => {
-    window.open('https://wa.me/5511951986641', '_blank');
+    window.open('https://wa.me/551151986641', '_blank');
   };
 
   if (!isVisible) return null;
