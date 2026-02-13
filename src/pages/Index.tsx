@@ -94,7 +94,7 @@ const Index = () => {
         
         {/* WhatsApp Button */}
         <a
-          href="https://wa.me/5511916924490?text=Quero%20saber%20mais%20sobre%20o%20cardápio%20grátis"
+          href="https://wa.me/5511951986641?text=Quero%20saber%20mais%20sobre%20o%20cardápio%20grátis"
           target="_blank"
           rel="noopener noreferrer"
           onClick={handleWhatsAppClick}

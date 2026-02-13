@@ -125,7 +125,7 @@ export function DashboardLayout({
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("quero o robo de WhatsApp");
-    const whatsappUrl = `https://wa.me/5511916924490?text=${message}`;
+    const whatsappUrl = `https://wa.me/5511951986641?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
 
@@ -219,7 +219,7 @@ export function DashboardLayout({
                 asChild
               >
                 <a 
-                  href="https://wa.me/5511916924490?text=Preciso%20de%20ajuda%20no%20cardápio%20grátis" 
+                  href="https://wa.me/5511951986641?text=Preciso%20de%20ajuda%20no%20cardápio%20grátis" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
@@ -281,7 +281,7 @@ export function DashboardLayout({
                           <Button 
                             onClick={() => {
                               const message = "Quero liberar a função de disparar mensagens";
-                              const whatsappUrl = `https://wa.me/5511916924490?text=${encodeURIComponent(message)}`;
+                              const whatsappUrl = `https://wa.me/5511951986641?text=${encodeURIComponent(message)}`;
                               window.open(whatsappUrl, '_blank');
                             }}
                             className="bg-whatsapp hover:bg-whatsapp/90 text-white shadow-sm"
