@@ -61,7 +61,7 @@ export function OnboardingHelpDialog({ restaurantId }: OnboardingHelpDialogProps
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("Preciso que cadastrem meu cardápio");
-    const whatsappUrl = `https://wa.me/5511951986641?text=${message}`;
+    const whatsappUrl = `https://wa.me/551151986641?text=${message}`;
     window.open(whatsappUrl, '_blank');
     handleClose();
   };
