@@ -44,6 +44,7 @@ import { OrdersKanban } from "../orders/OrdersKanban";
 import { OnboardingHelpDialog } from "./OnboardingHelpDialog";
 import { UpsellPopup } from "./UpsellPopup";
 import { FloatingWhatsAppButton } from "./FloatingWhatsAppButton";
+import { CouponManager } from "./CouponManager";
 
 interface DashboardLayoutProps {
   restaurant: any;
@@ -267,28 +268,18 @@ export function DashboardLayout({
                   </div>
                   
                   <div className="p-6">
-                    <div className="bg-muted/30 rounded-xl p-6 border border-border/50">
+                    <CouponManager restaurantId={restaurant.id} />
+
+                    <div className="bg-muted/30 rounded-xl p-6 border border-border/50 mt-6">
                       <div className="flex items-start gap-4">
                         <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-whatsapp/20 to-whatsapp/5 flex items-center justify-center flex-shrink-0">
                           <Sparkles className="h-6 w-6 text-whatsapp" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-foreground mb-2">Disparar Mensagens</h3>
+                          <h3 className="text-lg font-semibold text-foreground mb-2">Próximas funções de marketing</h3>
                           <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
-                            Envie promoções e novidades diretamente para seus clientes via WhatsApp. 
-                            Entre em contato para liberar esta funcionalidade.
+                            Em breve você poderá disparar campanhas e mensagens para clientes direto pelo painel.
                           </p>
-                          <Button 
-                            onClick={() => {
-                              const message = "Quero liberar a função de disparar mensagens";
-                              const whatsappUrl = `https://wa.me/551151986641?text=${encodeURIComponent(message)}`;
-                              window.open(whatsappUrl, '_blank');
-                            }}
-                            className="bg-whatsapp hover:bg-whatsapp/90 text-white shadow-sm"
-                          >
-                            <Send className="h-4 w-4 mr-2" />
-                            Solicitar Liberação
-                          </Button>
                         </div>
                       </div>
                     </div>
