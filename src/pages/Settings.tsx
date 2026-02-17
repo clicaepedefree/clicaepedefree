@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { 
@@ -338,6 +338,7 @@ function SettingsSidebar({
 }) {
   const { state } = useSidebar();
   const navigate = useNavigate();
+  const location = useLocation();
   const [openMenus, setOpenMenus] = useState<string[]>(['configuracoes']);
 
   const toggleMenu = (value: string) => {
@@ -347,6 +348,18 @@ function SettingsSidebar({
         : [...prev, value]
     );
   };
+
+  const currentTab = activeTab || new URLSearchParams(location.search).get("tab");
+
+  useEffect(() => {
+    if (["products", "categories", "addons"].includes(currentTab || "")) {
+      setOpenMenus((prev) => (prev.includes("cardapio") ? prev : [...prev, "cardapio"]));
+    }
+
+    if (["delivery", "hours", "payment", "profile"].includes(currentTab || "")) {
+      setOpenMenus((prev) => (prev.includes("configuracoes") ? prev : [...prev, "configuracoes"]));
+    }
+  }, [currentTab]);
 
   const handleMenuClick = (item: MenuItem, subValue?: string) => {
     const value = subValue || item.value;
@@ -368,7 +381,7 @@ function SettingsSidebar({
   };
 
   const isSubItemActive = (item: MenuItem) => {
-    return item.subItems?.some(sub => activeTab === sub.value);
+    return item.subItems?.some(sub => currentTab === sub.value);
   };
 
   return (
@@ -388,8 +401,8 @@ function SettingsSidebar({
             <SidebarMenu className="space-y-1 px-2">
               {menuItems.map((item) => {
                 const isActive = isSubItemActive(item) || 
-                  (item.value === 'configuracoes' && ['delivery', 'hours', 'payment', 'profile'].includes(activeTab || '')) ||
-                  (item.value === 'cardapio' && ['products', 'categories', 'addons'].includes(activeTab || ''));
+                  (item.value === 'configuracoes' && ['delivery', 'hours', 'payment', 'profile'].includes(currentTab || '')) ||
+                  (item.value === 'cardapio' && ['products', 'categories', 'addons'].includes(currentTab || ''));
                 const isAccent = item.accent;
                 const isOpen = openMenus.includes(item.value);
                 const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -423,7 +436,7 @@ function SettingsSidebar({
                         <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
                           <div className="mt-1 ml-4 lg:ml-6 space-y-1 border-l-2 border-sidebar-accent/50 pl-3">
                             {item.subItems?.map((subItem) => {
-                              const isSubActive = activeTab === subItem.value;
+                              const isSubActive = currentTab === subItem.value;
                               return (
                                 <SidebarMenuButton
                                   key={subItem.value}
@@ -433,7 +446,7 @@ function SettingsSidebar({
                                     h-10 w-full rounded-lg px-2
                                     transition-all duration-200
                                     ${isSubActive 
-                                      ? "bg-primary/10 text-primary font-medium"
+                                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
                                       : "text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground"
                                     }
                                   `}
@@ -458,9 +471,13 @@ function SettingsSidebar({
                         flex items-center justify-center lg:justify-start gap-3 
                         h-12 w-full rounded-xl px-3 
                         transition-all duration-200
-                        ${isAccent
-                          ? "text-whatsapp hover:bg-whatsapp/10"
-                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                        ${isActive
+                          ? isAccent
+                            ? "bg-whatsapp text-white shadow-sm"
+                            : "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                          : isAccent
+                            ? "text-whatsapp hover:bg-whatsapp/10"
+                            : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                         }
                       `}
                     >
