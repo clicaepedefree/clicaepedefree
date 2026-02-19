@@ -159,23 +159,35 @@ export function useCart() {
     return encodeURIComponent(message);
   };
 
+  const sanitizeString = (value: string | undefined | null, maxLength: number): string | null => {
+    if (!value) return null;
+    // Trim and limit length
+    return value.trim().slice(0, maxLength);
+  };
+
+  const sanitizePhone = (value: string | undefined | null): string | null => {
+    if (!value) return null;
+    // Only allow digits, parentheses, spaces, dashes, and plus
+    const cleaned = value.replace(/[^\d\s()\-+]/g, '').trim().slice(0, 20);
+    return cleaned || null;
+  };
+
   const saveOrderToDatabase = async (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }, deliveryFee?: number) => {
     if (!restaurant || Object.keys(cart).length === 0) return;
 
     try {
       const orderItems = Object.entries(cart).map(([cartKey, item]) => {
-        // Extract product ID - format is: productId-[addons]-observations
         const parts = cartKey.split('-');
         const productId = parts.slice(0, 5).join('-');
         const product = products.find(p => p.id === productId);
         
         return {
           productId,
-          productName: product?.name,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
+          productName: sanitizeString(product?.name, 200),
+          quantity: Math.min(Math.max(1, Math.floor(item.quantity)), 100),
+          unitPrice: Math.max(0, item.unitPrice),
           addons: item.addons,
-          observations: item.observations,
+          observations: sanitizeString(item.observations, 500),
           total: item.unitPrice * item.quantity
         };
       });
@@ -183,16 +195,23 @@ export function useCart() {
       const subtotal = getCartTotal();
       const total = subtotal + (deliveryFee || 0);
 
+      const customerName = sanitizeString(address?.name, 100);
+      const customerPhone = sanitizePhone(address?.phone);
+      const fullAddress = address && address.street && address.number && address.neighborhood
+        ? sanitizeString(`${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ''}, ${address.neighborhood}`, 500)
+        : null;
+      const paymentMethod = sanitizeString(payment?.type, 50);
+
       await supabase.from('orders').insert({
         restaurant_id: restaurant.id,
-        customer_name: address?.name || null,
-        customer_phone: address?.phone || null,
+        customer_name: customerName,
+        customer_phone: customerPhone,
         items: orderItems,
         subtotal,
         delivery_fee: deliveryFee || 0,
         total,
-        address: address ? `${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ''}, ${address.neighborhood}` : null,
-        payment_method: payment?.type || null,
+        address: fullAddress,
+        payment_method: paymentMethod,
         status: 'new'
       });
     } catch (error) {
