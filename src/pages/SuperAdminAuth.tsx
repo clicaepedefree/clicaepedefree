@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,51 +13,74 @@ const SuperAdminAuth = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // Check if user is super admin
+          const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { check_user_id: session.user.id });
+          if (isSuperAdmin) {
+            navigate('/super-admin');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkExistingSession();
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.rpc('authenticate_super_admin', {
-        admin_email: email,
-        admin_password: password
+      // Use Supabase Auth for login
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
       if (error) {
-        console.error('Error:', error);
         toast({
           title: "Erro",
-          description: "Erro ao autenticar. Tente novamente.",
+          description: "Email ou senha incorretos.",
           variant: "destructive",
         });
         return;
       }
 
-      const result = data?.[0];
-      if (result?.success) {
-        // Store super admin session in localStorage
-        localStorage.setItem('superAdminSession', JSON.stringify({
-          id: result.id,
-          email: result.email,
-          loginTime: Date.now()
-        }));
-        
-        toast({
-          title: "Sucesso",
-          description: "Login realizado com sucesso!",
-        });
-        
-        navigate('/super-admin');
-      } else {
+      // Verify the user is a super admin
+      const { data: isSuperAdmin, error: rpcError } = await supabase.rpc('is_super_admin', { 
+        check_user_id: data.user.id 
+      });
+
+      if (rpcError || !isSuperAdmin) {
+        // Sign out if not a super admin
+        await supabase.auth.signOut();
         toast({
           title: "Acesso negado",
-          description: "Email ou senha incorretos.",
+          description: "Você não tem permissão de super admin.",
           variant: "destructive",
         });
+        return;
       }
+
+      toast({
+        title: "Sucesso",
+        description: "Login realizado com sucesso!",
+      });
+      
+      navigate('/super-admin');
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -69,6 +92,14 @@ const SuperAdminAuth = () => {
       setLoading(false);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
+        <div className="text-center">Verificando autenticação...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
