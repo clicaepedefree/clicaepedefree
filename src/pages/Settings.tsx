@@ -147,7 +147,7 @@ export default function Settings() {
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("quero o robo de WhatsApp");
-    const whatsappUrl = `https://wa.me/551151986641?text=${message}`;
+    const whatsappUrl = `https://wa.me/5511934963958?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
 
