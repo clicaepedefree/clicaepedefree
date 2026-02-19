@@ -53,7 +53,7 @@ export function CouponManager({ restaurantId }: CouponManagerProps) {
 
   const fetchCoupons = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("discount_coupons")
         .select("*")
         .eq("restaurant_id", restaurantId)
@@ -142,7 +142,7 @@ export function CouponManager({ restaurantId }: CouponManagerProps) {
         is_active: true,
       };
 
-      const { error } = await supabase.from("discount_coupons").insert(payload);
+      const { error } = await (supabase as any).from("discount_coupons").insert(payload);
       if (error) throw error;
 
       toast({
@@ -165,7 +165,7 @@ export function CouponManager({ restaurantId }: CouponManagerProps) {
 
   const handleToggleActive = async (coupon: DiscountCoupon, active: boolean) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("discount_coupons")
         .update({ is_active: active })
         .eq("id", coupon.id);
@@ -186,7 +186,7 @@ export function CouponManager({ restaurantId }: CouponManagerProps) {
 
   const handleDelete = async (couponId: string) => {
     try {
-      const { error } = await supabase.from("discount_coupons").delete().eq("id", couponId);
+      const { error } = await (supabase as any).from("discount_coupons").delete().eq("id", couponId);
       if (error) throw error;
 
       setCoupons((prev) => prev.filter((item) => item.id !== couponId));
