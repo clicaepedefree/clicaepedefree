@@ -55,8 +55,10 @@ const SuperAdmin = () => {
   }, [authLoading, isAuthenticated, navigate]);
 
   useEffect(() => {
-    fetchRestaurants();
-  }, []);
+    if (isAuthenticated) {
+      fetchRestaurants();
+    }
+  }, [isAuthenticated]);
 
   const fetchRestaurants = async () => {
     try {
