@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as pdfjsLib from "pdfjs-dist";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,19 +70,34 @@ export function MenuImporter({ restaurantId, onImportComplete, hasExistingData =
 
     setPdfFileName(file.name);
 
-    // Read as text (basic extraction - works for text-based PDFs)
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      // For binary PDFs, we send a base64 version
-      const base64Reader = new FileReader();
-      base64Reader.onload = (b64Event) => {
-        const base64 = (b64Event.target?.result as string).split(",")[1];
-        setPdfText(base64);
-      };
-      base64Reader.readAsDataURL(file);
-    };
-    reader.readAsText(file);
+    try {
+      // Extract actual text from PDF using pdf.js
+      const arrayBuffer = await file.arrayBuffer();
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs`;
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      
+      let fullText = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        fullText += pageText + "\n";
+      }
+
+      if (!fullText.trim()) {
+        toast({ variant: "destructive", title: "PDF sem texto", description: "Este PDF parece ser apenas imagem. Tente um PDF com texto selecionável." });
+        setPdfFileName("");
+        return;
+      }
+
+      setPdfText(fullText.trim());
+    } catch (err) {
+      console.error("Error extracting PDF text:", err);
+      toast({ variant: "destructive", title: "Erro ao ler PDF", description: "Não foi possível extrair o texto do PDF." });
+      setPdfFileName("");
+    }
   };
 
   const handleExtract = async (type: "url" | "pdf") => {
