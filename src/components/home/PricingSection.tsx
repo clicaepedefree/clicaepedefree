@@ -63,32 +63,34 @@ function PlanCard({ plan, isVisible, delay }: { plan: PlanProps; isVisible: bool
           </ul>
 
           {/* CTA */}
-          {plan.cta.isExternal ? (
-            <a
-              href={plan.cta.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`inline-flex items-center justify-center w-full py-4 rounded-xl font-bold text-base transition-all duration-300 hover:scale-[1.02] ${
-                plan.highlight
-                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/25"
-                  : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25"
-              }`}
-            >
-              {plan.cta.label}
-            </a>
-          ) : (
-            <Button
-              size="lg"
-              className={`w-full py-6 rounded-xl font-bold text-base ${
-                plan.highlight
-                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/25"
-                  : "bg-gray-900 hover:bg-gray-800 shadow-lg"
-              }`}
-              asChild
-            >
-              <Link to={plan.cta.href}>{plan.cta.label}</Link>
-            </Button>
-          )}
+          <div className="mt-auto pt-4">
+            {plan.cta.isExternal ? (
+              <a
+                href={plan.cta.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center justify-center w-full h-14 rounded-xl font-bold text-sm sm:text-base transition-all duration-300 hover:scale-[1.02] ${
+                  plan.highlight
+                    ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/25"
+                    : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25"
+                }`}
+              >
+                {plan.cta.label}
+              </a>
+            ) : (
+              <Button
+                size="lg"
+                className={`w-full h-14 rounded-xl font-bold text-sm sm:text-base ${
+                  plan.highlight
+                    ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/25"
+                    : "bg-gray-900 hover:bg-gray-800 shadow-lg"
+                }`}
+                asChild
+              >
+                <Link to={plan.cta.href}>{plan.cta.label}</Link>
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -121,15 +123,11 @@ export function PricingSection() {
       color: "bg-emerald-500",
       features: [
         "Cardápio digital ilimitado",
-        "Pedidos automáticos no WhatsApp",
         "Impressão de pedidos",
         "Gestão de pedidos (kanban)",
         "Adicionais e personalizações",
-        "Relatórios de vendas",
         "Painel administrativo",
-        "Suporte via WhatsApp",
         "Sem limite de produtos",
-        "Atualizações gratuitas",
       ],
       cta: { label: "Criar meu cardápio grátis", href: "/criar-conta" },
     },
@@ -148,6 +146,9 @@ export function PricingSection() {
         "Relatórios de Gestão",
         "Programa de Fidelidade",
         "Cashback e Cupom de Desconto",
+        "Cadastro de Clientes",
+        "Suporte no WhatsApp 24/7",
+        "Áreas de entrega por KM e Bairro",
       ],
       cta: {
         label: "Quero conhecer o Plano Básico",
