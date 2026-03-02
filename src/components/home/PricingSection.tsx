@@ -63,13 +63,13 @@ function PlanCard({ plan, isVisible, delay }: { plan: PlanProps; isVisible: bool
           </ul>
 
           {/* CTA */}
-          <div className="mt-auto pt-4">
+          <div className="mt-auto pt-6">
             {plan.cta.isExternal ? (
               <a
                 href={plan.cta.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex items-center justify-center w-full h-14 rounded-xl font-bold text-sm sm:text-base transition-all duration-300 hover:scale-[1.02] ${
+                className={`inline-flex items-center justify-center w-full min-h-[56px] px-4 py-3 rounded-xl font-bold text-[13px] sm:text-sm md:text-base leading-tight text-center transition-all duration-300 hover:scale-[1.02] ${
                   plan.highlight
                     ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/25"
                     : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25"
@@ -80,7 +80,7 @@ function PlanCard({ plan, isVisible, delay }: { plan: PlanProps; isVisible: bool
             ) : (
               <Button
                 size="lg"
-                className={`w-full h-14 rounded-xl font-bold text-sm sm:text-base ${
+                className={`w-full min-h-[56px] px-4 py-3 rounded-xl font-bold text-[13px] sm:text-sm md:text-base leading-tight ${
                   plan.highlight
                     ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/25"
                     : "bg-gray-900 hover:bg-gray-800 shadow-lg"
