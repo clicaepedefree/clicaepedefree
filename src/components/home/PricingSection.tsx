@@ -37,7 +37,7 @@ function PlanCard({ plan, isVisible, delay }: { plan: PlanProps; isVisible: bool
             {plan.badge}
           </div>
         )}
-        <CardContent className="p-6 md:p-8 flex flex-col h-full">
+        <CardContent className="p-6 md:p-8 flex flex-col h-full justify-between">
           {/* Icon + Name */}
           <div className="flex items-center gap-3 mb-4">
             <div className={`p-2.5 rounded-xl ${plan.color}`}>{plan.icon}</div>
