@@ -109,14 +109,12 @@ export function HeroSection() {
                 <Button 
                   size="lg" 
                   className="group relative text-lg px-8 py-7 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 transform hover:scale-[1.02] transition-all duration-300 rounded-2xl btn-shine animate-pulse-glow" 
-                  asChild
+                  onClick={() => document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  <Link to="/criar-conta">
-                    <span className="flex items-center gap-2">
-                      Criar meu cardápio grátis agora
-                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  </Link>
+                  <span className="flex items-center gap-2">
+                    Criar meu cardápio grátis agora
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
                 </Button>
                 
                 <Button 

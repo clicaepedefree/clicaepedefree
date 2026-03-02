@@ -43,12 +43,10 @@ export function Navbar() {
           <Button 
             size="sm" 
             className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl rounded-xl px-5 transition-all duration-300 hover:scale-105" 
-            asChild
+            onClick={() => document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' })}
           >
-            <Link to="/criar-conta">
-              <LogIn className="mr-2 h-4 w-4" />
-              Criar Conta Grátis
-            </Link>
+            <LogIn className="mr-2 h-4 w-4" />
+            Criar Conta Grátis
           </Button>
         </div>
 
@@ -83,13 +81,13 @@ export function Navbar() {
 
             <Button 
               className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg rounded-xl" 
-              asChild
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' });
+              }}
             >
-              <Link to="/criar-conta">
-                <LogIn className="mr-2 h-4 w-4" />
-                Criar Conta Grátis
-              </Link>
+              <LogIn className="mr-2 h-4 w-4" />
+              Criar Conta Grátis
             </Button>
           </div>
         </div>

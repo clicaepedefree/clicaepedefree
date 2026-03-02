@@ -58,12 +58,13 @@ export function ExitIntentPopup() {
           <Button 
             size="lg" 
             className="w-full py-7 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg text-lg font-bold rounded-xl mb-4" 
-            asChild
+            onClick={() => {
+              setIsVisible(false);
+              document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' });
+            }}
           >
-            <Link to="/criar-conta">
-              Quero testar grátis
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
+            Quero testar grátis
+            <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
 
           <button 
