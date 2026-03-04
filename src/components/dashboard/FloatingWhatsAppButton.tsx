@@ -3,7 +3,7 @@ import { MessageCircle } from "lucide-react";
 export function FloatingWhatsAppButton() {
   const handleClick = () => {
     const message = encodeURIComponent("Preciso de um suporte aqui");
-    window.open(`https://wa.me/5511934963958?text=${message}`, '_blank');
+    window.open(`https://wa.me/5511916651776?text=${message}`, '_blank');
   };
 
   return (

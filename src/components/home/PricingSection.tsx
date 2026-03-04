@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
 const whatsappLink = (message: string) =>
-  `https://wa.me/5511934963958?text=${encodeURIComponent(message)}`;
+  `https://wa.me/5511916651776?text=${encodeURIComponent(message)}`;
 
 interface PlanProps {
   name: string;

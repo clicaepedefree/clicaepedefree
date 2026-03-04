@@ -31,7 +31,7 @@ export function UpsellPopup() {
 
   const handleCtaClick = () => {
     const message = encodeURIComponent("olá quero conhecer os outros recursos do sistema");
-    const whatsappUrl = `https://wa.me/5511934963958?text=${message}`;
+    const whatsappUrl = `https://wa.me/5511916651776?text=${message}`;
     window.open(whatsappUrl, '_blank');
     setIsOpen(false);
   };
