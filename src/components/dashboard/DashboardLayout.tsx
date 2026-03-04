@@ -126,7 +126,7 @@ export function DashboardLayout({
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("quero o robo de WhatsApp");
-    const whatsappUrl = `https://wa.me/5511934963958?text=${message}`;
+    const whatsappUrl = `https://wa.me/5511916651776?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
 
@@ -220,7 +220,7 @@ export function DashboardLayout({
                 asChild
               >
                 <a 
-                  href="https://wa.me/5511934963958?text=Preciso%20de%20ajuda%20no%20cardápio%20grátis" 
+                  href="https://wa.me/5511916651776?text=Preciso%20de%20ajuda%20no%20cardápio%20grátis" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"

@@ -5,7 +5,7 @@ import { MessageCircle, ArrowLeft } from "lucide-react";
 
 export default function RegistrationPending() {
   const handleWhatsAppClick = () => {
-    const phone = "5511934963958";
+    const phone = "5511916651776";
     const message = encodeURIComponent("Vim pelo site, quero saber mais do cardápio digital");
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };

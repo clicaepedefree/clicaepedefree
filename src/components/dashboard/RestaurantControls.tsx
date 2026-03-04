@@ -336,7 +336,7 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
                 className="w-full border border-whatsapp/30 text-whatsapp hover:bg-whatsapp/5 h-11 rounded-xl"
               >
                 <a 
-                  href="https://wa.me/5511934963958?text=Preciso%20liberar%20meu%20cardápio" 
+                  href="https://wa.me/5511916651776?text=Preciso%20liberar%20meu%20cardápio" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
