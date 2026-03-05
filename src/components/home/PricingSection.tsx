@@ -1,98 +1,316 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, Shield, CreditCard, FileText, Percent, Crown, Rocket, Star } from "lucide-react";
+import { Check, X, Shield, CreditCard, FileText, Percent, Crown, Rocket, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const whatsappLink = (message: string) =>
   `https://wa.me/5511916651776?text=${encodeURIComponent(message)}`;
 
-interface PlanProps {
+interface Feature {
+  label: string;
+  plans: boolean[]; // [gratis, basico, profissional, completo]
+}
+
+const allFeatures: Feature[] = [
+  { label: "Cardápio digital ilimitado", plans: [true, true, true, true] },
+  { label: "Impressão de pedidos", plans: [true, true, true, true] },
+  { label: "Gestão de pedidos (kanban)", plans: [true, true, true, true] },
+  { label: "Adicionais e personalizações", plans: [true, true, true, true] },
+  { label: "Painel administrativo", plans: [true, true, true, true] },
+  { label: "Sem limite de produtos", plans: [true, true, true, true] },
+  { label: "PDV Balcão", plans: [false, true, true, true] },
+  { label: "Integração iFood e 99Food", plans: [false, true, true, true] },
+  { label: "Pagamento Online (PIX/Cartão)", plans: [false, true, true, true] },
+  { label: "Robô de WhatsApp", plans: [false, true, true, true] },
+  { label: "Relatórios de Gestão", plans: [false, true, true, true] },
+  { label: "Programa de Fidelidade", plans: [false, true, true, true] },
+  { label: "Cashback e Cupom de Desconto", plans: [false, true, true, true] },
+  { label: "Cadastro de Clientes", plans: [false, true, true, true] },
+  { label: "Suporte WhatsApp 24/7", plans: [false, true, true, true] },
+  { label: "Áreas de entrega por KM/Bairro", plans: [false, true, true, true] },
+  { label: "Atendimento de Mesas (Garçom)", plans: [false, false, true, true] },
+  { label: "Contas a Pagar/Receber", plans: [false, false, true, true] },
+  { label: "Controle de Estoque", plans: [false, false, true, true] },
+  { label: "Ficha Técnica", plans: [false, false, true, true] },
+  { label: "Emissão de NFCe e NFe", plans: [false, false, false, true] },
+  { label: "Relatórios Avançados", plans: [false, false, false, true] },
+  { label: "Suporte Prioritário", plans: [false, false, false, true] },
+  { label: "App Motoboy + Painel Entrega", plans: [false, false, false, true] },
+  { label: "KDS", plans: [false, false, false, true] },
+  { label: "Recuperador de Vendas (WhatsApp)", plans: [false, false, false, true] },
+];
+
+interface PlanMeta {
   name: string;
   price: string;
   priceLabel?: string;
   highlight?: boolean;
   badge?: string;
-  features: string[];
-  cta: { label: string; href: string; isExternal?: boolean };
   icon: React.ReactNode;
   color: string;
+  cta: { label: string; href: string; isExternal?: boolean };
 }
 
-function PlanCard({ plan, isVisible, delay }: { plan: PlanProps; isVisible: boolean; delay: number }) {
+const plans: PlanMeta[] = [
+  {
+    name: "Grátis",
+    price: "R$0",
+    priceLabel: "até 100 pedidos/mês",
+    highlight: true,
+    badge: "⚡ Mais popular",
+    icon: <Rocket className="w-4 h-4 text-white" />,
+    color: "bg-emerald-500",
+    cta: { label: "Criar meu cardápio grátis", href: "/criar-conta" },
+  },
+  {
+    name: "Básico",
+    price: "R$119",
+    priceLabel: "/mês",
+    icon: <Star className="w-4 h-4 text-white" />,
+    color: "bg-blue-500",
+    cta: {
+      label: "Quero o Básico",
+      href: whatsappLink("Quero conhecer o plano Básico"),
+      isExternal: true,
+    },
+  },
+  {
+    name: "Profissional",
+    price: "R$199",
+    priceLabel: "/mês",
+    icon: <Crown className="w-4 h-4 text-white" />,
+    color: "bg-purple-500",
+    cta: {
+      label: "Quero o Profissional",
+      href: whatsappLink("Quero conhecer o plano Profissional"),
+      isExternal: true,
+    },
+  },
+  {
+    name: "Completo",
+    price: "R$269",
+    priceLabel: "/mês",
+    badge: "🏆 Mais completo",
+    icon: <Shield className="w-4 h-4 text-white" />,
+    color: "bg-gradient-to-r from-orange-500 to-amber-500",
+    cta: {
+      label: "Quero o Completo",
+      href: whatsappLink("Quero conhecer o plano Completo"),
+      isExternal: true,
+    },
+  },
+];
+
+function MobileCards({ isVisible }: { isVisible: boolean }) {
+  const [activeTab, setActiveTab] = useState(0);
+
   return (
-    <div
-      className={`${isVisible ? "animate-fade-in-up" : "opacity-0"}`}
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <Card
-        className={`relative h-full rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${
-          plan.highlight
-            ? "border-2 border-emerald-400 shadow-xl shadow-emerald-500/10"
-            : "border border-gray-200 shadow-lg"
-        }`}
-      >
-        {plan.badge && (
-          <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 text-white text-center py-2 font-semibold text-sm">
-            {plan.badge}
+    <div className={`md:hidden ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
+      {/* Tab selector */}
+      <div className="flex gap-1 mb-4 bg-white/10 backdrop-blur-sm rounded-xl p-1">
+        {plans.map((plan, i) => (
+          <button
+            key={i}
+            onClick={() => setActiveTab(i)}
+            className={`flex-1 text-xs font-bold py-2 px-1 rounded-lg transition-all ${
+              activeTab === i
+                ? "bg-white text-gray-900 shadow-md"
+                : "text-white/80 hover:text-white"
+            }`}
+          >
+            {plan.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Active plan card */}
+      <Card className="rounded-2xl border-0 shadow-xl overflow-hidden">
+        {plans[activeTab].badge && (
+          <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 text-white text-center py-1.5 font-semibold text-xs">
+            {plans[activeTab].badge}
           </div>
         )}
-        <CardContent className="p-6 md:p-8 flex flex-col h-full justify-between">
-          {/* Icon + Name */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className={`p-2.5 rounded-xl ${plan.color}`}>{plan.icon}</div>
-            <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+        <CardContent className="p-4">
+          {/* Header */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`p-1.5 rounded-lg ${plans[activeTab].color}`}>
+              {plans[activeTab].icon}
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">{plans[activeTab].name}</h3>
+            </div>
           </div>
-
-          {/* Price */}
-          <div className="mb-6">
-            <span className="text-4xl font-extrabold text-gray-900">{plan.price}</span>
-            {plan.priceLabel && <span className="text-gray-500 ml-1">{plan.priceLabel}</span>}
+          <div className="mb-4">
+            <span className="text-3xl font-extrabold text-gray-900">{plans[activeTab].price}</span>
+            {plans[activeTab].priceLabel && (
+              <span className="text-gray-500 text-sm ml-1">{plans[activeTab].priceLabel}</span>
+            )}
           </div>
 
           {/* Features */}
-          <ul className="space-y-3 mb-8 flex-1">
-            {plan.features.map((f, i) => (
-              <li key={i} className="flex items-start gap-2.5">
-                <div className="bg-emerald-100 rounded-full p-1 mt-0.5 flex-shrink-0">
-                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+          <div className="space-y-1.5 mb-4 max-h-[320px] overflow-y-auto">
+            {allFeatures.map((feature, fi) => {
+              const included = feature.plans[activeTab];
+              return (
+                <div
+                  key={fi}
+                  className={`flex items-center gap-2 py-1 ${
+                    !included ? "opacity-60" : ""
+                  }`}
+                >
+                  {included ? (
+                    <div className="bg-emerald-100 rounded-full p-0.5 flex-shrink-0">
+                      <Check className="h-3 w-3 text-emerald-600" />
+                    </div>
+                  ) : (
+                    <div className="bg-red-100 rounded-full p-0.5 flex-shrink-0">
+                      <X className="h-3 w-3 text-red-500" />
+                    </div>
+                  )}
+                  <span
+                    className={`text-xs ${
+                      included
+                        ? "text-gray-700"
+                        : "text-red-400 line-through"
+                    }`}
+                  >
+                    {feature.label}
+                  </span>
                 </div>
-                <span className="text-gray-700 text-sm">{f}</span>
-              </li>
-            ))}
-          </ul>
+              );
+            })}
+          </div>
 
           {/* CTA */}
-          <div className="mt-auto pt-6">
-            {plan.cta.isExternal ? (
-              <a
-                href={plan.cta.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`inline-flex items-center justify-center w-full min-h-[56px] px-4 py-3 rounded-xl font-bold text-[13px] sm:text-sm md:text-base leading-tight text-center transition-all duration-300 hover:scale-[1.02] ${
-                  plan.highlight
-                    ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/25"
-                    : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25"
-                }`}
-              >
-                {plan.cta.label}
-              </a>
-            ) : (
-              <Button
-                size="lg"
-                className={`w-full min-h-[56px] px-4 py-3 rounded-xl font-bold text-[13px] sm:text-sm md:text-base leading-tight ${
-                  plan.highlight
-                    ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/25"
-                    : "bg-gray-900 hover:bg-gray-800 shadow-lg"
-                }`}
-                asChild
-              >
-                <Link to={plan.cta.href}>{plan.cta.label}</Link>
-              </Button>
-            )}
-          </div>
+          {plans[activeTab].cta.isExternal ? (
+            <a
+              href={plans[activeTab].cta.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center justify-center w-full py-3 rounded-xl font-bold text-sm text-center transition-all duration-300 ${
+                plans[activeTab].highlight
+                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg"
+                  : "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
+              }`}
+            >
+              {plans[activeTab].cta.label}
+            </a>
+          ) : (
+            <Button
+              size="lg"
+              className={`w-full py-3 rounded-xl font-bold text-sm ${
+                plans[activeTab].highlight
+                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg"
+                  : "bg-gray-900 hover:bg-gray-800 shadow-lg"
+              }`}
+              asChild
+            >
+              <Link to={plans[activeTab].cta.href}>{plans[activeTab].cta.label}</Link>
+            </Button>
+          )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function DesktopTable({ isVisible }: { isVisible: boolean }) {
+  return (
+    <div className={`hidden md:block ${isVisible ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}>
+      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <table className="w-full">
+          {/* Header */}
+          <thead>
+            <tr>
+              <th className="text-left p-4 lg:p-5 w-[28%] bg-gray-50">
+                <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Recursos</span>
+              </th>
+              {plans.map((plan, i) => (
+                <th key={i} className={`p-3 lg:p-4 text-center relative ${plan.highlight ? "bg-emerald-50" : ""}`}>
+                  {plan.badge && (
+                    <div className="absolute -top-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-400 text-white text-[10px] font-bold py-1">
+                      {plan.badge}
+                    </div>
+                  )}
+                  <div className={`inline-flex p-1.5 rounded-lg ${plan.color} mb-1.5 ${plan.badge ? "mt-5" : ""}`}>
+                    {plan.icon}
+                  </div>
+                  <div className="text-sm font-bold text-gray-900">{plan.name}</div>
+                  <div className="mt-1">
+                    <span className="text-xl lg:text-2xl font-extrabold text-gray-900">{plan.price}</span>
+                    {plan.priceLabel && (
+                      <span className="text-gray-400 text-xs ml-0.5">{plan.priceLabel}</span>
+                    )}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          {/* Body */}
+          <tbody>
+            {allFeatures.map((feature, fi) => (
+              <tr key={fi} className={fi % 2 === 0 ? "bg-white" : "bg-gray-50/50"}>
+                <td className="px-4 lg:px-5 py-2 text-xs lg:text-sm text-gray-700 font-medium">
+                  {feature.label}
+                </td>
+                {feature.plans.map((included, pi) => (
+                  <td
+                    key={pi}
+                    className={`px-2 py-2 text-center ${plans[pi].highlight ? "bg-emerald-50/50" : ""}`}
+                  >
+                    {included ? (
+                      <div className="inline-flex items-center justify-center bg-emerald-100 rounded-full p-1">
+                        <Check className="h-3 w-3 text-emerald-600" />
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center justify-center bg-red-100 rounded-full p-1">
+                        <X className="h-3 w-3 text-red-500" />
+                      </div>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+          {/* Footer CTAs */}
+          <tfoot>
+            <tr className="border-t border-gray-200">
+              <td className="p-4"></td>
+              {plans.map((plan, i) => (
+                <td key={i} className="p-3 lg:p-4 text-center">
+                  {plan.cta.isExternal ? (
+                    <a
+                      href={plan.cta.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center justify-center w-full py-2.5 rounded-xl font-bold text-xs lg:text-sm transition-all duration-300 hover:scale-[1.02] ${
+                        plan.highlight
+                          ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25"
+                          : "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/25"
+                      }`}
+                    >
+                      {plan.cta.label}
+                    </a>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className={`w-full py-2.5 rounded-xl font-bold text-xs lg:text-sm ${
+                        plan.highlight
+                          ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/25"
+                          : "bg-gray-900 hover:bg-gray-800 shadow-lg"
+                      }`}
+                      asChild
+                    >
+                      <Link to={plan.cta.href}>{plan.cta.label}</Link>
+                    </Button>
+                  )}
+                </td>
+              ))}
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
   );
 }
@@ -112,94 +330,6 @@ export function PricingSection() {
     return () => observer.disconnect();
   }, []);
 
-  const plans: PlanProps[] = [
-    {
-      name: "Grátis",
-      price: "Grátis",
-      priceLabel: "até 100 pedidos/mês",
-      highlight: true,
-      badge: "⚡ Mais de 1.000 restaurantes já usam",
-      icon: <Rocket className="w-5 h-5 text-white" />,
-      color: "bg-emerald-500",
-      features: [
-        "Cardápio digital ilimitado",
-        "Impressão de pedidos",
-        "Gestão de pedidos (kanban)",
-        "Adicionais e personalizações",
-        "Painel administrativo",
-        "Sem limite de produtos",
-      ],
-      cta: { label: "Criar meu cardápio grátis", href: "/criar-conta" },
-    },
-    {
-      name: "Básico",
-      price: "R$119",
-      priceLabel: "/mês",
-      icon: <Star className="w-5 h-5 text-white" />,
-      color: "bg-blue-500",
-      features: [
-        "PDV Balcão",
-        "Cardápio Digital",
-        "Integração com iFood e 99Food",
-        "Pagamento Online (PIX e Cartão)",
-        "Robô de WhatsApp",
-        "Relatórios de Gestão",
-        "Programa de Fidelidade",
-        "Cashback e Cupom de Desconto",
-        "Cadastro de Clientes",
-        "Suporte no WhatsApp 24/7",
-        "Áreas de entrega por KM e Bairro",
-      ],
-      cta: {
-        label: "Quero conhecer o Plano Básico",
-        href: whatsappLink("Quero conhecer o plano Básico"),
-        isExternal: true,
-      },
-    },
-    {
-      name: "Profissional",
-      price: "R$199",
-      priceLabel: "/mês",
-      icon: <Crown className="w-5 h-5 text-white" />,
-      color: "bg-purple-500",
-      features: [
-        "Tudo do Plano Básico +",
-        "Atendimento de Mesas (App do Garçom)",
-        "PDV Balcão",
-        "Contas a Pagar/Receber",
-        "Controle de Estoque",
-        "Ficha Técnica",
-      ],
-      cta: {
-        label: "Quero conhecer o Plano Profissional",
-        href: whatsappLink("Quero conhecer o plano Profissional"),
-        isExternal: true,
-      },
-    },
-    {
-      name: "Completo",
-      price: "R$269",
-      priceLabel: "/mês",
-      badge: "🏆 Mais completo",
-      icon: <Shield className="w-5 h-5 text-white" />,
-      color: "bg-gradient-to-r from-orange-500 to-amber-500",
-      features: [
-        "Tudo do Plano Profissional +",
-        "Emissão de NFCe e NFe",
-        "Relatórios Avançados",
-        "Suporte Prioritário",
-        "App do Motoboy + Painel de Entrega",
-        "KDS",
-        "Recuperador de Vendas (Disparo WhatsApp)",
-      ],
-      cta: {
-        label: "Quero conhecer o Plano Completo",
-        href: whatsappLink("Quero conhecer o plano Completo"),
-        isExternal: true,
-      },
-    },
-  ];
-
   const guarantees = [
     { icon: CreditCard, text: "Sem cartão", subtext: "Não pedimos cartão no cadastro" },
     { icon: FileText, text: "Sem contrato", subtext: "Cancele quando quiser" },
@@ -207,7 +337,7 @@ export function PricingSection() {
   ];
 
   return (
-    <section id="planos" className="py-24 relative overflow-hidden" ref={sectionRef}>
+    <section id="planos" className="py-20 relative overflow-hidden" ref={sectionRef}>
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-emerald-600" />
       <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-float" />
@@ -222,15 +352,15 @@ export function PricingSection() {
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
-        <div className={`text-center mb-12 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-full px-6 py-3 mb-6 border border-white/30">
-            <span className="text-2xl">🎯</span>
-            <span className="font-semibold text-white">Escolha o plano ideal para você</span>
+        <div className={`text-center mb-10 ${isVisible ? "animate-fade-in-up" : "opacity-0"}`}>
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 border border-white/30">
+            <span className="text-xl">🎯</span>
+            <span className="font-semibold text-white text-sm">Escolha o plano ideal para você</span>
           </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6">
-            Planos para cada fase do seu negócio
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4">
+            Compare todos os planos
           </h2>
-          <p className="text-xl text-white/90 max-w-3xl mx-auto">
+          <p className="text-lg text-white/90 max-w-2xl mx-auto">
             Comece grátis e evolua conforme sua necessidade.
             <br />
             <strong>Sem taxa por pedido — o lucro é 100% seu.</strong>
@@ -238,27 +368,26 @@ export function PricingSection() {
         </div>
 
         {/* Guarantees */}
-        <div className={`max-w-3xl mx-auto grid sm:grid-cols-3 gap-4 mb-12 ${isVisible ? "animate-fade-in-up animation-delay-100" : "opacity-0"}`}>
+        <div className={`max-w-3xl mx-auto grid grid-cols-3 gap-2 md:gap-4 mb-10 ${isVisible ? "animate-fade-in-up animation-delay-100" : "opacity-0"}`}>
           {guarantees.map((item, index) => (
-            <div key={index} className="flex items-center gap-3 justify-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-              <item.icon className="w-6 h-6 text-emerald-300" />
+            <div key={index} className="flex items-center gap-2 justify-center bg-white/10 backdrop-blur-sm rounded-xl p-2.5 md:p-4 border border-white/20">
+              <item.icon className="w-5 h-5 text-emerald-300 flex-shrink-0" />
               <div>
-                <div className="font-bold text-white">{item.text}</div>
-                <div className="text-xs text-white/70">{item.subtext}</div>
+                <div className="font-bold text-white text-xs md:text-sm">{item.text}</div>
+                <div className="text-[10px] md:text-xs text-white/70 hidden sm:block">{item.subtext}</div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Plans grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          {plans.map((plan, i) => (
-            <PlanCard key={i} plan={plan} isVisible={isVisible} delay={150 + i * 100} />
-          ))}
-        </div>
+        {/* Desktop table */}
+        <DesktopTable isVisible={isVisible} />
+
+        {/* Mobile cards with tabs */}
+        <MobileCards isVisible={isVisible} />
 
         {/* Footer */}
-        <p className={`text-center text-sm text-white/70 mt-8 flex items-center justify-center gap-2 ${isVisible ? "animate-fade-in-up animation-delay-500" : "opacity-0"}`}>
+        <p className={`text-center text-xs text-white/70 mt-6 flex items-center justify-center gap-2 ${isVisible ? "animate-fade-in-up animation-delay-500" : "opacity-0"}`}>
           <Shield className="w-4 h-4" />
           Leva menos de 5 minutos • Sem cartão • Grátis todo mês
         </p>
