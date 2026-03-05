@@ -14,11 +14,6 @@ interface Feature {
 
 const allFeatures: Feature[] = [
   { label: "Cardápio digital ilimitado", plans: [true, true, true, true] },
-  { label: "Impressão de pedidos", plans: [true, true, true, true] },
-  { label: "Gestão de pedidos (kanban)", plans: [true, true, true, true] },
-  { label: "Adicionais e personalizações", plans: [true, true, true, true] },
-  { label: "Painel administrativo", plans: [true, true, true, true] },
-  { label: "Sem limite de produtos", plans: [true, true, true, true] },
   { label: "PDV Balcão", plans: [false, true, true, true] },
   { label: "Integração iFood e 99Food", plans: [false, true, true, true] },
   { label: "Pagamento Online (PIX/Cartão)", plans: [false, true, true, true] },
@@ -35,7 +30,6 @@ const allFeatures: Feature[] = [
   { label: "Ficha Técnica", plans: [false, false, true, true] },
   { label: "Emissão de NFCe e NFe", plans: [false, false, false, true] },
   { label: "Relatórios Avançados", plans: [false, false, false, true] },
-  { label: "Suporte Prioritário", plans: [false, false, false, true] },
   { label: "App Motoboy + Painel Entrega", plans: [false, false, false, true] },
   { label: "KDS", plans: [false, false, false, true] },
   { label: "Recuperador de Vendas (WhatsApp)", plans: [false, false, false, true] },
