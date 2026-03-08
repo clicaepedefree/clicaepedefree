@@ -360,7 +360,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                            </SheetTrigger>
                           <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
                             <SheetHeader>
-                              <SheetTitle>Pedido #{selectedOrder?.id.slice(-8)}</SheetTitle>
+                              <SheetTitle>Pedido {selectedOrder ? formatOrderNumber(selectedOrder) : ''}</SheetTitle>
                             </SheetHeader>
                             {selectedOrder && (
                               <div className="mt-6 space-y-4">
