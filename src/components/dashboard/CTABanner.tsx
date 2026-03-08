@@ -13,19 +13,19 @@ export function CTABanner() {
   };
 
   return (
-    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-whatsapp/5 mb-6">
-      <CardContent className="p-5 sm:p-6">
-        <div className="flex flex-col sm:flex-row items-start gap-4">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-whatsapp/20 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="h-6 w-6 text-primary" />
+    <Card className="relative overflow-hidden border-border/40 bg-gradient-to-r from-primary/[0.04] via-transparent to-whatsapp/[0.04]">
+      <CardContent className="p-4 lg:p-5">
+        <div className="flex flex-col sm:flex-row items-start gap-3 lg:gap-4">
+          <div className="h-10 w-10 lg:h-11 lg:w-11 rounded-xl bg-gradient-to-br from-primary/15 to-whatsapp/15 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-5 w-5 lg:h-5.5 lg:w-5.5 text-primary" />
           </div>
           
-          <div className="flex-1 space-y-3">
+          <div className="flex-1 space-y-2.5">
             <div>
-              <h3 className="text-base font-semibold text-foreground">
+              <h3 className="text-sm lg:text-base font-semibold text-foreground">
                 Precisa de mais recursos?
               </h3>
-              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+              <p className="text-xs lg:text-sm text-muted-foreground mt-0.5 leading-relaxed">
                 Robô de WhatsApp, integração com iFood, pagamento online, controle de estoque, PDV e muito mais!
               </p>
             </div>
@@ -34,9 +34,9 @@ export function CTABanner() {
               <Button 
                 onClick={handleUpgradeClick} 
                 size="sm"
-                className="bg-primary hover:bg-primary/90 shadow-sm"
+                className="h-8 lg:h-9 bg-primary hover:bg-primary/90 shadow-sm text-xs lg:text-sm"
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                 Conhecer Sistema Completo
               </Button>
               
@@ -44,9 +44,9 @@ export function CTABanner() {
                 variant="outline" 
                 size="sm"
                 onClick={handleWhatsAppClick} 
-                className="border-whatsapp/30 text-whatsapp hover:bg-whatsapp/5 hover:text-whatsapp"
+                className="h-8 lg:h-9 border-whatsapp/30 text-whatsapp hover:bg-whatsapp/5 hover:text-whatsapp text-xs lg:text-sm"
               >
-                <MessageCircle className="h-4 w-4 mr-2" />
+                <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
                 Falar com Equipe
               </Button>
             </div>
