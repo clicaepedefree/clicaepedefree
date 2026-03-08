@@ -79,7 +79,7 @@ export function PrintableReceipt({ order, restaurant }: PrintableReceiptProps) {
             CUPOM NÃO FISCAL
           </div>
           <div className="text-center text-small">
-            Pedido #{order.id.slice(-8)}
+            Pedido {order.order_number ? `#${String(order.order_number).padStart(2, '0')}` : `#${order.id.slice(-8)}`}
           </div>
           <div className="text-center text-small">
             {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}

@@ -18,6 +18,7 @@ interface OrdersDashboardProps {
 
 interface Order {
   id: string;
+  order_number: number | null;
   customer_name: string;
   customer_phone: string;
   items: any;
@@ -29,6 +30,9 @@ interface Order {
   status: string;
   created_at: string;
 }
+
+const formatOrderNumber = (order: Order) => 
+  order.order_number ? `#${String(order.order_number).padStart(2, '0')}` : `#${order.id.slice(-8)}`;
 
 interface DashboardStats {
   totalOrders: number;
