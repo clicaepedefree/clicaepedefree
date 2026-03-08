@@ -212,7 +212,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
           
           <div class="text-center">
             <div class="text-bold">CUPOM NÃO FISCAL</div>
-            <div>Pedido #${order.id.slice(-8)}</div>
+            <div>Pedido ${formatOrderNumber(order)}</div>
             <div>${format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</div>
           </div>
           
