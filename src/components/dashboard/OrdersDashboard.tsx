@@ -151,7 +151,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Cupom - Pedido #${order.id.slice(-8)}</title>
+          <title>Cupom - Pedido ${formatOrderNumber(order)}</title>
           <style>
             @page {
               size: 80mm auto;
