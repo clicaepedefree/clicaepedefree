@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, DollarSign, Settings2 } from "lucide-react";
+import { MenuImporter } from "./MenuImporter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CurrencyInput, currencyToNumber, numberToCurrency } from "@/components/ui/currency-input";
@@ -368,19 +369,25 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <div>
           <h2 className="text-2xl font-bold">Produtos</h2>
           <p className="text-muted-foreground">Gerencie os produtos do seu cardápio</p>
         </div>
         
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Produto
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          <MenuImporter 
+            restaurantId={restaurant.id} 
+            onImportComplete={() => { fetchProducts(); fetchCategories(); }} 
+            hasExistingData={products.length > 0 || categories.length > 0}
+          />
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Produto
+              </Button>
+            </DialogTrigger>
           
           <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -491,6 +498,7 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Dialog para gerenciar addons do produto */}
