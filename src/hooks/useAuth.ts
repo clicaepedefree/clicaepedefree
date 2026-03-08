@@ -14,12 +14,14 @@ interface AuthState {
 // Simple in-memory cache for restaurant data to avoid refetching on navigation
 let cachedRestaurant: any | null = null;
 let cachedUserId: string | null = null;
+let cachedUser: User | null = null;
+let authChecked = false;
 
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
-    user: null,
+    user: cachedUser,
     restaurant: cachedRestaurant,
-    loading: !cachedRestaurant,
+    loading: !authChecked,
     isSuperAdminMode: false,
     superAdminSelectedId: null,
   });
