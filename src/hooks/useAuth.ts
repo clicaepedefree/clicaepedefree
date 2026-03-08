@@ -70,6 +70,8 @@ export function useAuth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const user = session?.user ?? null;
+      cachedUser = user;
+      authChecked = true;
       setState(prev => ({ ...prev, user }));
       if (user) {
         if (cachedUserId === user.id && cachedRestaurant) {
