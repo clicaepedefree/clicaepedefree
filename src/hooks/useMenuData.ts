@@ -46,7 +46,7 @@ export function useMenuData(slug: string | undefined) {
 
   const fetchMenuData = async () => {
     try {
-      // Buscar restaurante usando função segura
+      // Fetch restaurant first (needed for ID)
       const { data: restaurantData, error: restaurantError } = await supabase
         .rpc('get_public_restaurant_by_slug', { slug_input: slug });
 
@@ -59,26 +59,26 @@ export function useMenuData(slug: string | undefined) {
       const restaurant = restaurantData[0];
       setRestaurant(restaurant);
 
-      // Buscar categorias
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('restaurant_id', restaurant.id)
-        .order('display_order', { ascending: true });
+      // Fetch categories and products IN PARALLEL
+      const [categoriesResult, productsResult] = await Promise.all([
+        supabase
+          .from('categories')
+          .select('id, name, display_order')
+          .eq('restaurant_id', restaurant.id)
+          .order('display_order', { ascending: true }),
+        supabase
+          .from('products')
+          .select('id, name, description, price, category_id, image_url, is_active, is_featured, display_order')
+          .eq('restaurant_id', restaurant.id)
+          .eq('is_active', true)
+          .order('display_order', { ascending: true }),
+      ]);
 
-      if (categoriesError) throw categoriesError;
-      setCategories(categoriesData || []);
+      if (categoriesResult.error) throw categoriesResult.error;
+      if (productsResult.error) throw productsResult.error;
 
-      // Buscar produtos ativos
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('restaurant_id', restaurant.id)
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-
-      if (productsError) throw productsError;
-      setProducts(productsData || []);
+      setCategories(categoriesResult.data || []);
+      setProducts(productsResult.data || []);
     } catch (error) {
       console.error("Erro ao carregar cardápio:", error);
     } finally {

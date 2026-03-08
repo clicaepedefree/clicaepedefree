@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   SidebarProvider, 
   SidebarTrigger,
@@ -135,13 +134,11 @@ const settingsCards = [
 export default function Settings() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [user, setUser] = useState<User | null>(null);
-  const [restaurant, setRestaurant] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, restaurant, loading, updateRestaurant, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<string | null>(searchParams.get('tab'));
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await logout();
     navigate("/criar-conta");
   };
 
@@ -159,36 +156,13 @@ export default function Settings() {
   }, [searchParams]);
 
   useEffect(() => {
-    checkUser();
-  }, []);
-
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
+    if (!loading && !user) {
       navigate("/criar-conta");
-      return;
     }
-
-    setUser(user);
-
-    const { data: restaurantData } = await supabase
-      .from("restaurants")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!restaurantData) {
-      navigate("/criar-conta");
-      return;
-    }
-
-    setRestaurant(restaurantData);
-    setLoading(false);
-  };
+  }, [loading, user]);
 
   const handleRestaurantUpdate = (updatedRestaurant: any) => {
-    setRestaurant(updatedRestaurant);
+    updateRestaurant(updatedRestaurant);
   };
 
   const getColorClasses = (color: string) => {
