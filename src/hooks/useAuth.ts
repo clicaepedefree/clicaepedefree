@@ -14,12 +14,14 @@ interface AuthState {
 // Simple in-memory cache for restaurant data to avoid refetching on navigation
 let cachedRestaurant: any | null = null;
 let cachedUserId: string | null = null;
+let cachedUser: User | null = null;
+let authChecked = false;
 
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
-    user: null,
+    user: cachedUser,
     restaurant: cachedRestaurant,
-    loading: !cachedRestaurant,
+    loading: !authChecked,
     isSuperAdminMode: false,
     superAdminSelectedId: null,
   });
@@ -51,6 +53,8 @@ export function useAuth() {
     // Normal auth flow
     supabase.auth.getSession().then(({ data: { session } }) => {
       const user = session?.user ?? null;
+      cachedUser = user;
+      authChecked = true;
       setState(prev => ({ ...prev, user }));
       if (user) {
         // Use cache if same user
@@ -66,6 +70,8 @@ export function useAuth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const user = session?.user ?? null;
+      cachedUser = user;
+      authChecked = true;
       setState(prev => ({ ...prev, user }));
       if (user) {
         if (cachedUserId === user.id && cachedRestaurant) {
