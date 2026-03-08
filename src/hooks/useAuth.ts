@@ -53,6 +53,8 @@ export function useAuth() {
     // Normal auth flow
     supabase.auth.getSession().then(({ data: { session } }) => {
       const user = session?.user ?? null;
+      cachedUser = user;
+      authChecked = true;
       setState(prev => ({ ...prev, user }));
       if (user) {
         // Use cache if same user
