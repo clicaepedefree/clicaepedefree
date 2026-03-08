@@ -722,7 +722,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                         </SheetTrigger>
                         <SheetContent side="right" className="w-[500px] sm:w-[600px] overflow-y-auto">
                           <SheetHeader>
-                            <SheetTitle>Detalhes do Pedido #{order.id.slice(-8)}</SheetTitle>
+                            <SheetTitle>Detalhes do Pedido {formatOrderNumber(order)}</SheetTitle>
                           </SheetHeader>
                           <div className="mt-6">
                             {selectedOrder && renderOrderDetails(selectedOrder)}
