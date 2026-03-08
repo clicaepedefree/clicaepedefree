@@ -12,6 +12,7 @@ import { ptBR } from "date-fns/locale";
 
 interface Order {
   id: string;
+  order_number: number | null;
   customer_name: string;
   customer_phone: string;
   items: any;
@@ -23,6 +24,9 @@ interface Order {
   status: string;
   created_at: string;
 }
+
+const formatOrderNumber = (order: Order) => 
+  order.order_number ? `#${String(order.order_number).padStart(2, '0')}` : `#${order.id.slice(-8)}`;
 
 interface OrdersKanbanProps {
   restaurant: any;
@@ -188,7 +192,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Cupom - Pedido #${order.id.slice(-8)}</title>
+          <title>Cupom - Pedido ${formatOrderNumber(order)}</title>
           <style>
             @page { size: 80mm auto; margin: 0; }
             * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -208,7 +212,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
           
           <div class="text-center">
             <div class="text-bold">CUPOM NÃO FISCAL</div>
-            <div>Pedido #${order.id.slice(-8)}</div>
+            <div>Pedido ${formatOrderNumber(order)}</div>
             <div>${format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</div>
           </div>
           
@@ -317,7 +321,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-medium">
-                          #{order.id.slice(-8)}
+                          {formatOrderNumber(order)}
                         </CardTitle>
                         {getStatusBadge(order.status)}
                       </div>
@@ -356,7 +360,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                            </SheetTrigger>
                           <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
                             <SheetHeader>
-                              <SheetTitle>Pedido #{selectedOrder?.id.slice(-8)}</SheetTitle>
+                              <SheetTitle>Pedido {selectedOrder ? formatOrderNumber(selectedOrder) : ''}</SheetTitle>
                             </SheetHeader>
                             {selectedOrder && (
                               <div className="mt-6 space-y-4">

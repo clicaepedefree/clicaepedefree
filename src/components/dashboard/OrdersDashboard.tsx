@@ -18,6 +18,7 @@ interface OrdersDashboardProps {
 
 interface Order {
   id: string;
+  order_number: number | null;
   customer_name: string;
   customer_phone: string;
   items: any;
@@ -29,6 +30,9 @@ interface Order {
   status: string;
   created_at: string;
 }
+
+const formatOrderNumber = (order: Order) => 
+  order.order_number ? `#${String(order.order_number).padStart(2, '0')}` : `#${order.id.slice(-8)}`;
 
 interface DashboardStats {
   totalOrders: number;
@@ -147,7 +151,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Cupom - Pedido #${order.id.slice(-8)}</title>
+          <title>Cupom - Pedido ${formatOrderNumber(order)}</title>
           <style>
             @page {
               size: 80mm auto;
@@ -279,7 +283,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
           CUPOM NÃO FISCAL
         </div>
         <div class="text-center text-small">
-          Pedido #${order.id.slice(-8)}
+          Pedido ${formatOrderNumber(order)}
         </div>
         <div class="text-center text-small">
           ${format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
@@ -718,7 +722,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
                         </SheetTrigger>
                         <SheetContent side="right" className="w-[500px] sm:w-[600px] overflow-y-auto">
                           <SheetHeader>
-                            <SheetTitle>Detalhes do Pedido #{order.id.slice(-8)}</SheetTitle>
+                            <SheetTitle>Detalhes do Pedido {formatOrderNumber(order)}</SheetTitle>
                           </SheetHeader>
                           <div className="mt-6">
                             {selectedOrder && renderOrderDetails(selectedOrder)}
