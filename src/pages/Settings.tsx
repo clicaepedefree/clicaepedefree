@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { User } from "@supabase/supabase-js";
-import { 
   SidebarProvider, 
   SidebarTrigger,
   Sidebar,
