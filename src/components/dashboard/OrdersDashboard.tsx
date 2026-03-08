@@ -283,7 +283,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
           CUPOM NÃO FISCAL
         </div>
         <div class="text-center text-small">
-          Pedido #${order.id.slice(-8)}
+          Pedido ${formatOrderNumber(order)}
         </div>
         <div class="text-center text-small">
           ${format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
