@@ -18,29 +18,41 @@ export default function Login() {
   const authIntentRef = useRef<"signin" | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
+    const timeout = setTimeout(() => {
+      if (mounted) setCheckingAuth(false);
+    }, 3000);
+
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
         if (session) {
-          navigate("/admin");
+          navigate("/admin", { replace: true });
+          return;
         }
       } catch (error) {
         console.error("Erro ao verificar autenticação:", error);
-      } finally {
-        setCheckingAuth(false);
       }
+      if (mounted) setCheckingAuth(false);
     };
 
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
       if (event === "SIGNED_IN" && session) {
         authIntentRef.current = null;
-        navigate("/admin");
+        navigate("/admin", { replace: true });
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
