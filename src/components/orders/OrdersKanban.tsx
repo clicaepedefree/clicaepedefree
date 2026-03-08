@@ -192,7 +192,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Cupom - Pedido #${order.id.slice(-8)}</title>
+          <title>Cupom - Pedido ${formatOrderNumber(order)}</title>
           <style>
             @page { size: 80mm auto; margin: 0; }
             * { margin: 0; padding: 0; box-sizing: border-box; }
