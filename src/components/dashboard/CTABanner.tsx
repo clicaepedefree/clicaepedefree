@@ -1,11 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ExternalLink, MessageCircle, Sparkles, X } from "lucide-react";
-import { useState } from "react";
+import { ExternalLink, MessageCircle, Sparkles } from "lucide-react";
 
 export function CTABanner() {
-  const [isVisible, setIsVisible] = useState(true);
-
   const handleUpgradeClick = () => {
     const message = encodeURIComponent("quero conhecer o sistema completo");
     window.open(`https://wa.me/5511916651776?text=${message}`, '_blank');
@@ -15,18 +12,8 @@ export function CTABanner() {
     window.open('https://wa.me/5511916651776', '_blank');
   };
 
-  if (!isVisible) return null;
-
   return (
     <Card className="relative overflow-hidden border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-whatsapp/5 mb-6">
-      <button 
-        onClick={() => setIsVisible(false)}
-        className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted/50 transition-colors z-10"
-        aria-label="Fechar"
-      >
-        <X className="h-4 w-4 text-muted-foreground" />
-      </button>
-      
       <CardContent className="p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start gap-4">
           <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-whatsapp/20 flex items-center justify-center flex-shrink-0">
