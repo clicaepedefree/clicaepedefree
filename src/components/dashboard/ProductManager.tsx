@@ -498,6 +498,7 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Dialog para gerenciar addons do produto */}
