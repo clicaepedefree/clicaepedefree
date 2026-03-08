@@ -561,6 +561,7 @@ export type Database = {
           delivery_fee: number | null
           id: string | null
           items: Json | null
+          order_number: number | null
           payment_method: string | null
           restaurant_id: string | null
           status: string | null
@@ -576,6 +577,7 @@ export type Database = {
           delivery_fee?: number | null
           id?: string | null
           items?: Json | null
+          order_number?: number | null
           payment_method?: string | null
           restaurant_id?: string | null
           status?: string | null
@@ -591,6 +593,7 @@ export type Database = {
           delivery_fee?: number | null
           id?: string | null
           items?: Json | null
+          order_number?: number | null
           payment_method?: string | null
           restaurant_id?: string | null
           status?: string | null
