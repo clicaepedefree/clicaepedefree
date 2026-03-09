@@ -163,12 +163,9 @@ const SuperAdmin = () => {
 
   const markRestaurantAsPaid = async (restaurantId: string) => {
     try {
-      // Usar data específica: 01/09/2025 22:24 Brasília
-      const specificDate = new Date('2025-09-01T22:24:00-03:00');
-
       const { data, error } = await supabase.rpc('admin_mark_restaurant_paid', {
         restaurant_id: restaurantId,
-        for_time: specificDate.toISOString()
+        for_time: new Date().toISOString()
       });
 
       if (error) throw error;
