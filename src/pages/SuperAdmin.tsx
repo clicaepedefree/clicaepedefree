@@ -25,6 +25,7 @@ interface RestaurantWithEmail {
   banner_url?: string;
   total_revenue: number;
   monthly_revenue: number;
+  monthly_orders: number;
   is_open: boolean;
   is_blocked: boolean;
   revenue_block_exempt_until?: string;
@@ -62,15 +63,13 @@ const SuperAdmin = () => {
 
   const fetchRestaurants = async () => {
     try {
-      // Executar verificação de limites com data específica (01/09/2025 22:24 Brasília)
-      const specificDate = new Date('2025-09-01T22:24:00-03:00');
+      const now = new Date();
       await supabase.rpc('check_revenue_limits', { 
-        target_time: specificDate.toISOString() 
+        target_time: now.toISOString() 
       });
       
-      // Update monthly revenues first with specific date
       await supabase.rpc('update_monthly_revenues', {
-        target_time: specificDate.toISOString()
+        target_time: now.toISOString()
       });
       
       // Use the existing function to get restaurants with emails (now includes all fields)
@@ -129,13 +128,11 @@ const SuperAdmin = () => {
 
   const toggleRestaurantBlock = async (restaurantId: string, isCurrentlyBlocked: boolean) => {
     try {
-      // Usar data específica: 01/09/2025 22:24 Brasília
-      const specificDate = new Date('2025-09-01T22:24:00-03:00');
+      const now = new Date();
       
       let exemptUntil = null;
       if (isCurrentlyBlocked) {
-        // Se está liberando, definir isenção até fim do mês
-        const endOfMonth = new Date(specificDate.getFullYear(), specificDate.getMonth() + 1, 0, 23, 59, 59);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
         exemptUntil = endOfMonth.toISOString();
       }
 
@@ -166,12 +163,9 @@ const SuperAdmin = () => {
 
   const markRestaurantAsPaid = async (restaurantId: string) => {
     try {
-      // Usar data específica: 01/09/2025 22:24 Brasília
-      const specificDate = new Date('2025-09-01T22:24:00-03:00');
-
       const { data, error } = await supabase.rpc('admin_mark_restaurant_paid', {
         restaurant_id: restaurantId,
-        for_time: specificDate.toISOString()
+        for_time: new Date().toISOString()
       });
 
       if (error) throw error;
@@ -397,8 +391,8 @@ const SuperAdmin = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>WhatsApp</TableHead>
                     <TableHead>CPF/CNPJ</TableHead>
-                    <TableHead>Fat. Mensal</TableHead>
-                    <TableHead>Fat. Total</TableHead>
+                    <TableHead>Fat. Mês Atual</TableHead>
+                    <TableHead>Vendas Mês</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
@@ -437,8 +431,8 @@ const SuperAdmin = () => {
                         {restaurant.tax_id || '-'}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1">
-                          <span className={`font-semibold ${Number(restaurant.monthly_revenue || 0) >= 1800 ? 'text-red-600' : 'text-green-600'}`}>
+                        <div className="flex flex-col gap-0.5">
+                          <span className={`font-semibold ${Number(restaurant.monthly_revenue || 0) >= 1800 ? 'text-destructive' : 'text-green-600'}`}>
                             {formatCurrency(Number(restaurant.monthly_revenue || 0))}
                           </span>
                           {Number(restaurant.monthly_revenue || 0) >= 1800 && (
@@ -447,12 +441,9 @@ const SuperAdmin = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-blue-600" />
-                          <span className="font-semibold text-blue-600">
-                            {formatCurrency(Number(restaurant.total_revenue || 0))}
-                          </span>
-                        </div>
+                        <span className="font-semibold text-primary">
+                          {Number(restaurant.monthly_orders || 0)} pedido{Number(restaurant.monthly_orders || 0) !== 1 ? 's' : ''}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
