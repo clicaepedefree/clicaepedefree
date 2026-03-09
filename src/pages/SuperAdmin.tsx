@@ -63,15 +63,13 @@ const SuperAdmin = () => {
 
   const fetchRestaurants = async () => {
     try {
-      // Executar verificação de limites com data específica (01/09/2025 22:24 Brasília)
-      const specificDate = new Date('2025-09-01T22:24:00-03:00');
+      const now = new Date();
       await supabase.rpc('check_revenue_limits', { 
-        target_time: specificDate.toISOString() 
+        target_time: now.toISOString() 
       });
       
-      // Update monthly revenues first with specific date
       await supabase.rpc('update_monthly_revenues', {
-        target_time: specificDate.toISOString()
+        target_time: now.toISOString()
       });
       
       // Use the existing function to get restaurants with emails (now includes all fields)
