@@ -128,13 +128,11 @@ const SuperAdmin = () => {
 
   const toggleRestaurantBlock = async (restaurantId: string, isCurrentlyBlocked: boolean) => {
     try {
-      // Usar data específica: 01/09/2025 22:24 Brasília
-      const specificDate = new Date('2025-09-01T22:24:00-03:00');
+      const now = new Date();
       
       let exemptUntil = null;
       if (isCurrentlyBlocked) {
-        // Se está liberando, definir isenção até fim do mês
-        const endOfMonth = new Date(specificDate.getFullYear(), specificDate.getMonth() + 1, 0, 23, 59, 59);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
         exemptUntil = endOfMonth.toISOString();
       }
 
