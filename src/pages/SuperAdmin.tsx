@@ -25,6 +25,7 @@ interface RestaurantWithEmail {
   banner_url?: string;
   total_revenue: number;
   monthly_revenue: number;
+  monthly_orders: number;
   is_open: boolean;
   is_blocked: boolean;
   revenue_block_exempt_until?: string;
