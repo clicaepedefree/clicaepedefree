@@ -391,8 +391,8 @@ const SuperAdmin = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>WhatsApp</TableHead>
                     <TableHead>CPF/CNPJ</TableHead>
-                    <TableHead>Fat. Mensal</TableHead>
-                    <TableHead>Fat. Total</TableHead>
+                    <TableHead>Fat. Mês Atual</TableHead>
+                    <TableHead>Vendas Mês</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
