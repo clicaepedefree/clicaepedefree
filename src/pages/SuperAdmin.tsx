@@ -431,8 +431,8 @@ const SuperAdmin = () => {
                         {restaurant.tax_id || '-'}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1">
-                          <span className={`font-semibold ${Number(restaurant.monthly_revenue || 0) >= 1800 ? 'text-red-600' : 'text-green-600'}`}>
+                        <div className="flex flex-col gap-0.5">
+                          <span className={`font-semibold ${Number(restaurant.monthly_revenue || 0) >= 1800 ? 'text-destructive' : 'text-green-600'}`}>
                             {formatCurrency(Number(restaurant.monthly_revenue || 0))}
                           </span>
                           {Number(restaurant.monthly_revenue || 0) >= 1800 && (
@@ -441,12 +441,9 @@ const SuperAdmin = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-blue-600" />
-                          <span className="font-semibold text-blue-600">
-                            {formatCurrency(Number(restaurant.total_revenue || 0))}
-                          </span>
-                        </div>
+                        <span className="font-semibold text-primary">
+                          {Number(restaurant.monthly_orders || 0)} pedido{Number(restaurant.monthly_orders || 0) !== 1 ? 's' : ''}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
