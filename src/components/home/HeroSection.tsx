@@ -96,7 +96,7 @@ export function HeroSection() {
               <div className="flex flex-wrap gap-3 justify-center lg:justify-start animate-fade-in-up animation-delay-300">
                 <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium">
                   <CheckCircle2 className="w-4 h-4" />
-                  Grátis até 100 pedidos ou R$2.000/mês
+                  Grátis até 50 pedidos ou R$1.500/mês
                 </div>
                 <div className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-full text-sm font-medium">
                   <X className="w-4 h-4" />
