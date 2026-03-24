@@ -50,7 +50,7 @@ const plans: PlanMeta[] = [
   {
     name: "Grátis",
     price: "R$0",
-    priceLabel: "até 100 pedidos/mês",
+    priceLabel: "até 50 pedidos/mês • após: R$34,90/mês",
     highlight: true,
     badge: "⚡ Mais popular",
     icon: <Rocket className="w-4 h-4 text-white" />,

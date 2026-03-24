@@ -290,10 +290,10 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
             </div>
 
             <div className="bg-gradient-to-br from-primary/5 to-whatsapp/5 p-5 rounded-xl border border-border/50">
-              <h3 className="font-semibold mb-3 text-foreground">Plano Atual - Grátis até 100 pedidos/mês</h3>
+              <h3 className="font-semibold mb-3 text-foreground">Plano Atual - Grátis até 50 pedidos/mês</h3>
               <ul className="text-sm space-y-2 text-muted-foreground">
                 {[
-                  "Grátis até 100 pedidos mensais",
+                  "Grátis até 50 pedidos mensais ou R$1.500 em vendas",
                   "Suporte prioritário",
                   "Relatórios avançados",
                   "Sem limites de faturamento"
