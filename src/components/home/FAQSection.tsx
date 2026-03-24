@@ -38,7 +38,7 @@ export function FAQSection() {
     },
     {
       question: "💰 Preciso pagar depois?",
-      answer: "Você usa grátis até 100 pedidos por mês ou R$2.000 em vendas. Se passar desse limite, aí conversamos sobre o plano pago. Mas pra começar, é 100% grátis e não pedimos cartão de crédito."
+      answer: "Você usa grátis até 50 pedidos por mês ou R$1.500 em vendas. Se passar desse limite, o mês seguinte custa apenas R$34,90. Mas pra começar, é 100% grátis e não pedimos cartão de crédito."
     },
     {
       question: "🛵 Funciona para delivery próprio?",
