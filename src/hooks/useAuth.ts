@@ -11,11 +11,7 @@ interface AuthState {
   superAdminSelectedId: string | null;
 }
 
-// Simple in-memory cache for restaurant data to avoid refetching on navigation
-let cachedRestaurant: any | null = null;
-let cachedUserId: string | null = null;
-let cachedUser: User | null = null;
-let authChecked = false;
+// Cache removed - always fetch fresh data
 
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
