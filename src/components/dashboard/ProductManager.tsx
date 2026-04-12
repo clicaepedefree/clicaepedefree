@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, DollarSign, Settings2 } from "lucide-react";
 import { MenuImporter } from "./MenuImporter";
+import { deleteStorageImage } from "@/lib/storage-utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CurrencyInput, currencyToNumber, numberToCurrency } from "@/components/ui/currency-input";
@@ -202,6 +203,13 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
       };
 
       if (editingProduct) {
+        // Delete old image if it changed
+        const oldImageUrl = editingProduct.image_url;
+        const newImageUrl = productData.image_url;
+        if (oldImageUrl && oldImageUrl !== newImageUrl) {
+          await deleteStorageImage(oldImageUrl);
+        }
+
         const { error } = await supabase
           .from('products')
           .update(productData)
@@ -283,12 +291,20 @@ export function ProductManager({ restaurant }: ProductManagerProps) {
     if (!confirm("Tem certeza que deseja excluir este produto?")) return;
 
     try {
+      // Find the product to get its image URL before deleting
+      const productToDelete = products.find(p => p.id === productId);
+      
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', productId);
 
       if (error) throw error;
+
+      // Delete image from storage after successful DB delete
+      if (productToDelete?.image_url) {
+        await deleteStorageImage(productToDelete.image_url);
+      }
       
       toast({
         title: "Produto excluído",
