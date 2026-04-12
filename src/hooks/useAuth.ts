@@ -11,17 +11,11 @@ interface AuthState {
   superAdminSelectedId: string | null;
 }
 
-// Simple in-memory cache for restaurant data to avoid refetching on navigation
-let cachedRestaurant: any | null = null;
-let cachedUserId: string | null = null;
-let cachedUser: User | null = null;
-let authChecked = false;
-
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
-    user: cachedUser,
-    restaurant: cachedRestaurant,
-    loading: !authChecked,
+    user: null,
+    restaurant: null,
+    loading: true,
     isSuperAdminMode: false,
     superAdminSelectedId: null,
   });
@@ -53,16 +47,9 @@ export function useAuth() {
     // Normal auth flow
     supabase.auth.getSession().then(({ data: { session } }) => {
       const user = session?.user ?? null;
-      cachedUser = user;
-      authChecked = true;
       setState(prev => ({ ...prev, user }));
       if (user) {
-        // Use cache if same user
-        if (cachedUserId === user.id && cachedRestaurant) {
-          setState(prev => ({ ...prev, restaurant: cachedRestaurant, loading: false }));
-        } else {
-          fetchRestaurant(user.id);
-        }
+        fetchRestaurant(user.id);
       } else {
         setState(prev => ({ ...prev, loading: false }));
       }
@@ -70,18 +57,10 @@ export function useAuth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const user = session?.user ?? null;
-      cachedUser = user;
-      authChecked = true;
       setState(prev => ({ ...prev, user }));
       if (user) {
-        if (cachedUserId === user.id && cachedRestaurant) {
-          setState(prev => ({ ...prev, restaurant: cachedRestaurant, loading: false }));
-        } else {
-          fetchRestaurant(user.id);
-        }
+        fetchRestaurant(user.id);
       } else {
-        cachedRestaurant = null;
-        cachedUserId = null;
         setState(prev => ({ ...prev, restaurant: null, loading: false }));
       }
     });
@@ -99,8 +78,6 @@ export function useAuth() {
 
       if (error && error.code !== 'PGRST116') throw error;
 
-      cachedRestaurant = data;
-      cachedUserId = userId;
       setState(prev => ({ ...prev, restaurant: data, loading: false }));
     } catch (error: any) {
       console.error('Erro ao buscar restaurante:', error);
@@ -110,7 +87,6 @@ export function useAuth() {
 
   const fetchRestaurantById = async (restaurantId: string) => {
     try {
-      // Query only the specific restaurant fields we need, not ALL restaurants
       const { data, error } = await supabase
         .from('restaurants')
         .select('*')
@@ -127,13 +103,10 @@ export function useAuth() {
   };
 
   const updateRestaurant = useCallback((updated: any) => {
-    cachedRestaurant = updated;
     setState(prev => ({ ...prev, restaurant: updated }));
   }, []);
 
   const logout = useCallback(async () => {
-    cachedRestaurant = null;
-    cachedUserId = null;
     queryClient.clear();
     
     if (state.isSuperAdminMode) {
