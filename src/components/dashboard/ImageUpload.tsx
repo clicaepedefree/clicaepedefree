@@ -11,6 +11,56 @@ interface ImageUploadProps {
   restaurantId: string;
 }
 
+const MAX_SIZE_BYTES = 300 * 1024; // 300KB
+
+/**
+ * Compresses an image client-side using canvas.
+ * Reduces quality iteratively until under MAX_SIZE_BYTES or minimum quality reached.
+ */
+async function compressImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      
+      // Resize if very large (max 1200px width for products/banners)
+      let { width, height } = img;
+      const maxDim = 1200;
+      if (width > maxDim) {
+        height = Math.round((height * maxDim) / width);
+        width = maxDim;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas not supported'));
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Try decreasing quality until under limit
+      let quality = 0.8;
+      const tryCompress = () => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject(new Error('Compression failed'));
+            if (blob.size <= MAX_SIZE_BYTES || quality <= 0.3) {
+              resolve(blob);
+            } else {
+              quality -= 0.1;
+              tryCompress();
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      tryCompress();
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
@@ -19,7 +69,6 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Erro",
@@ -29,7 +78,6 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "Erro",
@@ -42,45 +90,39 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
     setUploading(true);
 
     try {
-      console.log('Starting image upload process...');
-      console.log('File details:', { name: file.name, size: file.size, type: file.type });
-
-      // Get the current user's auth ID for the folder name (required by RLS policy)
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
+      if (!user) throw new Error('User not authenticated');
+
+      // Compress image client-side to max 300KB
+      let uploadBlob: Blob | File = file;
+      if (file.size > MAX_SIZE_BYTES) {
+        console.log(`Compressing image from ${(file.size / 1024).toFixed(0)}KB...`);
+        uploadBlob = await compressImage(file);
+        console.log(`Compressed to ${(uploadBlob.size / 1024).toFixed(0)}KB`);
       }
 
-      // Use user's auth ID as folder name to comply with RLS policy
-      const fileName = `${user.id}/${type}_${Date.now()}.${file.name.split('.').pop()}`;
-      console.log('Upload fileName:', fileName);
+      const ext = file.type === 'image/png' && uploadBlob === file ? 'png' : 'jpg';
+      const fileName = `${user.id}/${type}_${Date.now()}.${ext}`;
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('restaurant-images')
-        .upload(fileName, file, {
-          cacheControl: '3600',
+        .upload(fileName, uploadBlob, {
+          cacheControl: '31536000', // 1 year CDN cache
           upsert: true,
+          contentType: 'image/jpeg',
         });
 
-      console.log('Upload result:', { uploadData, uploadError });
+      if (uploadError) throw uploadError;
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-      }
-
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('restaurant-images')
         .getPublicUrl(uploadData.path);
-
-      console.log('Public URL:', publicUrl);
 
       onImageUploaded(publicUrl);
 
       toast({
         title: "Sucesso",
-        description: "Imagem carregada com sucesso!",
+        description: `Imagem carregada (${(uploadBlob.size / 1024).toFixed(0)}KB)`,
       });
 
     } catch (error: any) {
@@ -108,6 +150,7 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
               src={currentUrl}
               alt={type === 'logo' ? 'Logo' : 'Banner'}
               className={type === 'logo' ? 'w-20 h-20 object-cover rounded' : 'w-40 h-20 object-cover rounded'}
+              loading="lazy"
             />
             <Button
               size="sm"
@@ -146,7 +189,7 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
                 {uploading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Carregando...
+                    Comprimindo e enviando...
                   </>
                 ) : (
                   <>
@@ -166,7 +209,7 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
           : 'Recomendado: 1200x300px, formato retangular'
         }
         <br />
-        Máximo 5MB.
+        Imagens são comprimidas automaticamente (máx. 300KB).
       </p>
     </div>
   );
