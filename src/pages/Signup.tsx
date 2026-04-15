@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ChefHat } from "lucide-react";
@@ -65,6 +66,7 @@ const isValidWhatsApp = (value: string) => {
 };
 
 export default function Signup() {
+  const [selectedPlan, setSelectedPlan] = useState("gratis");
   const [isLoading, setIsLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const { toast } = useToast();
@@ -125,6 +127,7 @@ export default function Signup() {
 
     const cleanedWhats = onlyDigits(whatsappRaw);
     const cleanedTaxId = onlyDigits(taxIdRaw);
+    const plan = selectedPlan;
 
     try {
       if (!isValidTaxId(cleanedTaxId)) {
@@ -146,6 +149,7 @@ export default function Signup() {
             responsible_name: responsibleName,
             whatsapp: cleanedWhats,
             tax_id: cleanedTaxId,
+            selected_plan: plan,
           }
         }
       });
@@ -171,6 +175,7 @@ export default function Signup() {
             responsibleName: responsibleName,
             whatsapp: cleanedWhats,
             taxId: cleanedTaxId,
+            selectedPlan: plan,
           }
         });
 
@@ -272,6 +277,21 @@ export default function Signup() {
                   required
                 />
                 <p className="text-sm text-muted-foreground">Use DDD + 9 dígitos e evite 4+ números iguais seguidos.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="plan">Plano desejado</Label>
+                <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o plano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gratis">Grátis — até 30 pedidos/mês</SelectItem>
+                    <SelectItem value="basico">Básico Ilimitado — R$109,90/mês</SelectItem>
+                    <SelectItem value="essencial">Essencial Ilimitado — R$199,50/mês</SelectItem>
+                    <SelectItem value="completo">Completo — R$249,30/mês</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">Você pode mudar de plano a qualquer momento.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
