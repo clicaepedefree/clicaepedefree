@@ -50,7 +50,7 @@ const plans: PlanMeta[] = [
   {
     name: "Grátis",
     price: "R$0",
-    priceLabel: "até 50 pedidos/mês • após: R$34,90/mês",
+    priceLabel: "até 30 pedidos/mês • após: R$39,90/mês",
     highlight: true,
     badge: "⚡ Mais popular",
     icon: <Rocket className="w-4 h-4 text-white" />,
@@ -59,8 +59,8 @@ const plans: PlanMeta[] = [
   },
   {
     name: "Básico",
-    price: "R$119",
-    priceLabel: "/mês",
+    price: "R$109,90",
+    priceLabel: "/mês • pedidos ilimitados",
     icon: <Star className="w-4 h-4 text-white" />,
     color: "bg-blue-500",
     cta: {
@@ -70,21 +70,21 @@ const plans: PlanMeta[] = [
     },
   },
   {
-    name: "Profissional",
-    price: "R$199",
-    priceLabel: "/mês",
+    name: "Essencial",
+    price: "R$199,50",
+    priceLabel: "/mês • pedidos ilimitados",
     icon: <Crown className="w-4 h-4 text-white" />,
     color: "bg-purple-500",
     cta: {
-      label: "Quero o Profissional",
-      href: whatsappLink("Quero conhecer o plano Profissional"),
+      label: "Quero o Essencial",
+      href: whatsappLink("Quero conhecer o plano Essencial"),
       isExternal: true,
     },
   },
   {
     name: "Completo",
-    price: "R$269",
-    priceLabel: "/mês",
+    price: "R$249,30",
+    priceLabel: "/mês • pedidos ilimitados",
     badge: "🏆 Mais completo",
     icon: <Shield className="w-4 h-4 text-white" />,
     color: "bg-gradient-to-r from-orange-500 to-amber-500",

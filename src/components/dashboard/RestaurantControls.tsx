@@ -290,10 +290,10 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
             </div>
 
             <div className="bg-gradient-to-br from-primary/5 to-whatsapp/5 p-5 rounded-xl border border-border/50">
-              <h3 className="font-semibold mb-3 text-foreground">Plano Atual - Grátis até 50 pedidos/mês</h3>
+              <h3 className="font-semibold mb-3 text-foreground">Plano Atual - Grátis até 30 pedidos/mês</h3>
               <ul className="text-sm space-y-2 text-muted-foreground">
                 {[
-                  "Grátis até 50 pedidos mensais ou R$1.500 em vendas",
+                  "Grátis até 30 pedidos mensais",
                   "Suporte prioritário",
                   "Relatórios avançados",
                   "Sem limites de faturamento"
@@ -318,7 +318,7 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
                   className="flex items-center gap-2"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Pagar R$ 34,90 e Continuar Vendendo
+                  Pagar R$ 39,90 e Continuar Vendendo
                 </a>
               </Button>
               
