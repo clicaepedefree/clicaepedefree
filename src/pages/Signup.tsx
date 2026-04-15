@@ -127,6 +127,7 @@ export default function Signup() {
 
     const cleanedWhats = onlyDigits(whatsappRaw);
     const cleanedTaxId = onlyDigits(taxIdRaw);
+    const plan = selectedPlan;
 
     try {
       if (!isValidTaxId(cleanedTaxId)) {
@@ -148,6 +149,7 @@ export default function Signup() {
             responsible_name: responsibleName,
             whatsapp: cleanedWhats,
             tax_id: cleanedTaxId,
+            selected_plan: plan,
           }
         }
       });
