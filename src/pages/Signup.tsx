@@ -278,6 +278,21 @@ export default function Signup() {
                 <p className="text-sm text-muted-foreground">Use DDD + 9 dígitos e evite 4+ números iguais seguidos.</p>
               </div>
               <div className="space-y-2">
+                <Label htmlFor="plan">Plano desejado</Label>
+                <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o plano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gratis">Grátis — até 30 pedidos/mês</SelectItem>
+                    <SelectItem value="basico">Básico Ilimitado — R$109,90/mês</SelectItem>
+                    <SelectItem value="essencial">Essencial Ilimitado — R$199,50/mês</SelectItem>
+                    <SelectItem value="completo">Completo — R$249,30/mês</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-muted-foreground">Você pode mudar de plano a qualquer momento.</p>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
