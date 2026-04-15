@@ -175,6 +175,7 @@ export default function Signup() {
             responsibleName: responsibleName,
             whatsapp: cleanedWhats,
             taxId: cleanedTaxId,
+            selectedPlan: plan,
           }
         });
 
