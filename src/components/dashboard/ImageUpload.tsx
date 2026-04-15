@@ -11,50 +11,60 @@ interface ImageUploadProps {
   restaurantId: string;
 }
 
-const MAX_SIZE_BYTES = 300 * 1024; // 300KB
+const MAX_SIZE_BYTES = 299 * 1024; // 299KB
 
 /**
- * Compresses an image client-side using canvas.
- * Reduces quality iteratively until under MAX_SIZE_BYTES or minimum quality reached.
+ * Compresses an image aggressively using canvas.
+ * Iteratively reduces JPEG quality and dimensions until ≤ 299KB.
  */
 async function compressImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      
-      // Resize if very large (max 1200px width for products/banners)
-      let { width, height } = img;
-      const maxDim = 1200;
-      if (width > maxDim) {
-        height = Math.round((height * maxDim) / width);
-        width = maxDim;
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return reject(new Error('Canvas not supported'));
-      ctx.drawImage(img, 0, 0, width, height);
-      
-      // Try decreasing quality until under limit
-      let quality = 0.8;
-      const tryCompress = () => {
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) return reject(new Error('Compression failed'));
-            if (blob.size <= MAX_SIZE_BYTES || quality <= 0.3) {
-              resolve(blob);
-            } else {
-              quality -= 0.1;
-              tryCompress();
-            }
-          },
-          'image/jpeg',
-          quality
-        );
+      const tryWithMaxDim = (currentMaxDim: number) => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+
+        if (width > currentMaxDim || height > currentMaxDim) {
+          if (width > height) {
+            height = Math.round((height * currentMaxDim) / width);
+            width = currentMaxDim;
+          } else {
+            width = Math.round((width * currentMaxDim) / height);
+            height = currentMaxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('Canvas not supported'));
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.75;
+        const tryCompress = () => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) return reject(new Error('Compression failed'));
+              if (blob.size <= MAX_SIZE_BYTES) {
+                resolve(blob);
+              } else if (quality > 0.15) {
+                quality -= 0.05;
+                tryCompress();
+              } else if (currentMaxDim > 400) {
+                tryWithMaxDim(Math.round(currentMaxDim * 0.7));
+              } else {
+                resolve(blob); // best effort
+              }
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+        tryCompress();
       };
-      tryCompress();
+
+      tryWithMaxDim(1200);
     };
     img.onerror = () => reject(new Error('Failed to load image'));
     img.src = URL.createObjectURL(file);
@@ -93,21 +103,17 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Compress image client-side to max 300KB
-      let uploadBlob: Blob | File = file;
-      if (file.size > MAX_SIZE_BYTES) {
-        console.log(`Compressing image from ${(file.size / 1024).toFixed(0)}KB...`);
-        uploadBlob = await compressImage(file);
-        console.log(`Compressed to ${(uploadBlob.size / 1024).toFixed(0)}KB`);
-      }
+      // Always compress to ensure ≤ 299KB
+      console.log(`Compressing image from ${(file.size / 1024).toFixed(0)}KB...`);
+      const uploadBlob = await compressImage(file);
+      console.log(`Compressed to ${(uploadBlob.size / 1024).toFixed(0)}KB`);
 
-      const ext = file.type === 'image/png' && uploadBlob === file ? 'png' : 'jpg';
-      const fileName = `${user.id}/${type}_${Date.now()}.${ext}`;
+      const fileName = `${user.id}/${type}_${Date.now()}.jpg`;
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('restaurant-images')
         .upload(fileName, uploadBlob, {
-          cacheControl: '31536000', // 1 year CDN cache
+          cacheControl: '31536000',
           upsert: true,
           contentType: 'image/jpeg',
         });
@@ -209,7 +215,7 @@ export function ImageUpload({ currentUrl, onImageUploaded, type, restaurantId }:
           : 'Recomendado: 1200x300px, formato retangular'
         }
         <br />
-        Imagens são comprimidas automaticamente (máx. 300KB).
+        Imagens são comprimidas automaticamente (máx. 299KB).
       </p>
     </div>
   );
