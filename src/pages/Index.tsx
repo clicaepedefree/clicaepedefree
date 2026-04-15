@@ -1,16 +1,27 @@
-import { useEffect } from "react";
+import { HeroSection } from "@/components/home/HeroSection";
+import { BenefitsSection } from "@/components/home/BenefitsSection";
+import { HowItWorksSection } from "@/components/home/HowItWorksSection";
+import { PricingSection } from "@/components/home/PricingSection";
+import { TestimonialsSection } from "@/components/home/TestimonialsSection";
+import { FAQSection } from "@/components/home/FAQSection";
+import { CTASection } from "@/components/home/CTASection";
+import { SEOSection } from "@/components/home/SEOSection";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 
 const Index = () => {
-  useEffect(() => {
-    window.location.href = "https://clicapede.com.br";
-  }, []);
-
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4"></div>
-        <p className="text-sm text-muted-foreground">Redirecionando...</p>
-      </div>
+    <div className="min-h-screen">
+      <Navbar />
+      <HeroSection />
+      <BenefitsSection />
+      <HowItWorksSection />
+      <PricingSection />
+      <TestimonialsSection />
+      <FAQSection />
+      <CTASection />
+      <SEOSection />
+      <Footer />
     </div>
   );
 };
