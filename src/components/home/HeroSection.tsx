@@ -109,7 +109,7 @@ export function HeroSection() {
                 <Button 
                   size="lg" 
                   className="group relative text-lg px-8 py-7 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 transform hover:scale-[1.02] transition-all duration-300 rounded-2xl btn-shine animate-pulse-glow" 
-                  onClick={() => document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => window.open(`https://wa.me/5511916651776?text=${encodeURIComponent('Quero criar meu cardápio grátis')}`, '_blank')}
                 >
                   <span className="flex items-center gap-2">
                     Criar meu cardápio grátis agora
