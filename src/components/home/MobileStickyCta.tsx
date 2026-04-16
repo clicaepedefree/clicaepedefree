@@ -8,7 +8,7 @@ export function MobileStickyCtA() {
       <Button 
         size="lg" 
         className="w-full py-6 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg text-base font-bold rounded-xl" 
-        onClick={() => document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' })}
+        onClick={() => window.open(`https://wa.me/5511916651776?text=${encodeURIComponent('Quero criar meu cardápio grátis')}`, '_blank')}
       >
         Criar meu cardápio grátis
         <ArrowRight className="ml-2 h-5 w-5" />

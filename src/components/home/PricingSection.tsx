@@ -55,7 +55,7 @@ const plans: PlanMeta[] = [
     badge: "⚡ Mais popular",
     icon: <Rocket className="w-4 h-4 text-white" />,
     color: "bg-emerald-500",
-    cta: { label: "Criar meu cardápio grátis", href: "/criar-conta" },
+    cta: { label: "Criar meu cardápio grátis", href: whatsappLink("Quero o plano Grátis"), isExternal: true },
   },
   {
     name: "Básico",
