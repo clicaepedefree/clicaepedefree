@@ -71,10 +71,10 @@ export function HeroSection() {
               </div>
 
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-gray-900 animate-fade-in-up animation-delay-100">
-                Receba pedidos no WhatsApp{" "}
+                Receba pedidos organizados no WhatsApp{" "}
                 <span className="relative">
                   <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-emerald-500 bg-clip-text text-transparent">
-                    sem bagunça, sem taxa e sem mensalidade
+                    e aumente suas vendas todos os dias
                   </span>
                   <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none">
                     <path d="M2 10C50 2 150 2 298 10" stroke="url(#gradient)" strokeWidth="4" strokeLinecap="round"/>
