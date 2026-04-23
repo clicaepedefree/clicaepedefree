@@ -4,9 +4,6 @@ import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-const whatsappLink = (message: string) =>
-  `https://wa.me/5511916651776?text=${encodeURIComponent(message)}`;
-
 interface Feature {
   label: string;
   plans: boolean[]; // [gratis, basico, profissional, completo]
@@ -55,7 +52,7 @@ const plans: PlanMeta[] = [
     badge: "⚡ Mais popular",
     icon: <Rocket className="w-4 h-4 text-white" />,
     color: "bg-emerald-500",
-    cta: { label: "Criar meu cardápio grátis", href: whatsappLink("Quero o plano Grátis"), isExternal: true },
+    cta: { label: "Criar meu cardápio grátis", href: "https://cardapiofacil.site/criar-conta" },
   },
   {
     name: "Básico",
@@ -65,8 +62,7 @@ const plans: PlanMeta[] = [
     color: "bg-blue-500",
     cta: {
       label: "Quero o Básico",
-      href: whatsappLink("Quero conhecer o plano Básico"),
-      isExternal: true,
+      href: "https://cardapiofacil.site/criar-conta",
     },
   },
   {
@@ -77,8 +73,7 @@ const plans: PlanMeta[] = [
     color: "bg-purple-500",
     cta: {
       label: "Quero o Essencial",
-      href: whatsappLink("Quero conhecer o plano Essencial"),
-      isExternal: true,
+      href: "https://cardapiofacil.site/criar-conta",
     },
   },
   {
@@ -90,8 +85,7 @@ const plans: PlanMeta[] = [
     color: "bg-gradient-to-r from-orange-500 to-amber-500",
     cta: {
       label: "Quero o Completo",
-      href: whatsappLink("Quero conhecer o plano Completo"),
-      isExternal: true,
+      href: "https://cardapiofacil.site/criar-conta",
     },
   },
 ];

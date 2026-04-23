@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
 
 export function ExitIntentPopup() {
   const [isVisible, setIsVisible] = useState(false);
@@ -60,7 +59,7 @@ export function ExitIntentPopup() {
             className="w-full py-7 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg text-lg font-bold rounded-xl mb-4" 
             onClick={() => {
               setIsVisible(false);
-              window.open(`https://wa.me/5511916651776?text=${encodeURIComponent('Quero criar meu cardápio grátis')}`, '_blank');
+              window.location.href = "https://cardapiofacil.site/criar-conta";
             }}
           >
             Quero testar grátis

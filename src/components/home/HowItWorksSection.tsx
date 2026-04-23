@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronRight, Smartphone, Share2, MessageCircle, CheckCircle2 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
 export function HowItWorksSection() {
@@ -176,11 +175,13 @@ export function HowItWorksSection() {
         <div className={`text-center ${isVisible ? 'animate-fade-in-up animation-delay-500' : 'opacity-0'}`}>
           <Button 
             size="lg" 
-            className="group text-lg px-10 py-7 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-xl shadow-blue-500/25 hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 rounded-2xl" 
-            onClick={() => window.open(`https://wa.me/5511916651776?text=${encodeURIComponent('Quero criar meu cardápio grátis')}`, '_blank')}
+            className="group text-lg px-10 py-7 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-xl shadow-blue-500/25 hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 rounded-2xl"
+            asChild
           >
-            Criar meu cardápio grátis agora
-            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            <a href="https://cardapiofacil.site/criar-conta">
+              Criar meu cardápio grátis agora
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </a>
           </Button>
           <p className="mt-4 text-sm text-gray-500">
             Leva menos de 5 minutos • Sem cartão de crédito
