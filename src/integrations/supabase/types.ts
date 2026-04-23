@@ -14,13 +14,525 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      addon_groups: {
+        Row: {
+          created_at: string
+          id: string
+          is_required: boolean | null
+          max_selections: number | null
+          min_selections: number | null
+          name: string
+          restaurant_id: string
+          selection_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_required?: boolean | null
+          max_selections?: number | null
+          min_selections?: number | null
+          name: string
+          restaurant_id: string
+          selection_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_required?: boolean | null
+          max_selections?: number | null
+          min_selections?: number | null
+          name?: string
+          restaurant_id?: string
+          selection_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      addon_options: {
+        Row: {
+          addon_group_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          price: number | null
+        }
+        Insert: {
+          addon_group_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          price?: number | null
+        }
+        Update: {
+          addon_group_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number | null
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          id: string
+          name: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          name: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          name?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_zones: {
+        Row: {
+          created_at: string
+          delivery_fee: number
+          id: string
+          is_active: boolean | null
+          neighborhood: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_fee?: number
+          id?: string
+          is_active?: boolean | null
+          neighborhood: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_fee?: number
+          id?: string
+          is_active?: boolean | null
+          neighborhood?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      discount_coupons: {
+        Row: {
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          min_order_value: number
+          restaurant_id: string
+          updated_at: string
+          usage_limit: number | null
+          used_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount_type: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          min_order_value?: number
+          restaurant_id: string
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          min_order_value?: number
+          restaurant_id?: string
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+        }
+        Relationships: []
+      }
+      operating_hours: {
+        Row: {
+          close_time: string
+          created_at: string
+          day_of_week: number
+          id: string
+          is_active: boolean
+          open_time: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          close_time?: string
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_active?: boolean
+          open_time?: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          close_time?: string
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_active?: boolean
+          open_time?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      order_access_logs: {
+        Row: {
+          access_type: string
+          accessed_by: string | null
+          created_at: string | null
+          id: string
+          ip_address: unknown
+          order_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          access_type: string
+          accessed_by?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown
+          order_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          access_type?: string
+          accessed_by?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown
+          order_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          address: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_fee: number
+          id: string
+          items: Json
+          order_number: number | null
+          payment_method: string | null
+          restaurant_id: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_fee?: number
+          id?: string
+          items: Json
+          order_number?: number | null
+          payment_method?: string | null
+          restaurant_id: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_fee?: number
+          id?: string
+          items?: Json
+          order_number?: number | null
+          payment_method?: string | null
+          restaurant_id?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_methods: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          method_type: string
+          pix_key: string | null
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          method_type: string
+          pix_key?: string | null
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          method_type?: string
+          pix_key?: string | null
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      product_addon_groups: {
+        Row: {
+          addon_group_id: string
+          id: string
+          product_id: string
+        }
+        Insert: {
+          addon_group_id: string
+          id?: string
+          product_id: string
+        }
+        Update: {
+          addon_group_id?: string
+          id?: string
+          product_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          name: string
+          price: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          name: string
+          price: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          name?: string
+          price?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      restaurants: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          delivery_enabled: boolean | null
+          id: string
+          is_blocked: boolean | null
+          is_open: boolean | null
+          logo_url: string | null
+          monthly_revenue: number | null
+          name: string
+          pickup_enabled: boolean | null
+          responsible_name: string | null
+          revenue_block_exempt_until: string | null
+          slug: string
+          tax_id: string | null
+          updated_at: string
+          user_id: string
+          whatsapp: string
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          delivery_enabled?: boolean | null
+          id?: string
+          is_blocked?: boolean | null
+          is_open?: boolean | null
+          logo_url?: string | null
+          monthly_revenue?: number | null
+          name: string
+          pickup_enabled?: boolean | null
+          responsible_name?: string | null
+          revenue_block_exempt_until?: string | null
+          slug: string
+          tax_id?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp: string
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          delivery_enabled?: boolean | null
+          id?: string
+          is_blocked?: boolean | null
+          is_open?: boolean | null
+          logo_url?: string | null
+          monthly_revenue?: number | null
+          name?: string
+          pickup_enabled?: boolean | null
+          responsible_name?: string | null
+          revenue_block_exempt_until?: string | null
+          slug?: string
+          tax_id?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      super_admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      super_admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          password_hash: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          password_hash: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          password_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_restaurant_open_status: {
+        Args: { check_time?: string; restaurant_id_param: string }
+        Returns: boolean
+      }
+      check_revenue_limits: {
+        Args: { target_time?: string; tz?: string }
+        Returns: number
+      }
+      generate_unique_slug: {
+        Args: { restaurant_name: string }
+        Returns: string
+      }
+      get_monthly_revenue: {
+        Args: { restaurant_id_param: string; target_time?: string; tz?: string }
+        Returns: number
+      }
+      get_public_restaurant_by_slug: {
+        Args: { slug_input: string }
+        Returns: {
+          banner_url: string
+          delivery_enabled: boolean
+          id: string
+          is_open: boolean
+          logo_url: string
+          name: string
+          pickup_enabled: boolean
+          slug: string
+          whatsapp: string
+        }[]
+      }
+      is_super_admin: { Args: { check_user_id?: string }; Returns: boolean }
+      update_monthly_revenues: {
+        Args: { target_time?: string; tz?: string }
+        Returns: number
+      }
+      update_restaurants_open_status: { Args: never; Returns: number }
+      user_owns_order_restaurant: {
+        Args: { order_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
