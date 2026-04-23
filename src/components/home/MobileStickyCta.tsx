@@ -10,7 +10,7 @@ export function MobileStickyCtA() {
         className="w-full py-6 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg text-base font-bold rounded-xl"
         asChild
       >
-        <a href="https://cardapiofacil.site/criar-conta">
+        <a href="/criar-conta">
           Criar meu cardápio grátis
           <ArrowRight className="ml-2 h-5 w-5" />
         </a>

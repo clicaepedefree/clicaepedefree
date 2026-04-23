@@ -24,7 +24,7 @@ export function Footer() {
             <h4 className="text-lg font-semibold mb-4 text-primary-glow">Plataforma</h4>
             <ul className="space-y-2">
               <li>
-                <a href="https://cardapiofacil.site/criar-conta" className="text-white/80 hover:text-primary-glow transition-colors">
+                <a href="/criar-conta" className="text-white/80 hover:text-primary-glow transition-colors">
                   Criar Conta
                 </a>
               </li>

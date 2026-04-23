@@ -45,7 +45,7 @@ export function Navbar() {
             className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl rounded-xl px-5 transition-all duration-300 hover:scale-105"
             asChild
           >
-            <a href="https://cardapiofacil.site/criar-conta">
+            <a href="/criar-conta">
               <LogIn className="mr-2 h-4 w-4" />
               Criar Conta Grátis
             </a>
@@ -88,7 +88,7 @@ export function Navbar() {
               }}
               asChild
             >
-              <a href="https://cardapiofacil.site/criar-conta">
+              <a href="/criar-conta">
                 <LogIn className="mr-2 h-4 w-4" />
                 Criar Conta Grátis
               </a>

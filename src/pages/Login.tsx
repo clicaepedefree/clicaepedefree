@@ -288,7 +288,7 @@ export default function Login() {
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
                     Não tem uma conta?{" "}
-                    <a href="https://cardapiofacil.site/criar-conta" className="text-primary font-medium hover:underline">
+                    <a href="/criar-conta" className="text-primary font-medium hover:underline">
                       Criar conta grátis
                     </a>
                   </p>

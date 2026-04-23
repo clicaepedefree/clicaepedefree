@@ -67,7 +67,7 @@ export function CTASection() {
               className="group text-xl px-12 py-8 bg-white text-emerald-700 hover:bg-gray-50 shadow-2xl hover:shadow-3xl transform hover:scale-[1.02] transition-all duration-300 rounded-2xl font-bold"
               asChild
             >
-              <a href="https://cardapiofacil.site/criar-conta">
+              <a href="/criar-conta">
                 Criar meu cardápio grátis agora
                 <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
               </a>

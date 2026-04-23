@@ -59,7 +59,7 @@ export function ExitIntentPopup() {
             className="w-full py-7 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg text-lg font-bold rounded-xl mb-4" 
             onClick={() => {
               setIsVisible(false);
-              window.location.href = "https://cardapiofacil.site/criar-conta";
+              window.location.href = "/criar-conta";
             }}
           >
             Quero testar grátis

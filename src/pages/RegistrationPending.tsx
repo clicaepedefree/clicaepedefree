@@ -4,12 +4,6 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, ArrowLeft } from "lucide-react";
 
 export default function RegistrationPending() {
-  const handleWhatsAppClick = () => {
-    const phone = "5511916651776";
-    const message = encodeURIComponent("Vim pelo site, quero saber mais do cardápio digital");
-    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-  };
-
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -37,11 +31,13 @@ export default function RegistrationPending() {
             </p>
 
             <Button
-              onClick={handleWhatsAppClick}
+              asChild
               className="w-full h-14 text-lg font-bold bg-whatsapp text-whatsapp-foreground hover:bg-whatsapp/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
-              <MessageCircle className="h-6 w-6 mr-2" />
-              Finalizar Cadastro
+              <Link to="/criar-conta">
+                <MessageCircle className="h-6 w-6 mr-2" />
+                Finalizar Cadastro
+              </Link>
             </Button>
           </CardContent>
         </Card>
