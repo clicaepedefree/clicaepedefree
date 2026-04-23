@@ -48,7 +48,15 @@ export type Database = {
           selection_type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "addon_groups_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       addon_options: {
         Row: {
@@ -75,7 +83,15 @@ export type Database = {
           name?: string
           price?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "addon_options_addon_group_id_fkey"
+            columns: ["addon_group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -102,7 +118,15 @@ export type Database = {
           restaurant_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       delivery_zones: {
         Row: {
@@ -132,7 +156,15 @@ export type Database = {
           restaurant_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "delivery_zones_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       discount_coupons: {
         Row: {
@@ -177,7 +209,15 @@ export type Database = {
           usage_limit?: number | null
           used_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "discount_coupons_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       operating_hours: {
         Row: {
@@ -210,7 +250,15 @@ export type Database = {
           restaurant_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "operating_hours_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_access_logs: {
         Row: {
@@ -240,7 +288,22 @@ export type Database = {
           order_id?: string
           user_agent?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "order_access_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_access_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "secure_orders_view"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orders: {
         Row: {
@@ -291,7 +354,15 @@ export type Database = {
           total?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_methods: {
         Row: {
@@ -321,7 +392,15 @@ export type Database = {
           restaurant_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_addon_groups: {
         Row: {
@@ -339,7 +418,22 @@ export type Database = {
           id?: string
           product_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "product_addon_groups_addon_group_id_fkey"
+            columns: ["addon_group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_addon_groups_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -384,7 +478,22 @@ export type Database = {
           restaurant_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       restaurants: {
         Row: {
@@ -490,9 +599,80 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      secure_orders_view: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_fee: number | null
+          id: string | null
+          items: Json | null
+          order_number: number | null
+          payment_method: string | null
+          restaurant_id: string | null
+          status: string | null
+          subtotal: number | null
+          total: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_fee?: number | null
+          id?: string | null
+          items?: Json | null
+          order_number?: number | null
+          payment_method?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          subtotal?: number | null
+          total?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_fee?: number | null
+          id?: string | null
+          items?: Json | null
+          order_number?: number | null
+          payment_method?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          subtotal?: number | null
+          total?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      admin_mark_restaurant_paid: {
+        Args: { for_time?: string; restaurant_id: string }
+        Returns: string
+      }
+      admin_set_restaurant_block: {
+        Args: {
+          exempt_until?: string
+          restaurant_id: string
+          set_blocked: boolean
+        }
+        Returns: boolean
+      }
+      anonymize_old_orders: { Args: never; Returns: number }
       check_restaurant_open_status: {
         Args: { check_time?: string; restaurant_id_param: string }
         Returns: boolean
@@ -523,7 +703,35 @@ export type Database = {
           whatsapp: string
         }[]
       }
+      get_restaurants_with_emails: {
+        Args: never
+        Returns: {
+          banner_url: string
+          created_at: string
+          id: string
+          is_blocked: boolean
+          is_open: boolean
+          logo_url: string
+          monthly_revenue: number
+          name: string
+          responsible_name: string
+          revenue_block_exempt_until: string
+          slug: string
+          tax_id: string
+          total_revenue: number
+          user_email: string
+          whatsapp: string
+        }[]
+      }
       is_super_admin: { Args: { check_user_id?: string }; Returns: boolean }
+      mask_customer_data: {
+        Args: {
+          customer_name: string
+          customer_phone: string
+          is_owner?: boolean
+        }
+        Returns: Json
+      }
       update_monthly_revenues: {
         Args: { target_time?: string; tz?: string }
         Returns: number
