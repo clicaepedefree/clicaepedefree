@@ -23,9 +23,10 @@ export function RestaurantSettings({ restaurant, onUpdate }: RestaurantSettingsP
 
   const handleImageUpdate = async (field: 'logo_url' | 'banner_url', url: string) => {
     try {
+      const updatePayload = { [field]: url } as { logo_url?: string; banner_url?: string };
       const { data, error } = await supabase
         .from('restaurants')
-        .update({ [field]: url })
+        .update(updatePayload)
         .eq('id', restaurant.id)
         .select()
         .single();
