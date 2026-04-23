@@ -288,7 +288,7 @@ export default function Login() {
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
                     Não tem uma conta?{" "}
-                    <a href={`https://wa.me/5511916651776?text=${encodeURIComponent('Quero criar meu cardápio grátis')}`} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline">
+                    <a href="https://cardapiofacil.site/criar-conta" className="text-primary font-medium hover:underline">
                       Criar conta grátis
                     </a>
                   </p>

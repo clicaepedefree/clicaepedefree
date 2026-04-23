@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 export function ExitIntentPopup() {
   const [isVisible, setIsVisible] = useState(false);
   const [hasShown, setHasShown] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleMouseLeave = (e: MouseEvent) => {
@@ -61,7 +59,7 @@ export function ExitIntentPopup() {
             className="w-full py-7 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg text-lg font-bold rounded-xl mb-4" 
             onClick={() => {
               setIsVisible(false);
-              navigate("/criar-conta");
+              window.location.href = "https://cardapiofacil.site/criar-conta";
             }}
           >
             Quero testar grátis

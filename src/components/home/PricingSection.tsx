@@ -52,7 +52,7 @@ const plans: PlanMeta[] = [
     badge: "⚡ Mais popular",
     icon: <Rocket className="w-4 h-4 text-white" />,
     color: "bg-emerald-500",
-    cta: { label: "Criar meu cardápio grátis", href: "/criar-conta" },
+    cta: { label: "Criar meu cardápio grátis", href: "https://cardapiofacil.site/criar-conta" },
   },
   {
     name: "Básico",
@@ -62,7 +62,7 @@ const plans: PlanMeta[] = [
     color: "bg-blue-500",
     cta: {
       label: "Quero o Básico",
-      href: "/criar-conta",
+      href: "https://cardapiofacil.site/criar-conta",
     },
   },
   {
@@ -73,7 +73,7 @@ const plans: PlanMeta[] = [
     color: "bg-purple-500",
     cta: {
       label: "Quero o Essencial",
-      href: "/criar-conta",
+      href: "https://cardapiofacil.site/criar-conta",
     },
   },
   {
@@ -85,7 +85,7 @@ const plans: PlanMeta[] = [
     color: "bg-gradient-to-r from-orange-500 to-amber-500",
     cta: {
       label: "Quero o Completo",
-      href: "/criar-conta",
+      href: "https://cardapiofacil.site/criar-conta",
     },
   },
 ];
