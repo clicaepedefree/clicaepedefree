@@ -1,13 +1,1 @@
-project_id = "llfpytyqalbogadhdnzu"
-
-[functions.create-agendor-deal]
-verify_jwt = false
-
-[functions.sync-all-agendor-deals]
-verify_jwt = false
-
-[functions.register-restaurant]
-verify_jwt = false
-
-[functions.import-menu]
-verify_jwt = true
+project_id = "defowjmlqmheecydnyrj"
