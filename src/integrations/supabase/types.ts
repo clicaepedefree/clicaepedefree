@@ -712,6 +712,7 @@ export type Database = {
           is_blocked: boolean
           is_open: boolean
           logo_url: string
+          monthly_orders: number
           monthly_revenue: number
           name: string
           responsible_name: string
