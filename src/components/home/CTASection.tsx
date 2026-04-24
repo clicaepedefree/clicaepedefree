@@ -66,7 +66,7 @@ export function CTASection() {
             <Button 
               size="lg" 
               className="group text-xl px-12 py-8 bg-white text-emerald-700 hover:bg-gray-50 shadow-2xl hover:shadow-3xl transform hover:scale-[1.02] transition-all duration-300 rounded-2xl font-bold" 
-              onClick={() => window.open(`https://wa.me/5511916651776?text=${encodeURIComponent('Quero criar meu cardápio grátis')}`, '_blank');
+              onClick={() => window.location.href = '/criar-conta'}
             >
               Criar meu cardápio grátis agora
               <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />

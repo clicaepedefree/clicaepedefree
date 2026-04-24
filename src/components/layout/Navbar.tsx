@@ -34,16 +34,16 @@ export function Navbar() {
             className="text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 rounded-xl" 
             asChild
           >
-            <a href="https://cardapiofacil.site/entrar">
+            <Link to="/entrar">
               <User className="mr-2 h-4 w-4" />
               Entrar
-            </a>
+            </Link>
           </Button>
 
           <Button 
             size="sm" 
             className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl rounded-xl px-5 transition-all duration-300 hover:scale-105" 
-            onClick={() => window.open(`https://wa.me/5511916651776?text=${encodeURIComponent('Quero criar meu cardápio grátis')}`, '_blank')}
+            onClick={() => window.location.href = '/criar-conta'}
           >
             <LogIn className="mr-2 h-4 w-4" />
             Criar Conta Grátis
@@ -73,17 +73,17 @@ export function Navbar() {
               asChild
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <a href="https://cardapiofacil.site/entrar">
+              <Link to="/entrar">
                 <User className="mr-2 h-4 w-4" />
                 Entrar
-              </a>
+              </Link>
             </Button>
 
             <Button 
               className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg rounded-xl" 
               onClick={() => {
                 setIsMobileMenuOpen(false);
-                window.open(`https://wa.me/5511916651776?text=${encodeURIComponent('Quero criar meu cardápio grátis')}`, '_blank');
+                window.location.href = '/criar-conta';
               }}
             >
               <LogIn className="mr-2 h-4 w-4" />
