@@ -228,7 +228,7 @@ Cadastro realizado via Clica e Pede`;
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: (error as Error).message
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
