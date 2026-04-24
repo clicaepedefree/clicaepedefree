@@ -69,7 +69,7 @@ serve(async (req) => {
           .trim()
           .slice(0, 30000);
       } catch (e) {
-        throw new Error(`Não foi possível acessar o link: ${e.message}`);
+        throw new Error(`Não foi possível acessar o link: ${(e as Error).message}`);
       }
     } else if (type === "pdf") {
       if (!content) throw new Error("PDF content is required");
@@ -246,7 +246,7 @@ REGRAS:
   } catch (error) {
     console.error("import-menu error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Erro interno" }),
+      JSON.stringify({ error: (error as Error).message || "Erro interno" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
