@@ -224,7 +224,7 @@ Sincronizado via Cardápio Fácil`;
         console.error(`Error processing restaurant ${restaurant.name}:`, error);
         results.errors.push({
           restaurant: restaurant.name,
-          error: error.message,
+          error: (error as Error).message,
         });
       }
     }
@@ -250,7 +250,7 @@ Sincronizado via Cardápio Fácil`;
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: (error as Error).message,
       }),
       {
         status: 500,

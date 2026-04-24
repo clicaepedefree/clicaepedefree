@@ -203,7 +203,7 @@ Cadastro realizado via Cardápio Fácil`;
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: (error as Error).message 
       }),
       {
         status: 500,
