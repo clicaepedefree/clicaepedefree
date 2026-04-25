@@ -35,7 +35,7 @@ async function findOrganizationByName(name: string): Promise<number | null> {
     }
     return null;
   } catch (error) {
-    console.error('Erro ao buscar organização:', error);
+    console.error('Erro ao buscar organização');
     return null;
   }
 }
@@ -48,22 +48,53 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
-    // Usar service role para poder criar o restaurante sem autenticação do usuário
+
+    // Verify authenticated user from JWT
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabaseUserClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+    const userId = claimsData.claims.sub as string;
+    const email = (claimsData.claims.email as string | undefined) ?? null;
+
+    // Service role client for privileged inserts (after auth verified)
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     const {
-      userId,
-      email,
       restaurantName,
       responsibleName,
       whatsapp,
       taxId
     } = await req.json();
 
+    // Basic input validation
+    if (!restaurantName || typeof restaurantName !== 'string' || restaurantName.length > 200 ||
+        !responsibleName || typeof responsibleName !== 'string' || responsibleName.length > 200 ||
+        !whatsapp || typeof whatsapp !== 'string' || whatsapp.length > 30) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Dados inválidos' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
     console.log('Registrando restaurante para usuário:', userId);
-    console.log('Dados:', { restaurantName, responsibleName, whatsapp, taxId, email });
 
     // 1. Gerar slug único
     const { data: slugData, error: slugError } = await supabaseAdmin
@@ -75,7 +106,6 @@ serve(async (req) => {
     }
 
     const slug = slugData as string;
-    console.log('Slug gerado:', slug);
 
     // 2. Criar restaurante na tabela
     const { data: restaurant, error: restaurantError } = await supabaseAdmin
@@ -96,7 +126,7 @@ serve(async (req) => {
       throw new Error(`Erro ao criar restaurante: ${restaurantError.message}`);
     }
 
-    console.log('Restaurante criado:', restaurant);
+    console.log('Restaurante criado:', restaurant?.id);
 
     // 3. Criar negócio no Agendor (não-bloqueante)
     if (AGENDOR_API_KEY) {
@@ -123,8 +153,6 @@ serve(async (req) => {
             orgPayload.cnpj = taxId;
           }
 
-          console.log('Criando organização no Agendor:', orgPayload);
-
           const orgResponse = await fetch(`${AGENDOR_API_URL}/organizations`, {
             method: 'POST',
             headers: {
@@ -139,8 +167,7 @@ serve(async (req) => {
             organizationId = orgData.data.id;
             console.log('Organização criada no Agendor:', organizationId);
           } else {
-            const errorText = await orgResponse.text();
-            console.error('Erro ao criar organização no Agendor:', errorText);
+            console.error('Erro ao criar organização no Agendor (status):', orgResponse.status);
           }
         }
 
@@ -156,12 +183,12 @@ serve(async (req) => {
 
           if (funnelsResponse.ok) {
             const funnelsData = await funnelsResponse.json();
-            const negociosFunnel = funnelsData.data?.find((f: any) => 
-              f.name?.toLowerCase().includes('negócio') || 
+            const negociosFunnel = funnelsData.data?.find((f: any) =>
+              f.name?.toLowerCase().includes('negócio') ||
               f.name?.toLowerCase().includes('negocio')
             );
 
-        if (negociosFunnel) {
+            if (negociosFunnel) {
               const dealDescription = `**Novo Restaurante Cadastrado**
 
 Nome do Restaurante: ${restaurantName}
@@ -182,9 +209,6 @@ Cadastro realizado via Clica e Pede`;
                 allowToAllUsers: true,
               };
 
-              console.log('Criando deal no Agendor:', dealPayload);
-
-              // IMPORTANTE: Criar deal associado à organização usando a URL correta
               const dealResponse = await fetch(`${AGENDOR_API_URL}/organizations/${organizationId}/deals`, {
                 method: 'POST',
                 headers: {
@@ -198,14 +222,13 @@ Cadastro realizado via Clica e Pede`;
                 const dealData = await dealResponse.json();
                 console.log('Deal criado no Agendor:', dealData.data?.id);
               } else {
-                const errorText = await dealResponse.text();
-                console.error('Erro ao criar deal no Agendor:', errorText);
+                console.error('Erro ao criar deal no Agendor (status):', dealResponse.status);
               }
             }
           }
         }
       } catch (agendorError) {
-        console.error('Erro na integração com Agendor:', agendorError);
+        console.error('Erro na integração com Agendor');
         // Não falhar o registro por causa do Agendor
       }
     } else {
@@ -224,7 +247,7 @@ Cadastro realizado via Clica e Pede`;
       }
     );
   } catch (error: any) {
-    console.error('Erro no registro:', error);
+    console.error('Erro no registro:', (error as Error).message);
     return new Response(
       JSON.stringify({
         success: false,

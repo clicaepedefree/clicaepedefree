@@ -21,16 +21,23 @@ export function useAuth() {
   });
   const queryClient = useQueryClient();
 
-  // Check super admin session from localStorage
   useEffect(() => {
-    const superAdminSession = localStorage.getItem('superAdminSession');
-    const selectedRestaurant = localStorage.getItem('superAdminSelectedRestaurant');
-    
-    if (superAdminSession && selectedRestaurant) {
-      try {
-        const session = JSON.parse(superAdminSession);
-        const twentyFourHours = 24 * 60 * 60 * 1000;
-        if (Date.now() - session.loginTime < twentyFourHours) {
+    // Clean up any legacy insecure localStorage flag
+    localStorage.removeItem('superAdminSession');
+
+    const handleSession = async (user: User | null) => {
+      setState(prev => ({ ...prev, user }));
+      if (!user) {
+        setState(prev => ({ ...prev, restaurant: null, loading: false, isSuperAdminMode: false, superAdminSelectedId: null }));
+        return;
+      }
+
+      // Check if user is a super admin (server-side via RPC)
+      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { check_user_id: user.id });
+
+      if (isSuperAdmin) {
+        const selectedRestaurant = localStorage.getItem('superAdminSelectedRestaurant');
+        if (selectedRestaurant) {
           setState(prev => ({
             ...prev,
             isSuperAdminMode: true,
@@ -39,30 +46,18 @@ export function useAuth() {
           fetchRestaurantById(selectedRestaurant);
           return;
         }
-      } catch (e) {
-        console.error('Erro ao verificar super admin session:', e);
+        setState(prev => ({ ...prev, isSuperAdminMode: false, superAdminSelectedId: null }));
       }
-    }
 
-    // Normal auth flow
+      fetchRestaurant(user.id);
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      const user = session?.user ?? null;
-      setState(prev => ({ ...prev, user }));
-      if (user) {
-        fetchRestaurant(user.id);
-      } else {
-        setState(prev => ({ ...prev, loading: false }));
-      }
+      handleSession(session?.user ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const user = session?.user ?? null;
-      setState(prev => ({ ...prev, user }));
-      if (user) {
-        fetchRestaurant(user.id);
-      } else {
-        setState(prev => ({ ...prev, restaurant: null, loading: false }));
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleSession(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();
@@ -108,13 +103,10 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     queryClient.clear();
-    
-    if (state.isSuperAdminMode) {
-      localStorage.removeItem('superAdminSelectedRestaurant');
-    } else {
-      await supabase.auth.signOut();
-    }
-  }, [state.isSuperAdminMode, queryClient]);
+    localStorage.removeItem('superAdminSelectedRestaurant');
+    localStorage.removeItem('superAdminSession');
+    await supabase.auth.signOut();
+  }, [queryClient]);
 
   return {
     ...state,
