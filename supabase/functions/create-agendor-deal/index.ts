@@ -85,7 +85,7 @@ serve(async (req) => {
         organizationData.cnpj = taxId.replace(/\D/g, '');
       }
 
-      console.log('Creating organization with data:', organizationData);
+      console.log('Creating organization for restaurant:', restaurantName);
 
       const orgResponse = await fetch(`${AGENDOR_API_URL}/organizations`, {
         method: 'POST',
