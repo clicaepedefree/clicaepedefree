@@ -573,30 +573,6 @@ export type Database = {
         }
         Relationships: []
       }
-      super_admins: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          password_hash: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          password_hash: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          password_hash?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       secure_orders_view: {
