@@ -13,6 +13,9 @@ interface PaymentMethod {
   method_type: 'cash' | 'debit_card' | 'credit_card' | 'food_voucher' | 'meal_voucher' | 'pix';
   is_active: boolean;
   pix_key?: string;
+  pix_online_enabled?: boolean;
+  restaurant_pix_key?: string;
+  restaurant_pix_key_type?: string;
 }
 
 interface PaymentMethodsManagerProps {
