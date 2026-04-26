@@ -137,23 +137,27 @@ export function OrderConfirmationModal({
       const { data, error } = await supabase
         .from('payment_methods')
         .select('*')
-        .eq('restaurant_id', restaurant!.id)
-        .eq('is_active', true);
+        .eq('restaurant_id', restaurant!.id);
 
       if (error) throw error;
 
-      const methods = data || [];
-      setAvailablePaymentMethods(methods);
-      
-      // Buscar chave PIX se disponível
-      const pixMethod = methods.find(method => method.method_type === 'pix');
+      const all = data || [];
+      const active = all.filter((m: any) => m.is_active);
+
+      // Build the visible list: active methods + synthetic 'pix_online' if enabled
+      const pixMethod = all.find((m: any) => m.method_type === 'pix');
+      const list: any[] = [...active];
+      if (pixMethod?.pix_online_enabled && pixMethod?.restaurant_pix_key) {
+        list.unshift({ method_type: 'pix_online', is_active: true });
+      }
+      setAvailablePaymentMethods(list);
+
       if (pixMethod?.pix_key) {
         setRestaurantPixKey(pixMethod.pix_key);
       }
 
-      // Definir o primeiro método disponível como selecionado
-      if (methods.length > 0 && !paymentMethod) {
-        setPaymentMethod({ type: methods[0].method_type as PaymentMethod['type'] });
+      if (list.length > 0 && !paymentMethod) {
+        setPaymentMethod({ type: list[0].method_type as PaymentMethod['type'] });
       }
     } catch (error) {
       console.error('Erro ao buscar formas de pagamento:', error);
