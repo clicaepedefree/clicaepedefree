@@ -493,8 +493,9 @@ export function OrderConfirmationModal({
                     credit_card: 'Cartão de Crédito',
                     food_voucher: 'Vale Alimentação',
                     meal_voucher: 'Vale Refeição',
-                    pix: 'PIX',
-                    card: 'Cartão' // Legacy support
+                    pix: 'PIX (manual)',
+                    pix_online: '⚡ PIX Online (pague agora)',
+                    card: 'Cartão'
                   };
                   return (
                     <div key={method.method_type} className="flex items-center space-x-2">
