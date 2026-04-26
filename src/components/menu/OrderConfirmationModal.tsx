@@ -49,7 +49,7 @@ interface DeliveryZone {
 }
 
 interface PaymentMethod {
-  type: 'debit_card' | 'credit_card' | 'food_voucher' | 'meal_voucher' | 'pix' | 'cash';
+  type: 'debit_card' | 'credit_card' | 'food_voucher' | 'meal_voucher' | 'pix' | 'pix_online' | 'cash';
   changeAmount?: number;
 }
 
