@@ -25,6 +25,10 @@ interface PaymentMethodsManagerProps {
 export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps) {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [pixKey, setPixKey] = useState("");
+  const [pixOnlineEnabled, setPixOnlineEnabled] = useState(false);
+  const [restaurantPixKey, setRestaurantPixKey] = useState("");
+  const [restaurantPixKeyType, setRestaurantPixKeyType] = useState<string>("aleatoria");
+  const [savingOnline, setSavingOnline] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
