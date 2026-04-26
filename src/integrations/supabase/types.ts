@@ -316,6 +316,13 @@ export type Database = {
           items: Json
           order_number: number | null
           payment_method: string | null
+          payment_status: string
+          pix_copia_cola: string | null
+          pix_e2e_id: string | null
+          pix_expires_at: string | null
+          pix_paid_at: string | null
+          pix_qrcode: string | null
+          pix_txid: string | null
           restaurant_id: string
           status: string
           subtotal: number
@@ -332,6 +339,13 @@ export type Database = {
           items: Json
           order_number?: number | null
           payment_method?: string | null
+          payment_status?: string
+          pix_copia_cola?: string | null
+          pix_e2e_id?: string | null
+          pix_expires_at?: string | null
+          pix_paid_at?: string | null
+          pix_qrcode?: string | null
+          pix_txid?: string | null
           restaurant_id: string
           status?: string
           subtotal?: number
@@ -348,6 +362,13 @@ export type Database = {
           items?: Json
           order_number?: number | null
           payment_method?: string | null
+          payment_status?: string
+          pix_copia_cola?: string | null
+          pix_e2e_id?: string | null
+          pix_expires_at?: string | null
+          pix_paid_at?: string | null
+          pix_qrcode?: string | null
+          pix_txid?: string | null
           restaurant_id?: string
           status?: string
           subtotal?: number
@@ -371,7 +392,10 @@ export type Database = {
           is_active: boolean | null
           method_type: string
           pix_key: string | null
+          pix_online_enabled: boolean
           restaurant_id: string
+          restaurant_pix_key: string | null
+          restaurant_pix_key_type: string | null
           updated_at: string
         }
         Insert: {
@@ -380,7 +404,10 @@ export type Database = {
           is_active?: boolean | null
           method_type: string
           pix_key?: string | null
+          pix_online_enabled?: boolean
           restaurant_id: string
+          restaurant_pix_key?: string | null
+          restaurant_pix_key_type?: string | null
           updated_at?: string
         }
         Update: {
@@ -389,12 +416,91 @@ export type Database = {
           is_active?: boolean | null
           method_type?: string
           pix_key?: string | null
+          pix_online_enabled?: boolean
           restaurant_id?: string
+          restaurant_pix_key?: string | null
+          restaurant_pix_key_type?: string | null
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "payment_methods_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pix_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          destination_pix_key: string | null
+          destination_pix_key_type: string | null
+          efi_e2e_id: string | null
+          efi_endtoend: string | null
+          efi_txid: string | null
+          error_message: string | null
+          id: string
+          order_id: string
+          raw_payload: Json | null
+          restaurant_id: string
+          status: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          destination_pix_key?: string | null
+          destination_pix_key_type?: string | null
+          efi_e2e_id?: string | null
+          efi_endtoend?: string | null
+          efi_txid?: string | null
+          error_message?: string | null
+          id?: string
+          order_id: string
+          raw_payload?: Json | null
+          restaurant_id: string
+          status?: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          destination_pix_key?: string | null
+          destination_pix_key_type?: string | null
+          efi_e2e_id?: string | null
+          efi_endtoend?: string | null
+          efi_txid?: string | null
+          error_message?: string | null
+          id?: string
+          order_id?: string
+          raw_payload?: Json | null
+          restaurant_id?: string
+          status?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pix_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "secure_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pix_transactions_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
