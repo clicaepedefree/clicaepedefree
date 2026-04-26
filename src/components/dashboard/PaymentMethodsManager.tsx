@@ -181,7 +181,7 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
         })}
 
         <div className="space-y-4 pt-4 border-t">
-          <Label htmlFor="pix-key">Chave PIX</Label>
+          <Label htmlFor="pix-key">Chave PIX (manual / cliente paga direto)</Label>
           <div className="flex space-x-2">
             <Input
               id="pix-key"
@@ -194,8 +194,93 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            Esta chave será exibida para os clientes quando escolherem PIX como forma de pagamento.
+            Esta chave será exibida para os clientes quando escolherem PIX manual.
           </p>
+        </div>
+
+        <div className="space-y-4 pt-6 border-t bg-muted/30 -mx-6 px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-base font-semibold">PIX Online (automático)</Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Cliente paga via QR Code direto no cardápio. Repasse imediato à sua chave (taxa R$1,00/venda).
+              </p>
+            </div>
+            <Switch
+              checked={pixOnlineEnabled}
+              onCheckedChange={setPixOnlineEnabled}
+            />
+          </div>
+
+          {pixOnlineEnabled && (
+            <div className="space-y-3 pt-2">
+              <div>
+                <Label htmlFor="pix-key-type">Tipo da chave para receber</Label>
+                <select
+                  id="pix-key-type"
+                  className="w-full mt-1 px-3 py-2 border rounded-md bg-background"
+                  value={restaurantPixKeyType}
+                  onChange={(e) => setRestaurantPixKeyType(e.target.value)}
+                >
+                  <option value="cpf">CPF</option>
+                  <option value="cnpj">CNPJ</option>
+                  <option value="email">Email</option>
+                  <option value="telefone">Telefone</option>
+                  <option value="aleatoria">Aleatória</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="restaurant-pix-key">Sua chave PIX para repasse</Label>
+                <Input
+                  id="restaurant-pix-key"
+                  placeholder="Chave PIX onde você quer receber"
+                  value={restaurantPixKey}
+                  onChange={(e) => setRestaurantPixKey(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          <Button
+            onClick={async () => {
+              setSavingOnline(true);
+              try {
+                const existing = paymentMethods.find(m => m.method_type === 'pix');
+                const payload = {
+                  pix_online_enabled: pixOnlineEnabled,
+                  restaurant_pix_key: restaurantPixKey || null,
+                  restaurant_pix_key_type: restaurantPixKeyType,
+                };
+                if (existing) {
+                  const { error } = await supabase
+                    .from('payment_methods')
+                    .update(payload)
+                    .eq('id', existing.id);
+                  if (error) throw error;
+                } else {
+                  const { error } = await supabase
+                    .from('payment_methods')
+                    .insert({
+                      restaurant_id: restaurant.id,
+                      method_type: 'pix',
+                      is_active: pixOnlineEnabled,
+                      ...payload,
+                    });
+                  if (error) throw error;
+                }
+                await fetchPaymentMethods();
+                toast({ title: "Configuração salva", description: "PIX Online atualizado." });
+              } catch (e) {
+                console.error(e);
+                toast({ title: "Erro", description: "Falha ao salvar PIX Online", variant: "destructive" });
+              } finally {
+                setSavingOnline(false);
+              }
+            }}
+            disabled={savingOnline || (pixOnlineEnabled && !restaurantPixKey)}
+          >
+            {savingOnline ? "Salvando..." : "Salvar PIX Online"}
+          </Button>
         </div>
       </CardContent>
     </Card>
