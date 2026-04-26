@@ -58,9 +58,10 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
       setPaymentMethods(methods);
       
       const pixMethod = methods.find(m => m.method_type === 'pix');
-      if (pixMethod?.pix_key) {
-        setPixKey(pixMethod.pix_key);
-      }
+      if (pixMethod?.pix_key) setPixKey(pixMethod.pix_key);
+      if (pixMethod?.pix_online_enabled) setPixOnlineEnabled(true);
+      if (pixMethod?.restaurant_pix_key) setRestaurantPixKey(pixMethod.restaurant_pix_key);
+      if (pixMethod?.restaurant_pix_key_type) setRestaurantPixKeyType(pixMethod.restaurant_pix_key_type);
     } catch (error) {
       console.error('Erro ao buscar formas de pagamento:', error);
       toast({
