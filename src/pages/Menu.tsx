@@ -8,6 +8,7 @@ import { OrderConfirmationModal } from "@/components/menu/OrderConfirmationModal
 import { ProductAddonSelector } from "@/components/menu/ProductAddonSelector";
 import { CategoryMenu } from "@/components/menu/CategoryMenu";
 import { FeaturedProducts } from "@/components/menu/FeaturedProducts";
+import { PixPaymentModal } from "@/components/menu/PixPaymentModal";
 import { useCart } from "@/hooks/useCart";
 import { useMenuData } from "@/hooks/useMenuData";
 import { useState } from "react";
@@ -30,19 +31,54 @@ interface Product {
 export default function Menu() {
   const { slug } = useParams<{ slug: string }>();
   const { restaurant, categories, products, loading, getProductsByCategory } = useMenuData(slug);
-  const { cart, addToCart, removeFromCart, updateQuantity, removeItem, getCartTotal, sendWhatsAppOrder, getCartItemsCount } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, removeItem, getCartTotal, sendWhatsAppOrder, generateWhatsAppMessage, clearCart, getCartItemsCount } = useCart();
   
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [addonSelectorOpen, setAddonSelectorOpen] = useState(false);
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
+
+  const [pixModalOpen, setPixModalOpen] = useState(false);
+  const [pixOrderId, setPixOrderId] = useState<string | null>(null);
+  const [pixAmount, setPixAmount] = useState(0);
+  const [pendingWhatsApp, setPendingWhatsApp] = useState<{ address: any; payment: any; deliveryFee?: number } | null>(null);
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
     setAddonSelectorOpen(true);
   };
 
-  const handleSendOrder = () => {
-    sendWhatsAppOrder(restaurant, products);
+  const handleSendOrder = async (address: any, payment: any, deliveryFee?: number) => {
+    const result = await sendWhatsAppOrder(restaurant, products, address, payment, deliveryFee);
+    if (result.isPixOnline && result.orderId) {
+      setPixOrderId(result.orderId);
+      setPixAmount(result.total);
+      setPendingWhatsApp({ address, payment, deliveryFee });
+      setPixModalOpen(true);
+      setConfirmationModalOpen(false);
+    }
+  };
+
+  const handlePixPaid = () => {
+    if (restaurant && pendingWhatsApp) {
+      const msg = generateWhatsAppMessage(
+        restaurant, products,
+        pendingWhatsApp.address,
+        { ...pendingWhatsApp.payment, type: 'pix_online' },
+        pendingWhatsApp.deliveryFee,
+      );
+      const url = `https://wa.me/${restaurant.whatsapp.replace(/\D/g, '')}?text=${msg}`;
+      window.open(url, '_blank');
+    }
+    clearCart();
+    setPixModalOpen(false);
+    setPixOrderId(null);
+    setPendingWhatsApp(null);
+  };
+
+  const handlePixExpired = () => {
+    setPixModalOpen(false);
+    setPixOrderId(null);
+    setPendingWhatsApp(null);
   };
 
   if (loading) {
@@ -126,7 +162,7 @@ export default function Menu() {
         restaurant={restaurant}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeItem}
-        onSendWhatsApp={(address, payment, deliveryFee) => sendWhatsAppOrder(restaurant, products, address, payment, deliveryFee)}
+        onSendWhatsApp={handleSendOrder}
         getCartTotal={getCartTotal}
       />
 
@@ -138,6 +174,15 @@ export default function Menu() {
           onAddToCart={addToCart}
         />
       )}
+
+      <PixPaymentModal
+        open={pixModalOpen}
+        onOpenChange={(open) => { if (!open) handlePixExpired(); }}
+        orderId={pixOrderId}
+        amount={pixAmount}
+        onPaid={handlePixPaid}
+        onExpired={handlePixExpired}
+      />
     </div>
   );
 }

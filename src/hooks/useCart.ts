@@ -172,8 +172,8 @@ export function useCart() {
     return cleaned || null;
   };
 
-  const saveOrderToDatabase = async (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }, deliveryFee?: number) => {
-    if (!restaurant || Object.keys(cart).length === 0) return;
+  const saveOrderToDatabase = async (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }, deliveryFee?: number): Promise<string | null> => {
+    if (!restaurant || Object.keys(cart).length === 0) return null;
 
     try {
       const orderItems = Object.entries(cart).map(([cartKey, item]) => {
@@ -201,8 +201,9 @@ export function useCart() {
         ? sanitizeString(`${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ''}, ${address.neighborhood}`, 500)
         : null;
       const paymentMethod = sanitizeString(payment?.type, 50);
+      const isPixOnline = payment?.type === 'pix_online';
 
-      await supabase.from('orders').insert({
+      const { data, error } = await supabase.from('orders').insert({
         restaurant_id: restaurant.id,
         customer_name: customerName,
         customer_phone: customerPhone,
@@ -212,26 +213,44 @@ export function useCart() {
         total,
         address: fullAddress,
         payment_method: paymentMethod,
-        status: 'new'
-      });
+        status: isPixOnline ? 'pending_payment' : 'new',
+        payment_status: isPixOnline ? 'aguardando_pagamento' : 'not_required',
+      }).select('id').single();
+
+      if (error) throw error;
+      return data?.id || null;
     } catch (error) {
       console.error('Erro ao salvar pedido:', error);
+      return null;
     }
   };
 
-  const sendWhatsAppOrder = async (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }, deliveryFee?: number) => {
-    if (!restaurant?.whatsapp || Object.keys(cart).length === 0) return;
+  const sendWhatsAppOrder = async (restaurant: Restaurant | null, products: Product[], address?: any, payment?: { type: string; changeAmount?: number }, deliveryFee?: number): Promise<{ orderId: string | null; isPixOnline: boolean; total: number }> => {
+    if (!restaurant?.whatsapp || Object.keys(cart).length === 0) {
+      return { orderId: null, isPixOnline: false, total: 0 };
+    }
+    
+    const isPixOnline = payment?.type === 'pix_online';
+    const total = getCartTotal() + (deliveryFee || 0);
     
     // Salvar pedido no banco antes de enviar WhatsApp
-    await saveOrderToDatabase(restaurant, products, address, payment, deliveryFee);
+    const orderId = await saveOrderToDatabase(restaurant, products, address, payment, deliveryFee);
     
+    // Para PIX online, NÃO envia WhatsApp ainda — só envia após pagamento confirmado
+    if (isPixOnline) {
+      return { orderId, isPixOnline: true, total };
+    }
+
     const message = generateWhatsAppMessage(restaurant, products, address, payment, deliveryFee);
     const whatsappUrl = `https://wa.me/${restaurant.whatsapp.replace(/\D/g, '')}?text=${message}`;
     window.open(whatsappUrl, '_blank');
     
     // Limpar carrinho após envio
     setCart({});
+    return { orderId, isPixOnline: false, total };
   };
+
+  const clearCart = () => setCart({});
 
   const getCartItemsCount = () => {
     return Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
@@ -245,6 +264,8 @@ export function useCart() {
     removeItem,
     getCartTotal,
     sendWhatsAppOrder,
+    generateWhatsAppMessage,
+    clearCart,
     getCartItemsCount
   };
 }
