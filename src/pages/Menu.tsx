@@ -162,7 +162,7 @@ export default function Menu() {
         restaurant={restaurant}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeItem}
-        onSendWhatsApp={(address, payment, deliveryFee) => sendWhatsAppOrder(restaurant, products, address, payment, deliveryFee)}
+        onSendWhatsApp={handleSendOrder}
         getCartTotal={getCartTotal}
       />
 
@@ -174,6 +174,15 @@ export default function Menu() {
           onAddToCart={addToCart}
         />
       )}
+
+      <PixPaymentModal
+        open={pixModalOpen}
+        onOpenChange={(open) => { if (!open) handlePixExpired(); }}
+        orderId={pixOrderId}
+        amount={pixAmount}
+        onPaid={handlePixPaid}
+        onExpired={handlePixExpired}
+      />
     </div>
   );
 }
