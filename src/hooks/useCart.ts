@@ -264,6 +264,8 @@ export function useCart() {
     removeItem,
     getCartTotal,
     sendWhatsAppOrder,
+    generateWhatsAppMessage,
+    clearCart,
     getCartItemsCount
   };
 }
