@@ -203,22 +203,22 @@ export function useCart() {
       const paymentMethod = sanitizeString(payment?.type, 50);
       const isPixOnline = payment?.type === 'pix_online';
 
-      const { data, error } = await supabase.from('orders').insert({
-        restaurant_id: restaurant.id,
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        items: orderItems,
-        subtotal,
-        delivery_fee: deliveryFee || 0,
-        total,
-        address: fullAddress,
-        payment_method: paymentMethod,
-        status: isPixOnline ? 'pending_payment' : 'new',
-        payment_status: isPixOnline ? 'aguardando_pagamento' : 'not_required',
-      }).select('id').single();
+      const { data, error } = await supabase.rpc('create_public_order', {
+        _restaurant_id: restaurant.id,
+        _customer_name: customerName,
+        _customer_phone: customerPhone,
+        _items: orderItems as any,
+        _subtotal: subtotal,
+        _delivery_fee: deliveryFee || 0,
+        _total: total,
+        _address: fullAddress,
+        _payment_method: paymentMethod,
+        _status: isPixOnline ? 'pending_payment' : 'new',
+        _payment_status: isPixOnline ? 'aguardando_pagamento' : 'not_required',
+      });
 
       if (error) throw error;
-      return data?.id || null;
+      return (data as unknown as string) || null;
     } catch (error) {
       console.error('Erro ao salvar pedido:', error);
       return null;
