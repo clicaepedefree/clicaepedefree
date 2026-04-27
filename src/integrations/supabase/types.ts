@@ -815,6 +815,10 @@ export type Database = {
         }
         Returns: Json
       }
+      restaurant_accepts_orders: {
+        Args: { _restaurant_id: string }
+        Returns: boolean
+      }
       update_monthly_revenues: {
         Args: { target_time?: string; tz?: string }
         Returns: number
