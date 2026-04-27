@@ -763,6 +763,22 @@ export type Database = {
         Args: { target_time?: string; tz?: string }
         Returns: number
       }
+      create_public_order: {
+        Args: {
+          _address: string
+          _customer_name: string
+          _customer_phone: string
+          _delivery_fee: number
+          _items: Json
+          _payment_method: string
+          _payment_status: string
+          _restaurant_id: string
+          _status: string
+          _subtotal: number
+          _total: number
+        }
+        Returns: string
+      }
       generate_unique_slug: {
         Args: { restaurant_name: string }
         Returns: string
@@ -814,6 +830,10 @@ export type Database = {
           is_owner?: boolean
         }
         Returns: Json
+      }
+      restaurant_accepts_orders: {
+        Args: { _restaurant_id: string }
+        Returns: boolean
       }
       update_monthly_revenues: {
         Args: { target_time?: string; tz?: string }
