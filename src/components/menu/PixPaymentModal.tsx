@@ -82,15 +82,11 @@ export function PixPaymentModal({
     if (state.status !== "ready" || !orderId) return;
     const t = setInterval(async () => {
       try {
-        const { data } = await supabase.functions.invoke("check-pix-status", {
-          body: null,
-          // @ts-ignore — pass as query
-        });
-        // Use direct fetch with query param fallback
         const res = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-pix-status?order_id=${orderId}`,
           { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } },
         );
+        if (!res.ok) return;
         const json = await res.json();
         if (json.status === "pago") setState({ status: "paid" });
         if (json.status === "expirado") setState({ status: "expired" });

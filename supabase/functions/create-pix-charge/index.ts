@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     // Validate order exists and amount matches
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .select("id, restaurant_id, total, payment_status")
+      .select("id, restaurant_id, total, payment_status, pix_txid, pix_qrcode, pix_copia_cola, pix_expires_at")
       .eq("id", body.order_id)
       .maybeSingle();
 
@@ -69,6 +69,27 @@ Deno.serve(async (req) => {
         status: 409,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const now = Date.now();
+    const expiresAtTs = order.pix_expires_at ? new Date(order.pix_expires_at).getTime() : 0;
+    const hasActiveCharge =
+      order.payment_status === "aguardando_pagamento" &&
+      !!order.pix_txid &&
+      !!order.pix_qrcode &&
+      !!order.pix_copia_cola &&
+      expiresAtTs > now;
+
+    if (hasActiveCharge) {
+      return new Response(
+        JSON.stringify({
+          txid: order.pix_txid,
+          qrcode: order.pix_qrcode,
+          copia_cola: order.pix_copia_cola,
+          expires_at: order.pix_expires_at,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // Confirm restaurant has PIX online enabled
@@ -94,7 +115,7 @@ Deno.serve(async (req) => {
     });
 
     // Persist charge data on order
-    await supabase
+    const { error: updateOrderErr } = await supabase
       .from("orders")
       .update({
         payment_status: "aguardando_pagamento",
@@ -105,8 +126,12 @@ Deno.serve(async (req) => {
       })
       .eq("id", body.order_id);
 
+    if (updateOrderErr) {
+      throw new Error(`Failed to persist PIX charge on order: ${updateOrderErr.message}`);
+    }
+
     // Ledger entry
-    await supabase.from("pix_transactions").insert({
+    const { error: ledgerErr } = await supabase.from("pix_transactions").insert({
       order_id: body.order_id,
       restaurant_id: order.restaurant_id,
       transaction_type: "cobranca",
@@ -114,6 +139,10 @@ Deno.serve(async (req) => {
       amount: body.amount,
       efi_txid: charge.txid,
     });
+
+    if (ledgerErr) {
+      throw new Error(`Failed to create PIX transaction ledger entry: ${ledgerErr.message}`);
+    }
 
     return new Response(
       JSON.stringify({
