@@ -9,6 +9,17 @@ const corsHeaders = {
 const PLATFORM_FEE = 1.0; // R$ 1,00 por venda
 const HMAC_SECRET = Deno.env.get("EFI_WEBHOOK_HMAC_SECRET")!;
 
+function parsePixAmount(valor: unknown): number {
+  if (typeof valor === "number") return valor;
+  if (typeof valor === "string") return Number(valor);
+  if (valor && typeof valor === "object") {
+    const original = (valor as Record<string, unknown>).original;
+    if (typeof original === "number") return original;
+    if (typeof original === "string") return Number(original);
+  }
+  return Number.NaN;
+}
+
 async function verifyHmac(rawBody: string, signature: string | null): Promise<boolean> {
   if (!signature || !HMAC_SECRET) return false;
   const enc = new TextEncoder();
@@ -79,9 +90,9 @@ Deno.serve(async (req) => {
   for (const ev of pixEvents) {
     const txid: string | undefined = ev.txid;
     const e2eId: string | undefined = ev.endToEndId;
-    const valor = Number(ev.valor);
+    const valor = parsePixAmount(ev.valor);
 
-    if (!txid || !valor) continue;
+    if (!txid || !Number.isFinite(valor) || valor <= 0) continue;
 
     // Locate order by txid
     const { data: order } = await supabase
@@ -96,6 +107,18 @@ Deno.serve(async (req) => {
     }
     if (order.payment_status === "pago") {
       // Idempotent — already processed
+      continue;
+    }
+
+    const orderTotal = Number(order.total);
+    if (Math.abs(orderTotal - valor) > 0.01) {
+      console.error(`PIX amount mismatch for txid ${txid}: expected=${orderTotal} received=${valor}`);
+      await supabase
+        .from("pix_transactions")
+        .update({ status: "failed", error_message: `Amount mismatch: expected ${orderTotal}, received ${valor}`, raw_payload: ev })
+        .eq("order_id", order.id)
+        .eq("transaction_type", "cobranca")
+        .eq("status", "pending");
       continue;
     }
 
