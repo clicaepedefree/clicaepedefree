@@ -42,7 +42,7 @@ async function efiFetch(path: string, init: RequestInit & { agent?: any } = {}) 
   const url = `${EFI_BASE_URL}${path}`;
 
   // Use node-fetch via node:https Agent
-  const nodeFetch = (await import("node-fetch")).default as any;
+  const nodeFetch = (await import("npm:node-fetch@2")).default as any;
   const res = await nodeFetch(url, { ...init, agent });
   return res;
 }

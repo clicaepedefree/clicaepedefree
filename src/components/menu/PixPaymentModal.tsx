@@ -50,6 +50,10 @@ export function PixPaymentModal({
           setState({ status: "error", message: error?.message || "Erro ao gerar PIX" });
           return;
         }
+        if (data.error) {
+          setState({ status: "error", message: data.error });
+          return;
+        }
         setState({
           status: "ready",
           qrcode: data.qrcode,
