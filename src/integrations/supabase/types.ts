@@ -692,6 +692,10 @@ export type Database = {
           items: Json | null
           order_number: number | null
           payment_method: string | null
+          payment_status: string | null
+          pix_expires_at: string | null
+          pix_paid_at: string | null
+          pix_txid: string | null
           restaurant_id: string | null
           status: string | null
           subtotal: number | null
@@ -708,6 +712,10 @@ export type Database = {
           items?: Json | null
           order_number?: number | null
           payment_method?: string | null
+          payment_status?: string | null
+          pix_expires_at?: string | null
+          pix_paid_at?: string | null
+          pix_txid?: string | null
           restaurant_id?: string | null
           status?: string | null
           subtotal?: number | null
@@ -724,6 +732,10 @@ export type Database = {
           items?: Json | null
           order_number?: number | null
           payment_method?: string | null
+          payment_status?: string | null
+          pix_expires_at?: string | null
+          pix_paid_at?: string | null
+          pix_txid?: string | null
           restaurant_id?: string | null
           status?: string | null
           subtotal?: number | null
