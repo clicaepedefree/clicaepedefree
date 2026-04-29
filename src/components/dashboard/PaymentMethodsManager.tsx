@@ -180,23 +180,7 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
           );
         })}
 
-        <div className="space-y-4 pt-4 border-t">
-          <Label htmlFor="pix-key">Chave PIX (manual / cliente paga direto)</Label>
-          <div className="flex space-x-2">
-            <Input
-              id="pix-key"
-              placeholder="Digite sua chave PIX (CPF, CNPJ, email ou telefone)"
-              value={pixKey}
-              onChange={(e) => setPixKey(e.target.value)}
-            />
-            <Button onClick={updatePixKey} disabled={!pixKey}>
-              Salvar
-            </Button>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Esta chave será exibida para os clientes quando escolherem PIX manual.
-          </p>
-        </div>
+
 
         <div className="space-y-4 pt-6 border-t bg-muted/30 -mx-6 px-6 py-6">
           <div className="flex items-center justify-between">
