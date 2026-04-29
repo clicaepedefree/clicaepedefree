@@ -209,3 +209,24 @@ export async function sendPix(input: SendPixInput) {
 
   return { idEnvio, ...(await res.json()) };
 }
+
+/**
+ * Consulta o status de um envio PIX (repasse) na EFI.
+ * EFI retorna { idEnvio, status, valor, ... } onde status pode ser:
+ *  - EM_PROCESSAMENTO
+ *  - REALIZADO
+ *  - NAO_REALIZADO
+ */
+export async function getPixSendStatus(idEnvio: string) {
+  const token = await getEfiAccessToken();
+  const res = await efiFetch(`/v3/gn/pix/enviados/${idEnvio}`, {
+    method: "GET",
+    headers: { "Authorization": `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`EFI get pix sent failed [${res.status}]: ${text}`);
+  }
+  return res.json();
+}
+
