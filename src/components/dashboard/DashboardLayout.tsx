@@ -385,6 +385,8 @@ function AppSidebar({
     
     if (value === "orders") {
       navigate("/admin/orders");
+    } else if (value === "reports") {
+      navigate("/admin/reports");
     } else if (value === "whatsapp-robot") {
       onWhatsAppClick();
     } else if (value === "products" || value === "categories" || value === "addons" || 
