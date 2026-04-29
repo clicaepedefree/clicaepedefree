@@ -1,5 +1,8 @@
-// EFI Pay client — handles mTLS auth + OAuth token + PIX endpoints
-// Used by: create-pix-charge, pix-webhook (repasse)
+// EFI Pay client — handles mTLS auth + OAuth + PIX endpoints
+// Converts PFX → PEM via node-forge, then uses Deno's native fetch with createHttpClient.
+
+import { Buffer } from "node:buffer";
+import forge from "npm:node-forge@1.3.1";
 
 const EFI_ENV = Deno.env.get("EFI_ENVIRONMENT") || "production";
 const EFI_CLIENT_ID = Deno.env.get("EFI_CLIENT_ID")!;
@@ -11,40 +14,51 @@ const EFI_BASE_URL = EFI_ENV === "production"
   ? "https://pix.api.efipay.com.br"
   : "https://pix-h.api.efipay.com.br";
 
-// Cache token in memory between invocations (best-effort)
 let cachedToken: { token: string; expiresAt: number } | null = null;
+let cachedClient: Deno.HttpClient | null = null;
+let cachedPem: { cert: string; key: string } | null = null;
 
-/**
- * Build a Deno HTTP client using the .p12 certificate (mTLS required by EFI).
- * EFI sends the cert as PKCS#12 — Deno needs PEM. We use the base64 directly with
- * Deno.createHttpClient that supports certChain + privateKey OR p12 via undici/Node compat.
- *
- * Approach: convert p12 -> PEM at runtime using forge (npm) or use Deno's built-in
- * `Deno.createHttpClient` with `caCerts`. Since Deno Deploy doesn't expose Node TLS,
- * we use the `node:https` compat with the certificate as a Buffer.
- */
-async function buildHttpsAgent() {
-  // Lazy import (Deno Deploy supports node:https compat)
-  const https = await import("node:https");
-  const Buffer = (await import("node:buffer")).Buffer;
+function pfxToPem(): { cert: string; key: string } {
+  if (cachedPem) return cachedPem;
+  if (!EFI_CERTIFICATE_BASE64) throw new Error("EFI_CERTIFICATE_BASE64 not configured");
 
-  const pfx = Buffer.from(EFI_CERTIFICATE_BASE64, "base64");
+  const pfxDer = Buffer.from(EFI_CERTIFICATE_BASE64, "base64");
+  const p12Asn1 = forge.asn1.fromDer(pfxDer.toString("binary"));
+  const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, "");
 
-  return new https.Agent({
-    pfx,
-    passphrase: "", // certificado sem senha (confirmado pelo usuário)
-    keepAlive: true,
-  });
+  let certPem = "";
+  let keyPem = "";
+
+  for (const safeContents of p12.safeContents) {
+    for (const safeBag of safeContents.safeBags) {
+      if (safeBag.type === forge.pki.oids.certBag && safeBag.cert) {
+        certPem += forge.pki.certificateToPem(safeBag.cert);
+      } else if (
+        (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag ||
+          safeBag.type === forge.pki.oids.keyBag) && safeBag.key
+      ) {
+        keyPem = forge.pki.privateKeyToPem(safeBag.key);
+      }
+    }
+  }
+
+  if (!certPem || !keyPem) throw new Error("Failed to extract cert/key from PFX");
+  cachedPem = { cert: certPem, key: keyPem };
+  return cachedPem;
 }
 
-async function efiFetch(path: string, init: RequestInit & { agent?: any } = {}) {
-  const agent = await buildHttpsAgent();
-  const url = `${EFI_BASE_URL}${path}`;
+function getClient(): Deno.HttpClient {
+  if (cachedClient) return cachedClient;
+  const { cert, key } = pfxToPem();
+  // @ts-ignore — cert/key supported in Deno runtime
+  cachedClient = Deno.createHttpClient({ cert, key });
+  return cachedClient;
+}
 
-  // Use node-fetch via node:https Agent
-  const nodeFetch = (await import("npm:node-fetch@2")).default as any;
-  const res = await nodeFetch(url, { ...init, agent });
-  return res;
+async function efiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const client = getClient();
+  // @ts-ignore — client option supported in Deno runtime
+  return await fetch(`${EFI_BASE_URL}${path}`, { ...init, client });
 }
 
 export async function getEfiAccessToken(): Promise<string> {
@@ -76,10 +90,10 @@ export async function getEfiAccessToken(): Promise<string> {
 }
 
 export interface CreatePixChargeInput {
-  amount: number;        // BRL, e.g. 49.90
-  txid?: string;         // 26-35 chars [a-zA-Z0-9]; auto if omitted
+  amount: number;
+  txid?: string;
   expirationSeconds: number;
-  description: string;   // max 140 chars
+  description: string;
   payerCpf?: string;
   payerName?: string;
 }
@@ -87,13 +101,12 @@ export interface CreatePixChargeInput {
 export interface PixChargeResponse {
   txid: string;
   loc_id: number;
-  qrcode: string;        // base64 image
-  copia_cola: string;    // BR Code string
+  qrcode: string;
+  copia_cola: string;
   expires_at: string;
 }
 
 function generateTxid(): string {
-  // 26-char [a-zA-Z0-9]
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let out = "";
   for (let i = 0; i < 26; i++) out += chars[Math.floor(Math.random() * chars.length)];
@@ -114,7 +127,6 @@ export async function createPixCharge(input: CreatePixChargeInput): Promise<PixC
     body.devedor = { cpf: input.payerCpf, nome: input.payerName.slice(0, 200) };
   }
 
-  // PUT /v2/cob/{txid}
   const res = await efiFetch(`/v2/cob/${txid}`, {
     method: "PUT",
     headers: {
@@ -130,10 +142,9 @@ export async function createPixCharge(input: CreatePixChargeInput): Promise<PixC
   }
 
   const cob = await res.json();
-  const locId = cob.loc?.id;
+  const locId = cob?.loc?.id;
   if (!locId) throw new Error("EFI cob response missing loc.id");
 
-  // Get QR Code: GET /v2/loc/{id}/qrcode
   const qrRes = await efiFetch(`/v2/loc/${locId}/qrcode`, {
     method: "GET",
     headers: { "Authorization": `Bearer ${token}` },
@@ -147,8 +158,8 @@ export async function createPixCharge(input: CreatePixChargeInput): Promise<PixC
   return {
     txid,
     loc_id: locId,
-    qrcode: qr.imagemQrcode,        // data:image/png;base64,...
-    copia_cola: qr.qrcode,          // BR Code
+    qrcode: qr.imagemQrcode,
+    copia_cola: qr.qrcode,
     expires_at: new Date(Date.now() + input.expirationSeconds * 1000).toISOString(),
   };
 }
@@ -174,7 +185,7 @@ export interface SendPixInput {
 
 export async function sendPix(input: SendPixInput) {
   const token = await getEfiAccessToken();
-  const idEnvio = generateTxid(); // 26 chars
+  const idEnvio = generateTxid();
 
   const body = {
     valor: input.amount.toFixed(2),
