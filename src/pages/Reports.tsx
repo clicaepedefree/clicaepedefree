@@ -226,29 +226,38 @@ export default function Reports() {
 
           {/* PIX Report */}
           <TabsContent value="pix" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Pedidos PIX pagos</CardTitle></CardHeader>
-                <CardContent><div className="text-2xl font-bold">{pixPaid.length}</div></CardContent></Card>
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Valor bruto</CardTitle></CardHeader>
-                <CardContent><div className="text-2xl font-bold">{formatBRL(totalPixGross)}</div></CardContent></Card>
-              <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Taxa plataforma</CardTitle></CardHeader>
-                <CardContent><div className="text-2xl font-bold text-destructive">- {formatBRL(totalFees)}</div></CardContent></Card>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Card><CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">Pedidos PIX pagos</CardTitle></CardHeader>
+                <CardContent><div className="text-xl font-bold">{pixPaid.length}</div></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">Valor bruto</CardTitle></CardHeader>
+                <CardContent><div className="text-xl font-bold">{formatBRL(totalPixGross)}</div></CardContent></Card>
+              <Card><CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">Taxa plataforma</CardTitle></CardHeader>
+                <CardContent><div className="text-xl font-bold text-destructive">- {formatBRL(totalFees)}</div></CardContent></Card>
               <Card className="border-primary/40">
-                <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Você recebeu (repasse)</CardTitle></CardHeader>
-                <CardContent><div className="text-2xl font-bold text-primary">{formatBRL(totalReceived)}</div></CardContent>
+                <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">Já recebido na sua chave</CardTitle></CardHeader>
+                <CardContent><div className="text-xl font-bold text-primary">{formatBRL(repasseRecebido)}</div></CardContent>
+              </Card>
+              <Card className="border-amber-500/40">
+                <CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">A receber (em processamento)</CardTitle></CardHeader>
+                <CardContent><div className="text-xl font-bold text-amber-600">{formatBRL(repasseAReceber)}</div></CardContent>
               </Card>
             </div>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Relatório PIX Online</CardTitle>
-                <Button variant="outline" size="sm" onClick={exportPix} disabled={!pixPaid.length}>
-                  <Download className="h-4 w-4 mr-2" /> Exportar CSV
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={reconcileRepasses} disabled={reconciling}>
+                    {reconciling ? "Atualizando..." : "Atualizar status"}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={exportPix} disabled={!pixPaid.length}>
+                    <Download className="h-4 w-4 mr-2" /> Exportar CSV
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Repasse imediato de cada venda paga via PIX Online (taxa de R$ 1,00 por venda já descontada).
+                  O repasse é enviado para sua chave PIX assim que o cliente paga. O status é atualizado automaticamente assim que a EFI confirma o crédito.
                 </p>
                 {fetching ? (
                   <p className="text-sm text-muted-foreground">Carregando...</p>
@@ -265,13 +274,31 @@ export default function Reports() {
                           <TableHead className="text-right">Valor</TableHead>
                           <TableHead className="text-right">Taxa</TableHead>
                           <TableHead className="text-right">Repasse</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead>Recebido na sua chave</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {pixPaid.map(o => {
                           const gross = Number(o.total || 0);
                           const repasse = Math.max(0, gross - platformFeePerOrder);
+                          const rs = o.repasse_status;
+                          let badge: JSX.Element;
+                          if (rs === "recebido") {
+                            badge = (
+                              <div className="flex flex-col">
+                                <Badge className="bg-green-600 hover:bg-green-600 text-white w-fit">✓ Recebido</Badge>
+                                {o.repasse_confirmed_at && (
+                                  <span className="text-[10px] text-muted-foreground mt-1">
+                                    {format(new Date(o.repasse_confirmed_at), "dd/MM HH:mm", { locale: ptBR })}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          } else if (rs === "falhou") {
+                            badge = <Badge variant="destructive">Falhou</Badge>;
+                          } else {
+                            badge = <Badge variant="outline" className="border-amber-500 text-amber-600">Em processamento</Badge>;
+                          }
                           return (
                             <TableRow key={o.id}>
                               <TableCell className="font-medium">{formatOrderNumber(o)}</TableCell>
@@ -280,7 +307,7 @@ export default function Reports() {
                               <TableCell className="text-right">{formatBRL(gross)}</TableCell>
                               <TableCell className="text-right text-muted-foreground">- {formatBRL(platformFeePerOrder)}</TableCell>
                               <TableCell className="text-right font-semibold text-primary">{formatBRL(repasse)}</TableCell>
-                              <TableCell><Badge variant="default">Recebido</Badge></TableCell>
+                              <TableCell>{badge}</TableCell>
                             </TableRow>
                           );
                         })}
