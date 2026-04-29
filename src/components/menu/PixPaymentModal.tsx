@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Copy, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -42,18 +41,34 @@ export function PixPaymentModal({
     (async () => {
       setState({ status: "loading" });
       try {
-        const { data, error } = await supabase.functions.invoke("create-pix-charge", {
-          body: { order_id: orderId, amount },
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-pix-charge`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ order_id: orderId, amount }),
+          },
+        );
+
+        const payload = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          const message = payload?.error || `Erro ao gerar PIX (${res.status})`;
+          setState({ status: "error", message });
+          return;
+        }
+
+        const data = payload;
+        if (!data?.qrcode || !data?.copia_cola || !data?.expires_at) {
+          setState({ status: "error", message: "Resposta inválida ao gerar PIX" });
+          return;
+        }
+
         if (cancelled) return;
-        if (error || !data) {
-          setState({ status: "error", message: error?.message || "Erro ao gerar PIX" });
-          return;
-        }
-        if (data.error) {
-          setState({ status: "error", message: data.error });
-          return;
-        }
         setState({
           status: "ready",
           qrcode: data.qrcode,
@@ -86,15 +101,16 @@ export function PixPaymentModal({
     if (state.status !== "ready" || !orderId) return;
     const t = setInterval(async () => {
       try {
-        const { data } = await supabase.functions.invoke("check-pix-status", {
-          body: null,
-          // @ts-ignore — pass as query
-        });
-        // Use direct fetch with query param fallback
         const res = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-pix-status?order_id=${orderId}`,
-          { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } },
+          {
+            headers: {
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+          },
         );
+        if (!res.ok) return;
         const json = await res.json();
         if (json.status === "pago") setState({ status: "paid" });
         if (json.status === "expirado") setState({ status: "expired" });
