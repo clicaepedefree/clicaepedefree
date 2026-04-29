@@ -100,9 +100,8 @@ export default function Signup() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       if (event === "SIGNED_IN" && session) {
-        const intent = authIntentRef.current;
         authIntentRef.current = null;
-        navigate(intent === "signup" ? "/cadastro-pendente" : "/admin", { replace: true });
+        navigate("/admin", { replace: true });
       }
     });
 
@@ -143,7 +142,7 @@ export default function Signup() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/cadastro-pendente`,
+          emailRedirectTo: `${window.location.origin}/admin`,
           data: {
             restaurant_name: restaurantName,
             responsible_name: responsibleName,
@@ -184,13 +183,12 @@ export default function Signup() {
         }
       }
 
-      try {
-        await supabase.auth.signOut();
-      } catch {
-        // ignore
-      }
+      toast({
+        title: "Conta criada!",
+        description: "Bem-vindo ao painel.",
+      });
 
-      navigate("/cadastro-pendente");
+      navigate("/admin", { replace: true });
     } catch (error: any) {
       toast({
         variant: "destructive",
