@@ -323,6 +323,9 @@ export type Database = {
           pix_paid_at: string | null
           pix_qrcode: string | null
           pix_txid: string | null
+          repasse_confirmed_at: string | null
+          repasse_id_envio: string | null
+          repasse_status: string | null
           restaurant_id: string
           status: string
           subtotal: number
@@ -346,6 +349,9 @@ export type Database = {
           pix_paid_at?: string | null
           pix_qrcode?: string | null
           pix_txid?: string | null
+          repasse_confirmed_at?: string | null
+          repasse_id_envio?: string | null
+          repasse_status?: string | null
           restaurant_id: string
           status?: string
           subtotal?: number
@@ -369,6 +375,9 @@ export type Database = {
           pix_paid_at?: string | null
           pix_qrcode?: string | null
           pix_txid?: string | null
+          repasse_confirmed_at?: string | null
+          repasse_id_envio?: string | null
+          repasse_status?: string | null
           restaurant_id?: string
           status?: string
           subtotal?: number
@@ -696,6 +705,9 @@ export type Database = {
           pix_expires_at: string | null
           pix_paid_at: string | null
           pix_txid: string | null
+          repasse_confirmed_at: string | null
+          repasse_id_envio: string | null
+          repasse_status: string | null
           restaurant_id: string | null
           status: string | null
           subtotal: number | null
@@ -716,6 +728,9 @@ export type Database = {
           pix_expires_at?: string | null
           pix_paid_at?: string | null
           pix_txid?: string | null
+          repasse_confirmed_at?: string | null
+          repasse_id_envio?: string | null
+          repasse_status?: string | null
           restaurant_id?: string | null
           status?: string | null
           subtotal?: number | null
@@ -736,6 +751,9 @@ export type Database = {
           pix_expires_at?: string | null
           pix_paid_at?: string | null
           pix_txid?: string | null
+          repasse_confirmed_at?: string | null
+          repasse_id_envio?: string | null
+          repasse_status?: string | null
           restaurant_id?: string | null
           status?: string | null
           subtotal?: number | null
