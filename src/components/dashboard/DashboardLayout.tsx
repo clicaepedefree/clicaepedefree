@@ -35,7 +35,8 @@ import {
   Store,
   Clock,
   Copy,
-  CheckCheck
+  CheckCheck,
+  FileText
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -69,6 +70,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { title: "Dashboard", value: "dashboard", icon: BarChart3 },
   { title: "Pedidos", value: "orders", icon: ShoppingCart },
+  { title: "Relatórios", value: "reports", icon: FileText },
   { 
     title: "Cardápio", 
     value: "cardapio", 
