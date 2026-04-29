@@ -1,5 +1,8 @@
 // EFI Pay client — handles mTLS auth + OAuth token + PIX endpoints
-// Used by: create-pix-charge, pix-webhook (repasse)
+// Used by: create-pix-charge, pix-webhook (repasse), check-pix-status
+
+import { Buffer } from "node:buffer";
+import https from "node:https";
 
 const EFI_ENV = Deno.env.get("EFI_ENVIRONMENT") || "production";
 const EFI_CLIENT_ID = Deno.env.get("EFI_CLIENT_ID")!;
@@ -7,44 +10,74 @@ const EFI_CLIENT_SECRET = Deno.env.get("EFI_CLIENT_SECRET")!;
 const EFI_CERTIFICATE_BASE64 = Deno.env.get("EFI_CERTIFICATE_BASE64")!;
 const EFI_PIX_KEY = Deno.env.get("EFI_PIX_KEY")!;
 
-const EFI_BASE_URL = EFI_ENV === "production"
-  ? "https://pix.api.efipay.com.br"
-  : "https://pix-h.api.efipay.com.br";
+const EFI_HOST = EFI_ENV === "production"
+  ? "pix.api.efipay.com.br"
+  : "pix-h.api.efipay.com.br";
 
-// Cache token in memory between invocations (best-effort)
 let cachedToken: { token: string; expiresAt: number } | null = null;
+let cachedPfx: Buffer | null = null;
 
-/**
- * Build a Deno HTTP client using the .p12 certificate (mTLS required by EFI).
- * EFI sends the cert as PKCS#12 — Deno needs PEM. We use the base64 directly with
- * Deno.createHttpClient that supports certChain + privateKey OR p12 via undici/Node compat.
- *
- * Approach: convert p12 -> PEM at runtime using forge (npm) or use Deno's built-in
- * `Deno.createHttpClient` with `caCerts`. Since Deno Deploy doesn't expose Node TLS,
- * we use the `node:https` compat with the certificate as a Buffer.
- */
-async function buildHttpsAgent() {
-  // Lazy import (Deno Deploy supports node:https compat)
-  const https = await import("node:https");
-  const Buffer = (await import("node:buffer")).Buffer;
-
-  const pfx = Buffer.from(EFI_CERTIFICATE_BASE64, "base64");
-
-  return new https.Agent({
-    pfx,
-    passphrase: "", // certificado sem senha (confirmado pelo usuário)
-    keepAlive: true,
-  });
+function getPfx(): Buffer {
+  if (!cachedPfx) {
+    if (!EFI_CERTIFICATE_BASE64) throw new Error("EFI_CERTIFICATE_BASE64 not configured");
+    cachedPfx = Buffer.from(EFI_CERTIFICATE_BASE64, "base64");
+  }
+  return cachedPfx;
 }
 
-async function efiFetch(path: string, init: RequestInit & { agent?: any } = {}) {
-  const agent = await buildHttpsAgent();
-  const url = `${EFI_BASE_URL}${path}`;
+interface EfiResponse {
+  ok: boolean;
+  status: number;
+  text: string;
+  json: () => any;
+}
 
-  // Use node-fetch via node:https Agent
-  const nodeFetch = (await import("npm:node-fetch@2")).default as any;
-  const res = await nodeFetch(url, { ...init, agent });
-  return res;
+/**
+ * Make an HTTPS request to EFI using mTLS (PFX certificate).
+ * Uses node:https compat in Deno — node-fetch is NOT supported on Edge Functions.
+ */
+function efiRequest(
+  path: string,
+  method: string,
+  headers: Record<string, string>,
+  body?: string,
+): Promise<EfiResponse> {
+  return new Promise((resolve, reject) => {
+    const pfx = getPfx();
+    const reqOptions: any = {
+      host: EFI_HOST,
+      port: 443,
+      path,
+      method,
+      pfx,
+      passphrase: "",
+      headers: {
+        ...headers,
+        ...(body ? { "Content-Length": Buffer.byteLength(body).toString() } : {}),
+      },
+    };
+
+    const req = https.request(reqOptions, (res: any) => {
+      const chunks: Uint8Array[] = [];
+      res.on("data", (c: Uint8Array) => chunks.push(c));
+      res.on("end", () => {
+        const text = Buffer.concat(chunks).toString("utf8");
+        const status = res.statusCode || 0;
+        resolve({
+          ok: status >= 200 && status < 300,
+          status,
+          text,
+          json: () => {
+            try { return JSON.parse(text); } catch { return null; }
+          },
+        });
+      });
+    });
+
+    req.on("error", (err: Error) => reject(err));
+    if (body) req.write(body);
+    req.end();
+  });
 }
 
 export async function getEfiAccessToken(): Promise<string> {
@@ -53,21 +86,17 @@ export async function getEfiAccessToken(): Promise<string> {
   }
 
   const credentials = btoa(`${EFI_CLIENT_ID}:${EFI_CLIENT_SECRET}`);
-  const res = await efiFetch("/oauth/token", {
-    method: "POST",
-    headers: {
-      "Authorization": `Basic ${credentials}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ grant_type: "client_credentials" }),
-  });
+  const body = JSON.stringify({ grant_type: "client_credentials" });
+  const res = await efiRequest("/oauth/token", "POST", {
+    "Authorization": `Basic ${credentials}`,
+    "Content-Type": "application/json",
+  }, body);
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`EFI OAuth failed [${res.status}]: ${text}`);
+    throw new Error(`EFI OAuth failed [${res.status}]: ${res.text}`);
   }
 
-  const data = await res.json();
+  const data = res.json();
   cachedToken = {
     token: data.access_token,
     expiresAt: Date.now() + (data.expires_in * 1000),
@@ -76,10 +105,10 @@ export async function getEfiAccessToken(): Promise<string> {
 }
 
 export interface CreatePixChargeInput {
-  amount: number;        // BRL, e.g. 49.90
-  txid?: string;         // 26-35 chars [a-zA-Z0-9]; auto if omitted
+  amount: number;
+  txid?: string;
   expirationSeconds: number;
-  description: string;   // max 140 chars
+  description: string;
   payerCpf?: string;
   payerName?: string;
 }
@@ -87,13 +116,12 @@ export interface CreatePixChargeInput {
 export interface PixChargeResponse {
   txid: string;
   loc_id: number;
-  qrcode: string;        // base64 image
-  copia_cola: string;    // BR Code string
+  qrcode: string;
+  copia_cola: string;
   expires_at: string;
 }
 
 function generateTxid(): string {
-  // 26-char [a-zA-Z0-9]
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let out = "";
   for (let i = 0; i < 26; i++) out += chars[Math.floor(Math.random() * chars.length)];
@@ -114,54 +142,43 @@ export async function createPixCharge(input: CreatePixChargeInput): Promise<PixC
     body.devedor = { cpf: input.payerCpf, nome: input.payerName.slice(0, 200) };
   }
 
-  // PUT /v2/cob/{txid}
-  const res = await efiFetch(`/v2/cob/${txid}`, {
-    method: "PUT",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  const res = await efiRequest(`/v2/cob/${txid}`, "PUT", {
+    "Authorization": `Bearer ${token}`,
+    "Content-Type": "application/json",
+  }, JSON.stringify(body));
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`EFI create cob failed [${res.status}]: ${text}`);
+    throw new Error(`EFI create cob failed [${res.status}]: ${res.text}`);
   }
 
-  const cob = await res.json();
-  const locId = cob.loc?.id;
+  const cob = res.json();
+  const locId = cob?.loc?.id;
   if (!locId) throw new Error("EFI cob response missing loc.id");
 
-  // Get QR Code: GET /v2/loc/{id}/qrcode
-  const qrRes = await efiFetch(`/v2/loc/${locId}/qrcode`, {
-    method: "GET",
-    headers: { "Authorization": `Bearer ${token}` },
+  const qrRes = await efiRequest(`/v2/loc/${locId}/qrcode`, "GET", {
+    "Authorization": `Bearer ${token}`,
   });
   if (!qrRes.ok) {
-    const text = await qrRes.text();
-    throw new Error(`EFI qrcode fetch failed [${qrRes.status}]: ${text}`);
+    throw new Error(`EFI qrcode fetch failed [${qrRes.status}]: ${qrRes.text}`);
   }
-  const qr = await qrRes.json();
+  const qr = qrRes.json();
 
   return {
     txid,
     loc_id: locId,
-    qrcode: qr.imagemQrcode,        // data:image/png;base64,...
-    copia_cola: qr.qrcode,          // BR Code
+    qrcode: qr.imagemQrcode,
+    copia_cola: qr.qrcode,
     expires_at: new Date(Date.now() + input.expirationSeconds * 1000).toISOString(),
   };
 }
 
 export async function getPixChargeStatus(txid: string) {
   const token = await getEfiAccessToken();
-  const res = await efiFetch(`/v2/cob/${txid}`, {
-    method: "GET",
-    headers: { "Authorization": `Bearer ${token}` },
+  const res = await efiRequest(`/v2/cob/${txid}`, "GET", {
+    "Authorization": `Bearer ${token}`,
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`EFI get cob failed [${res.status}]: ${text}`);
+    throw new Error(`EFI get cob failed [${res.status}]: ${res.text}`);
   }
   return res.json();
 }
@@ -174,7 +191,7 @@ export interface SendPixInput {
 
 export async function sendPix(input: SendPixInput) {
   const token = await getEfiAccessToken();
-  const idEnvio = generateTxid(); // 26 chars
+  const idEnvio = generateTxid();
 
   const body = {
     valor: input.amount.toFixed(2),
@@ -182,19 +199,14 @@ export async function sendPix(input: SendPixInput) {
     favorecido: { chave: input.destinationKey },
   };
 
-  const res = await efiFetch(`/v3/gn/pix/${idEnvio}`, {
-    method: "PUT",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  const res = await efiRequest(`/v3/gn/pix/${idEnvio}`, "PUT", {
+    "Authorization": `Bearer ${token}`,
+    "Content-Type": "application/json",
+  }, JSON.stringify(body));
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`EFI send pix failed [${res.status}]: ${text}`);
+    throw new Error(`EFI send pix failed [${res.status}]: ${res.text}`);
   }
 
-  return { idEnvio, ...(await res.json()) };
+  return { idEnvio, ...res.json() };
 }
