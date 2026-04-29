@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, User, Phone, MapPin, Clock, Printer, Truck, Eye, CreditCard, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatPaymentMethod } from "@/lib/payment-labels";
 
 interface Order {
   id: string;
@@ -21,6 +22,8 @@ interface Order {
   total: number;
   address: string;
   payment_method: string;
+  payment_status?: string | null;
+  pix_paid_at?: string | null;
   status: string;
   created_at: string;
 }
@@ -339,6 +342,20 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                         <div className="flex items-center gap-1 text-sm">
                           <ShoppingCart className="h-3 w-3" />
                           <span>{order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <CreditCard className="h-3 w-3" />
+                          <span className="truncate">{formatPaymentMethod(order.payment_method)}</span>
+                          {order.payment_method === 'pix_online' && order.payment_status === 'pago' && (
+                            <Badge className="ml-1 h-5 px-1.5 text-[10px] bg-green-600 hover:bg-green-600 text-white">
+                              <CheckCircle className="h-3 w-3 mr-0.5" /> Pago
+                            </Badge>
+                          )}
+                          {order.payment_method === 'pix_online' && order.payment_status === 'aguardando_pagamento' && (
+                            <Badge variant="outline" className="ml-1 h-5 px-1.5 text-[10px] border-amber-500 text-amber-600">
+                              Aguardando
+                            </Badge>
+                          )}
                         </div>
                         <div className="font-medium text-sm">
                           R$ {Number(order.total).toFixed(2)}
