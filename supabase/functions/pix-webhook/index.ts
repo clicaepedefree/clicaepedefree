@@ -171,29 +171,44 @@ Deno.serve(async (req) => {
       continue;
     }
 
-    // Trigger immediate PIX repasse
+    // Trigger immediate PIX repasse (asynchronous on EFI side — final status reconciled later)
     try {
-      const result = await sendPix({
+      const result: any = await sendPix({
         amount: repasseAmount,
         destinationKey: pm.restaurant_pix_key,
         description: `Repasse pedido ${order.id.slice(0, 8)}`,
       });
+      const idEnvio = result?.idEnvio || null;
+      const initialStatus = String(result?.status || "").toUpperCase();
+      const isAlreadyDone = initialStatus === "REALIZADO";
+      const isFailed = initialStatus === "NAO_REALIZADO";
+
       await supabase.from("pix_transactions").insert({
         order_id: order.id,
         restaurant_id: order.restaurant_id,
         transaction_type: "repasse",
-        status: "success",
+        status: isAlreadyDone ? "success" : isFailed ? "failed" : "processing",
         amount: repasseAmount,
         destination_pix_key: pm.restaurant_pix_key,
         destination_pix_key_type: pm.restaurant_pix_key_type,
-        efi_endtoend: result?.endToEndId || result?.idEnvio || null,
+        efi_endtoend: result?.endToEndId || null,
+        efi_e2e_id: result?.endToEndId || null,
         raw_payload: result,
       });
+
+      await supabase
+        .from("orders")
+        .update({
+          repasse_status: isAlreadyDone ? "recebido" : isFailed ? "falhou" : "processando",
+          repasse_id_envio: idEnvio,
+          repasse_confirmed_at: isAlreadyDone ? new Date().toISOString() : null,
+        })
+        .eq("id", order.id);
     } catch (err) {
       console.error("Repasse failed:", err);
       await supabase
         .from("orders")
-        .update({ payment_status: "falha_repasse" })
+        .update({ payment_status: "falha_repasse", repasse_status: "falhou" })
         .eq("id", order.id);
       await supabase.from("pix_transactions").insert({
         order_id: order.id,
