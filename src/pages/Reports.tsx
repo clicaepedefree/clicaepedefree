@@ -22,6 +22,8 @@ interface OrderRow {
   pix_paid_at: string | null;
   status: string;
   created_at: string;
+  repasse_status: string | null;
+  repasse_confirmed_at: string | null;
 }
 
 const formatBRL = (v: number) =>
@@ -43,20 +45,40 @@ export default function Reports() {
   const { user, restaurant, loading } = useAuth();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [reconciling, setReconciling] = useState(false);
+
+  const fetchOrders = async () => {
+    if (!restaurant?.id) return;
+    setFetching(true);
+    const { data, error } = await supabase
+      .from("secure_orders_view")
+      .select("id, order_number, customer_name, total, payment_method, payment_status, pix_paid_at, status, created_at, repasse_status, repasse_confirmed_at")
+      .eq("restaurant_id", restaurant.id)
+      .order("created_at", { ascending: false });
+    if (error) console.error(error);
+    setOrders((data as any) || []);
+    setFetching(false);
+  };
+
+  const reconcileRepasses = async () => {
+    setReconciling(true);
+    try {
+      const { error } = await supabase.functions.invoke("reconcile-pix-repasses");
+      if (error) console.error(error);
+      await fetchOrders();
+    } finally {
+      setReconciling(false);
+    }
+  };
 
   useEffect(() => {
-    if (!restaurant?.id) return;
-    (async () => {
-      setFetching(true);
-      const { data, error } = await supabase
-        .from("secure_orders_view")
-        .select("id, order_number, customer_name, total, payment_method, payment_status, pix_paid_at, status, created_at")
-        .eq("restaurant_id", restaurant.id)
-        .order("created_at", { ascending: false });
-      if (error) console.error(error);
-      setOrders((data as any) || []);
-      setFetching(false);
-    })();
+    fetchOrders();
+  }, [restaurant?.id]);
+
+  // On open, also reconcile any pending repasses
+  useEffect(() => {
+    if (restaurant?.id) reconcileRepasses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurant?.id]);
 
   // Sales: exclude cancelled
@@ -76,7 +98,12 @@ export default function Reports() {
   const totalPixGross = pixPaid.reduce((s, o) => s + Number(o.total || 0), 0);
   const platformFeePerOrder = 1; // R$1,00 por venda
   const totalFees = pixPaid.length * platformFeePerOrder;
-  const totalReceived = Math.max(0, totalPixGross - totalFees);
+  const repasseRecebido = pixPaid
+    .filter(o => o.repasse_status === "recebido")
+    .reduce((s, o) => s + Math.max(0, Number(o.total || 0) - platformFeePerOrder), 0);
+  const repasseAReceber = pixPaid
+    .filter(o => o.repasse_status !== "recebido" && o.repasse_status !== "falhou")
+    .reduce((s, o) => s + Math.max(0, Number(o.total || 0) - platformFeePerOrder), 0);
 
   if (loading) {
     return (
