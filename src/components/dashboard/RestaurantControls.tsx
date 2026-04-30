@@ -173,8 +173,8 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
         </Alert>
       )}
 
-      {/* Stats Cards — optimized for 15-20" screens */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+      {/* Stats Cards — Status agora fica no banner do topo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
         {/* Monthly Revenue */}
         <Card className="group relative overflow-hidden border-border/40 bg-card hover:shadow-md transition-all duration-200">
           <CardContent className="p-4 lg:p-5">
@@ -186,17 +186,14 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
                 </p>
                 <p className="text-[11px] lg:text-xs text-muted-foreground capitalize">{currentMonth}</p>
               </div>
-              <div className="h-10 w-10 lg:h-11 lg:w-11 rounded-xl bg-whatsapp/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <div className="h-10 w-10 lg:h-11 lg:w-11 rounded-xl bg-whatsapp/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5 text-whatsapp" />
               </div>
             </div>
             {monthlyRevenue >= 1800 && (
-              <Badge variant="destructive" className="mt-3 text-xs">
-                Limite atingido
-              </Badge>
+              <Badge variant="destructive" className="mt-3 text-xs">Limite atingido</Badge>
             )}
           </CardContent>
-          <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-whatsapp/50 to-whatsapp opacity-0 group-hover:opacity-100 transition-opacity" />
         </Card>
 
         {/* Total Revenue */}
@@ -210,62 +207,11 @@ export function RestaurantControls({ restaurant, onRestaurantUpdate }: Restauran
                 </p>
                 <p className="text-[11px] lg:text-xs text-muted-foreground">Desde o início</p>
               </div>
-              <div className="h-10 w-10 lg:h-11 lg:w-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <div className="h-10 w-10 lg:h-11 lg:w-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Wallet className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
               </div>
             </div>
           </CardContent>
-          <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-primary/50 to-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-        </Card>
-
-        {/* Store Status Control */}
-        <Card className="group relative overflow-hidden border-border/40 bg-card hover:shadow-md transition-all duration-200">
-          <CardContent className="p-4 lg:p-5">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2.5">
-                <p className="text-xs lg:text-sm font-medium text-muted-foreground">Status da Loja</p>
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={isOpen && !isBlocked}
-                    onCheckedChange={toggleStoreStatus}
-                    disabled={loading || isBlocked}
-                    className="data-[state=checked]:bg-whatsapp"
-                  />
-                  <span className="text-sm font-medium text-foreground">
-                    {isBlocked ? "Bloqueada" : isOpen ? "Aberta" : "Fechada"}
-                  </span>
-                </div>
-                <Badge 
-                  variant={isBlocked ? "destructive" : isOpen ? "default" : "secondary"}
-                  className={`text-[11px] lg:text-xs ${isOpen && !isBlocked ? "bg-whatsapp hover:bg-whatsapp/90" : ""}`}
-                >
-                  {isBlocked ? "Bloqueada pelo sistema" : isOpen ? "Recebendo pedidos" : "Apenas visualização"}
-                </Badge>
-              </div>
-              <div className={`h-10 w-10 lg:h-11 lg:w-11 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
-                isBlocked 
-                  ? "bg-destructive/10" 
-                  : isOpen 
-                    ? "bg-whatsapp/10" 
-                    : "bg-muted"
-              }`}>
-                <Store className={`h-4 w-4 lg:h-5 lg:w-5 ${
-                  isBlocked 
-                    ? "text-destructive" 
-                    : isOpen 
-                      ? "text-whatsapp" 
-                      : "text-muted-foreground"
-                }`} />
-              </div>
-            </div>
-          </CardContent>
-          <div className={`absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity ${
-            isBlocked 
-              ? "from-destructive/50 to-destructive" 
-              : isOpen 
-                ? "from-whatsapp/50 to-whatsapp" 
-                : "from-muted-foreground/30 to-muted-foreground/50"
-          }`} />
         </Card>
       </div>
 
