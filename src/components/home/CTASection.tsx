@@ -97,7 +97,7 @@ export function CTASection() {
             </div>
             <div className="text-center p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
               <div className="text-4xl font-extrabold text-yellow-300 mb-1">Grátis</div>
-              <div className="text-white/80 text-sm">Até 30 pedidos/mês</div>
+              <div className="text-white/80 text-sm">Até 60 pedidos/mês</div>
             </div>
             <div className="text-center p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
               <div className="text-4xl font-extrabold text-white mb-1 flex items-center justify-center gap-1">

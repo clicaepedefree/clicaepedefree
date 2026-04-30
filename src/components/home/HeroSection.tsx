@@ -96,7 +96,7 @@ export function HeroSection() {
               <div className="flex flex-wrap gap-3 justify-center lg:justify-start animate-fade-in-up animation-delay-300">
                 <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium">
                   <CheckCircle2 className="w-4 h-4" />
-                  Grátis até 30 pedidos/mês
+                  Grátis até 60 pedidos/mês
                 </div>
                 <div className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-full text-sm font-medium">
                   <X className="w-4 h-4" />
@@ -205,7 +205,7 @@ export function HeroSection() {
                 <span className="text-lg">⚡</span> Automático!
               </div>
               <div className="absolute -bottom-4 -left-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-5 py-2.5 rounded-2xl shadow-xl font-bold text-sm animate-float animation-delay-500">
-                🎁 Grátis até 30 pedidos/mês
+                🎁 Grátis até 60 pedidos/mês
               </div>
 
               {/* Live counter */}
