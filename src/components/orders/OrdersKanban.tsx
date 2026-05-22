@@ -599,6 +599,36 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
           );
         })}
       </div>
+
+      <AlertDialog open={!!cancelTarget} onOpenChange={(open) => !open && !refunding && setCancelTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Cancelar pedido pago e reembolsar?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {cancelTarget && (
+                <>
+                  Este pedido foi pago via PIX ({formatOrderNumber(cancelTarget)}) no valor de{' '}
+                  <strong>R$ {Number(cancelTarget.total).toFixed(2)}</strong>.
+                  Ao confirmar, o valor será <strong>estornado automaticamente</strong> para o cliente e descontado do seu saldo na Carteira. Esta ação não pode ser desfeita.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={refunding}>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleConfirmRefund(); }}
+              disabled={refunding}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {refunding ? 'Processando...' : 'Cancelar e reembolsar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
