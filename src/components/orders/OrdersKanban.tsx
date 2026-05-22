@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, User, Phone, MapPin, Clock, Printer, Truck, Eye, CreditCard, CheckCircle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ShoppingCart, User, Phone, MapPin, Clock, Printer, Truck, Eye, CreditCard, CheckCircle, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatPaymentMethod } from "@/lib/payment-labels";
+import { toast } from "sonner";
 
 interface Order {
   id: string;
