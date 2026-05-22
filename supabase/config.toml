@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.create-pix-charge]
 verify_jwt = false
+
+[functions.validapay-webhook]
+verify_jwt = false
+
+[functions.validapay-create-charge]
+verify_jwt = false
