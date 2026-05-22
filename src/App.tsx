@@ -66,6 +66,7 @@ const App = () => (
             <Route path="/admin/carteira" element={<Wallet />} />
             <Route path="/super-admin" element={<SuperAdmin />} />
             <Route path="/super-admin/auth" element={<SuperAdminAuth />} />
+            <Route path="/super-admin/gateway" element={<SuperAdminGateway />} />
             <Route path="/cadastro-pendente" element={<RegistrationPending />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
