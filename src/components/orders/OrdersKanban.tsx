@@ -92,6 +92,16 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    const order = orders.find(o => o.id === orderId);
+    // Intercept cancellation of paid PIX online orders → ask for refund confirmation
+    if (
+      newStatus === 'cancelled' &&
+      order?.payment_method === 'pix_online' &&
+      order?.payment_status === 'pago'
+    ) {
+      setCancelTarget(order);
+      return;
+    }
     try {
       const { error } = await supabase
         .from('orders')
@@ -105,6 +115,27 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
       console.error('Erro ao atualizar status do pedido:', error);
     }
   };
+
+  const handleConfirmRefund = async () => {
+    if (!cancelTarget) return;
+    setRefunding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('validapay-refund-order', {
+        body: { order_id: cancelTarget.id, reason: 'Pedido cancelado pela loja' },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success('Reembolso solicitado. O valor será estornado ao cliente.');
+      setCancelTarget(null);
+      fetchOrders();
+    } catch (err: any) {
+      console.error('Refund error:', err);
+      toast.error(err?.message || 'Falha ao processar reembolso');
+    } finally {
+      setRefunding(false);
+    }
+  };
+
 
   const confirmDelivery = async (orderId: string) => {
     try {
