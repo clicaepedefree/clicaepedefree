@@ -42,7 +42,7 @@ export function PixPaymentModal({
       setState({ status: "loading" });
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-pix-charge`,
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validapay-create-charge`,
           {
             method: "POST",
             headers: {

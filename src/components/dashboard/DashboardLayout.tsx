@@ -35,7 +35,8 @@ import {
   Clock,
   Copy,
   CheckCheck,
-  FileText
+  FileText,
+  Wallet as WalletIcon
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
@@ -100,6 +101,7 @@ const menuItems: MenuItem[] = [
       { title: "Dados da loja", value: "profile", icon: Store, hint: "Nome, logo e informações" },
     ]
   },
+  { title: "Carteira", value: "wallet", icon: WalletIcon, hint: "Saldo, extrato e saques PIX" },
   { title: "Relatórios", value: "reports", icon: FileText, hint: "Histórico de vendas e PIX" },
   { title: "Marketing", value: "marketing", icon: Send, accent: true, hint: "Cupons e promoções" },
   { title: "Robô de WhatsApp", value: "whatsapp-robot", icon: MessageCircle, accent: true, hint: "Atendimento automático" },
@@ -357,6 +359,7 @@ function AppSidebar({
     const value = subValue || item.value;
     if (value === "orders") navigate("/admin/orders");
     else if (value === "reports") navigate("/admin/reports");
+    else if (value === "wallet") navigate("/admin/carteira");
     else if (value === "whatsapp-robot") onWhatsAppClick();
     else if (["products","categories","addons","delivery","hours","payment","profile"].includes(value)) {
       navigate(`/admin/settings?tab=${value}`);
