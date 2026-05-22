@@ -62,6 +62,7 @@ const App = () => (
             <Route path="/admin/settings" element={<Settings />} />
             <Route path="/admin/analytics" element={<Analytics />} />
             <Route path="/admin/reports" element={<Reports />} />
+            <Route path="/admin/carteira" element={<Wallet />} />
             <Route path="/super-admin" element={<SuperAdmin />} />
             <Route path="/super-admin/auth" element={<SuperAdminAuth />} />
             <Route path="/cadastro-pendente" element={<RegistrationPending />} />
