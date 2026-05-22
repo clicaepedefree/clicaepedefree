@@ -359,6 +359,7 @@ function AppSidebar({
     const value = subValue || item.value;
     if (value === "orders") navigate("/admin/orders");
     else if (value === "reports") navigate("/admin/reports");
+    else if (value === "wallet") navigate("/admin/carteira");
     else if (value === "whatsapp-robot") onWhatsAppClick();
     else if (["products","categories","addons","delivery","hours","payment","profile"].includes(value)) {
       navigate(`/admin/settings?tab=${value}`);
