@@ -41,8 +41,9 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
+  const [refunding, setRefunding] = useState(false);
 
-  const statusColumns = [
     { key: 'new', title: 'Novos', color: 'bg-blue-50 border-blue-200' },
     { key: 'preparing', title: 'Em Preparo', color: 'bg-yellow-50 border-yellow-200' },
     { key: 'delivered', title: 'Em Entrega', color: 'bg-green-50 border-green-200' },
