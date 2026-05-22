@@ -101,6 +101,7 @@ const menuItems: MenuItem[] = [
       { title: "Dados da loja", value: "profile", icon: Store, hint: "Nome, logo e informações" },
     ]
   },
+  { title: "Carteira", value: "wallet", icon: WalletIcon, hint: "Saldo, extrato e saques PIX" },
   { title: "Relatórios", value: "reports", icon: FileText, hint: "Histórico de vendas e PIX" },
   { title: "Marketing", value: "marketing", icon: Send, accent: true, hint: "Cupons e promoções" },
   { title: "Robô de WhatsApp", value: "whatsapp-robot", icon: MessageCircle, accent: true, hint: "Atendimento automático" },
