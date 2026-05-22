@@ -35,7 +35,8 @@ import {
   Clock,
   Copy,
   CheckCheck,
-  FileText
+  FileText,
+  Wallet as WalletIcon
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
