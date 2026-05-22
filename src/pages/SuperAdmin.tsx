@@ -253,6 +253,15 @@ const SuperAdmin = () => {
               <Shield className="h-4 w-4" />
               <span>Logado como: {session?.email}</span>
             </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate('/super-admin/gateway')}
+              className="flex items-center gap-2"
+            >
+              <DollarSign className="h-4 w-4" />
+              Gateway ValidaPay
+            </Button>
             <Button 
               variant="default" 
               size="sm" 

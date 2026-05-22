@@ -20,6 +20,7 @@ const Reports = lazy(() => import("./pages/Reports"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const SuperAdminAuth = lazy(() => import("./pages/SuperAdminAuth"));
+const SuperAdminGateway = lazy(() => import("./pages/SuperAdminGateway"));
 const RegistrationPending = lazy(() => import("./pages/RegistrationPending"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/admin/carteira" element={<Wallet />} />
             <Route path="/super-admin" element={<SuperAdmin />} />
             <Route path="/super-admin/auth" element={<SuperAdminAuth />} />
+            <Route path="/super-admin/gateway" element={<SuperAdminGateway />} />
             <Route path="/cadastro-pendente" element={<RegistrationPending />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, User, Phone, MapPin, Clock, Printer, Truck, Eye, CreditCard, CheckCircle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ShoppingCart, User, Phone, MapPin, Clock, Printer, Truck, Eye, CreditCard, CheckCircle, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatPaymentMethod } from "@/lib/payment-labels";
+import { toast } from "sonner";
 
 interface Order {
   id: string;
@@ -39,8 +41,11 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
+  const [refunding, setRefunding] = useState(false);
 
   const statusColumns = [
+
     { key: 'new', title: 'Novos', color: 'bg-blue-50 border-blue-200' },
     { key: 'preparing', title: 'Em Preparo', color: 'bg-yellow-50 border-yellow-200' },
     { key: 'delivered', title: 'Em Entrega', color: 'bg-green-50 border-green-200' },
@@ -87,6 +92,16 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    const order = orders.find(o => o.id === orderId);
+    // Intercept cancellation of paid PIX online orders → ask for refund confirmation
+    if (
+      newStatus === 'cancelled' &&
+      order?.payment_method === 'pix_online' &&
+      order?.payment_status === 'pago'
+    ) {
+      setCancelTarget(order);
+      return;
+    }
     try {
       const { error } = await supabase
         .from('orders')
@@ -100,6 +115,27 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
       console.error('Erro ao atualizar status do pedido:', error);
     }
   };
+
+  const handleConfirmRefund = async () => {
+    if (!cancelTarget) return;
+    setRefunding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('validapay-refund-order', {
+        body: { order_id: cancelTarget.id, reason: 'Pedido cancelado pela loja' },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success('Reembolso solicitado. O valor será estornado ao cliente.');
+      setCancelTarget(null);
+      fetchOrders();
+    } catch (err: any) {
+      console.error('Refund error:', err);
+      toast.error(err?.message || 'Falha ao processar reembolso');
+    } finally {
+      setRefunding(false);
+    }
+  };
+
 
   const confirmDelivery = async (orderId: string) => {
     try {
@@ -563,6 +599,36 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
           );
         })}
       </div>
+
+      <AlertDialog open={!!cancelTarget} onOpenChange={(open) => !open && !refunding && setCancelTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Cancelar pedido pago e reembolsar?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {cancelTarget && (
+                <>
+                  Este pedido foi pago via PIX ({formatOrderNumber(cancelTarget)}) no valor de{' '}
+                  <strong>R$ {Number(cancelTarget.total).toFixed(2)}</strong>.
+                  Ao confirmar, o valor será <strong>estornado automaticamente</strong> para o cliente e descontado do seu saldo na Carteira. Esta ação não pode ser desfeita.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={refunding}>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleConfirmRefund(); }}
+              disabled={refunding}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {refunding ? 'Processando...' : 'Cancelar e reembolsar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
