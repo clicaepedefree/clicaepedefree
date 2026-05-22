@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { getPixChargeStatus } from "../_shared/efi-client.ts";
+import { getChargeStatus } from "../_shared/validapay-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
     const { data: order } = await supabase
       .from("orders")
-      .select("id, payment_status, pix_txid, pix_expires_at")
+      .select("id, payment_status, pix_txid, validapay_charge_id, pix_expires_at")
       .eq("id", orderId)
       .maybeSingle();
 
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     // Check expiration
     if (order.pix_expires_at && new Date(order.pix_expires_at) < new Date()) {
-      if (order.payment_status === "aguardando_pagamento") {
+      if (["aguardando_pagamento", "pendente"].includes(order.payment_status)) {
         await supabase
           .from("orders")
           .update({ payment_status: "expirado", status: "cancelled" })
@@ -67,15 +67,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Active polling fallback to EFI (in case webhook didn't arrive)
-    if (order.pix_txid) {
+    // Active polling fallback to ValidaPay (in case webhook didn't arrive)
+    const chargeId = order.validapay_charge_id || order.pix_txid;
+    if (chargeId) {
       try {
-        const efiStatus = await getPixChargeStatus(order.pix_txid);
-        if (efiStatus?.status === "CONCLUIDA") {
-          // Trigger webhook flow manually by calling pix-webhook with synthetic payload
-          const e2e = efiStatus?.pix?.[0]?.endToEndId;
-          await supabase.functions.invoke("pix-webhook", {
-            body: { pix: [{ txid: order.pix_txid, valor: efiStatus?.valor?.original, endToEndId: e2e }] },
+        const validapayStatus = await getChargeStatus(chargeId);
+        const normalizedStatus = String(validapayStatus?.status || "").toLowerCase();
+        if (["paid", "approved", "aprovado", "concluida", "completed"].includes(normalizedStatus)) {
+          await supabase.functions.invoke("validapay-webhook", {
+            body: { event: "charge.paid", data: { chargeId, amount: validapayStatus?.amount } },
           });
           return new Response(JSON.stringify({ status: "pago" }), {
             status: 200,
@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
           });
         }
       } catch (e) {
-        console.warn("EFI status check fallback failed:", e);
+        console.warn("ValidaPay status check fallback failed:", e);
       }
     }
 
