@@ -83,20 +83,25 @@ Deno.serve(async (req) => {
 
     // Generate QR Code from EMV using public quickchart
     const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(charge.emv)}`;
+    const qrcode = charge.qrcodeBase64 || qrcodeUrl;
 
-    await supabase
+    const { error: updateErr } = await supabase
       .from("orders")
       .update({
         payment_status: "pendente",
         validapay_charge_id: charge.chargeId,
         pix_txid: charge.chargeId,
-        pix_qrcode: charge.qrcodeBase64 || qrcodeUrl,
+        pix_qrcode: qrcode,
         pix_copia_cola: charge.emv,
         pix_expires_at: expiresAt,
       })
       .eq("id", order_id);
 
-    await supabase.from("pix_transactions").insert({
+    if (updateErr) {
+      throw new Error(`Failed to persist ValidaPay charge on order: ${updateErr.message}`);
+    }
+
+    const { error: ledgerErr } = await supabase.from("pix_transactions").insert({
       order_id,
       restaurant_id: order.restaurant_id,
       transaction_type: "cobranca",
@@ -105,10 +110,14 @@ Deno.serve(async (req) => {
       efi_txid: charge.chargeId,
     });
 
+    if (ledgerErr) {
+      throw new Error(`Failed to create PIX transaction ledger entry: ${ledgerErr.message}`);
+    }
+
     return new Response(
       JSON.stringify({
         txid: charge.chargeId,
-        qrcode: charge.qrcodeBase64 || qrcodeUrl,
+        qrcode,
         copia_cola: charge.emv,
         expires_at: expiresAt,
       }),
