@@ -323,6 +323,7 @@ export type Database = {
           pix_paid_at: string | null
           pix_qrcode: string | null
           pix_txid: string | null
+          refunded_at: string | null
           repasse_confirmed_at: string | null
           repasse_id_envio: string | null
           repasse_status: string | null
@@ -331,6 +332,7 @@ export type Database = {
           subtotal: number
           total: number
           updated_at: string
+          validapay_charge_id: string | null
         }
         Insert: {
           address?: string | null
@@ -349,6 +351,7 @@ export type Database = {
           pix_paid_at?: string | null
           pix_qrcode?: string | null
           pix_txid?: string | null
+          refunded_at?: string | null
           repasse_confirmed_at?: string | null
           repasse_id_envio?: string | null
           repasse_status?: string | null
@@ -357,6 +360,7 @@ export type Database = {
           subtotal?: number
           total?: number
           updated_at?: string
+          validapay_charge_id?: string | null
         }
         Update: {
           address?: string | null
@@ -375,6 +379,7 @@ export type Database = {
           pix_paid_at?: string | null
           pix_qrcode?: string | null
           pix_txid?: string | null
+          refunded_at?: string | null
           repasse_confirmed_at?: string | null
           repasse_id_envio?: string | null
           repasse_status?: string | null
@@ -383,6 +388,7 @@ export type Database = {
           subtotal?: number
           total?: number
           updated_at?: string
+          validapay_charge_id?: string | null
         }
         Relationships: [
           {
@@ -394,6 +400,51 @@ export type Database = {
           },
         ]
       }
+      payment_gateway_settings: {
+        Row: {
+          auto_withdrawal_enabled: boolean
+          created_at: string
+          environment: string
+          fee_per_sale: number
+          id: string
+          master_pix_key: string | null
+          minimum_withdrawal: number
+          provider: string
+          release_delay_hours: number
+          updated_at: string
+          webhook_url: string | null
+          withdrawal_fee: number
+        }
+        Insert: {
+          auto_withdrawal_enabled?: boolean
+          created_at?: string
+          environment?: string
+          fee_per_sale?: number
+          id?: string
+          master_pix_key?: string | null
+          minimum_withdrawal?: number
+          provider?: string
+          release_delay_hours?: number
+          updated_at?: string
+          webhook_url?: string | null
+          withdrawal_fee?: number
+        }
+        Update: {
+          auto_withdrawal_enabled?: boolean
+          created_at?: string
+          environment?: string
+          fee_per_sale?: number
+          id?: string
+          master_pix_key?: string | null
+          minimum_withdrawal?: number
+          provider?: string
+          release_delay_hours?: number
+          updated_at?: string
+          webhook_url?: string | null
+          withdrawal_fee?: number
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           created_at: string
@@ -404,6 +455,8 @@ export type Database = {
           pix_online_enabled: boolean
           restaurant_id: string
           restaurant_pix_key: string | null
+          restaurant_pix_key_holder_document: string | null
+          restaurant_pix_key_holder_name: string | null
           restaurant_pix_key_type: string | null
           updated_at: string
         }
@@ -416,6 +469,8 @@ export type Database = {
           pix_online_enabled?: boolean
           restaurant_id: string
           restaurant_pix_key?: string | null
+          restaurant_pix_key_holder_document?: string | null
+          restaurant_pix_key_holder_name?: string | null
           restaurant_pix_key_type?: string | null
           updated_at?: string
         }
@@ -428,6 +483,8 @@ export type Database = {
           pix_online_enabled?: boolean
           restaurant_id?: string
           restaurant_pix_key?: string | null
+          restaurant_pix_key_holder_document?: string | null
+          restaurant_pix_key_holder_name?: string | null
           restaurant_pix_key_type?: string | null
           updated_at?: string
         }
@@ -610,6 +667,51 @@ export type Database = {
           },
         ]
       }
+      refund_transactions: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          order_id: string
+          raw_payload: Json | null
+          reason: string | null
+          reason_code: string | null
+          restaurant_id: string
+          status: string
+          validapay_refund_id: string | null
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          order_id: string
+          raw_payload?: Json | null
+          reason?: string | null
+          reason_code?: string | null
+          restaurant_id: string
+          status?: string
+          validapay_refund_id?: string | null
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          order_id?: string
+          raw_payload?: Json | null
+          reason?: string | null
+          reason_code?: string | null
+          restaurant_id?: string
+          status?: string
+          validapay_refund_id?: string | null
+        }
+        Relationships: []
+      }
       restaurants: {
         Row: {
           banner_url: string | null
@@ -685,6 +787,212 @@ export type Database = {
           created_at?: string
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          balance_after: number | null
+          created_at: string
+          customer_name: string | null
+          description: string | null
+          fee: number
+          id: string
+          metadata: Json | null
+          net_amount: number
+          order_id: string | null
+          refund_id: string | null
+          restaurant_id: string
+          status: string
+          transaction_type: string
+          wallet_id: string
+          withdrawal_id: string | null
+        }
+        Insert: {
+          amount: number
+          balance_after?: number | null
+          created_at?: string
+          customer_name?: string | null
+          description?: string | null
+          fee?: number
+          id?: string
+          metadata?: Json | null
+          net_amount: number
+          order_id?: string | null
+          refund_id?: string | null
+          restaurant_id: string
+          status?: string
+          transaction_type: string
+          wallet_id: string
+          withdrawal_id?: string | null
+        }
+        Update: {
+          amount?: number
+          balance_after?: number | null
+          created_at?: string
+          customer_name?: string | null
+          description?: string | null
+          fee?: number
+          id?: string
+          metadata?: Json | null
+          net_amount?: number
+          order_id?: string | null
+          refund_id?: string | null
+          restaurant_id?: string
+          status?: string
+          transaction_type?: string
+          wallet_id?: string
+          withdrawal_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          available_balance: number
+          created_at: string
+          id: string
+          pending_balance: number
+          restaurant_id: string
+          sales_count: number
+          total_fees: number
+          total_received: number
+          total_refunded: number
+          total_withdrawn: number
+          updated_at: string
+        }
+        Insert: {
+          available_balance?: number
+          created_at?: string
+          id?: string
+          pending_balance?: number
+          restaurant_id: string
+          sales_count?: number
+          total_fees?: number
+          total_received?: number
+          total_refunded?: number
+          total_withdrawn?: number
+          updated_at?: string
+        }
+        Update: {
+          available_balance?: number
+          created_at?: string
+          id?: string
+          pending_balance?: number
+          restaurant_id?: string
+          sales_count?: number
+          total_fees?: number
+          total_received?: number
+          total_refunded?: number
+          total_withdrawn?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_id: string | null
+          event_type: string | null
+          headers: Json | null
+          id: string
+          payload: Json
+          processed: boolean
+          processed_at: string | null
+          provider: string
+          signature_valid: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_id?: string | null
+          event_type?: string | null
+          headers?: Json | null
+          id?: string
+          payload: Json
+          processed?: boolean
+          processed_at?: string | null
+          provider?: string
+          signature_valid?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_id?: string | null
+          event_type?: string | null
+          headers?: Json | null
+          id?: string
+          payload?: Json
+          processed?: boolean
+          processed_at?: string | null
+          provider?: string
+          signature_valid?: boolean | null
+        }
+        Relationships: []
+      }
+      withdrawal_requests: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          fee: number
+          gross_amount: number
+          holder_document: string | null
+          holder_name: string | null
+          id: string
+          net_amount: number
+          pix_key: string
+          pix_key_type: string
+          processed_at: string | null
+          restaurant_id: string
+          status: string
+          updated_at: string
+          user_id: string | null
+          validapay_withdrawal_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          fee?: number
+          gross_amount: number
+          holder_document?: string | null
+          holder_name?: string | null
+          id?: string
+          net_amount: number
+          pix_key: string
+          pix_key_type: string
+          processed_at?: string | null
+          restaurant_id: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          validapay_withdrawal_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          fee?: number
+          gross_amount?: number
+          holder_document?: string | null
+          holder_name?: string | null
+          id?: string
+          net_amount?: number
+          pix_key?: string
+          pix_key_type?: string
+          processed_at?: string | null
+          restaurant_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          validapay_withdrawal_id?: string | null
         }
         Relationships: []
       }
@@ -812,6 +1120,10 @@ export type Database = {
       generate_unique_slug: {
         Args: { restaurant_name: string }
         Returns: string
+      }
+      get_available_for_withdrawal: {
+        Args: { _restaurant_id: string }
+        Returns: number
       }
       get_monthly_revenue: {
         Args: { restaurant_id_param: string; target_time?: string; tz?: string }
