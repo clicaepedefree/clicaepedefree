@@ -4,6 +4,8 @@
 const ENV = Deno.env.get("VALIDAPAY_ENVIRONMENT") || "sandbox";
 const CLIENT_ID = Deno.env.get("VALIDAPAY_CLIENT_ID") || "";
 const CLIENT_SECRET = Deno.env.get("VALIDAPAY_CLIENT_SECRET") || "";
+const USE_STUBS =
+  Deno.env.get("VALIDAPAY_USE_STUBS") !== "false" && ENV !== "production";
 
 export const VALIDAPAY_BASE_URL =
   ENV === "production"
@@ -25,6 +27,8 @@ let tokenCache: TokenCache | null = null;
  * ValidaPay's "Autenticação" doc page if requests return 401.
  */
 export async function getAccessToken(): Promise<string> {
+  if (USE_STUBS) return "stub-token";
+
   if (tokenCache && tokenCache.expiresAt > Date.now() + 30_000) {
     return tokenCache.token;
   }
@@ -96,6 +100,15 @@ export interface CreateChargeResult {
 }
 
 export async function createPixCharge(amount: number): Promise<CreateChargeResult> {
+  if (USE_STUBS) {
+    const chargeId = `stub_${crypto.randomUUID()}`;
+    const cents = Math.round(amount * 100);
+    return {
+      chargeId,
+      emv: `00020126580014BR.GOV.BCB.PIX0136${chargeId}520400005303986540${cents}5802BR5925CLICA E PEDE PAGAMENTO6009SAO PAULO62070503***6304TEST`,
+    };
+  }
+
   const data = await apiRequest<any>("/v1/charges/pix", {
     method: "POST",
     body: JSON.stringify({ amount }),
@@ -108,6 +121,7 @@ export async function createPixCharge(amount: number): Promise<CreateChargeResul
 }
 
 export async function getChargeStatus(chargeId: string): Promise<any> {
+  if (USE_STUBS) return { id: chargeId, status: "pending" };
   return apiRequest(`/v1/charges/${chargeId}`, { method: "GET" });
 }
 
@@ -126,6 +140,15 @@ export async function createRefund(params: {
   amount: number;
   reasonCode: RefundReasonCode;
 }): Promise<any> {
+  if (USE_STUBS) {
+    return {
+      id: `stub_refund_${crypto.randomUUID()}`,
+      chargeId: params.chargeId,
+      amount: params.amount,
+      status: "completed",
+    };
+  }
+
   return apiRequest("/v1/wallet/refunds", {
     method: "POST",
     body: JSON.stringify({
@@ -147,6 +170,15 @@ export async function createWithdrawal(params: {
   holderName?: string;
   holderDocument?: string;
 }): Promise<any> {
+  if (USE_STUBS) {
+    return {
+      id: `stub_withdrawal_${crypto.randomUUID()}`,
+      withdrawalId: `stub_withdrawal_${crypto.randomUUID()}`,
+      amount: params.amount,
+      status: "completed",
+    };
+  }
+
   return apiRequest("/v1/wallet/withdraw", {
     method: "POST",
     body: JSON.stringify({

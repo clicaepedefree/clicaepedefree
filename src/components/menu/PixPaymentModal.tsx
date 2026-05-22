@@ -140,6 +140,11 @@ export function PixPaymentModal({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const getQrCodeSrc = (qrcode: string) => {
+    if (qrcode.startsWith("data:") || qrcode.startsWith("http")) return qrcode;
+    return `data:image/png;base64,${qrcode}`;
+  };
+
   const mins = Math.floor(secondsLeft / 60);
   const secs = secondsLeft % 60;
 
@@ -166,7 +171,7 @@ export function PixPaymentModal({
 
             <div className="flex justify-center bg-white p-4 rounded-lg">
               <img
-                src={state.qrcode.startsWith("data:") ? state.qrcode : `data:image/png;base64,${state.qrcode}`}
+                src={getQrCodeSrc(state.qrcode)}
                 alt="QR Code PIX"
                 className="w-64 h-64"
               />
