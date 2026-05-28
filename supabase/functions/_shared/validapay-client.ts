@@ -8,7 +8,6 @@ const USE_STUBS =
   Deno.env.get("VALIDAPAY_USE_STUBS") !== "false" && ENV !== "production";
 
 export const VALIDAPAY_BASE_URL =
-export const VALIDAPAY_BASE_URL =
   ENV === "production"
     ? "https://api.validapay.com.br"
     : "https://sandbox.validapay.com.br";
