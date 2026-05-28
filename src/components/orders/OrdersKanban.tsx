@@ -52,10 +52,39 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
     { key: 'cancelled', title: 'Cancelados', color: 'bg-red-50 border-red-200' }
   ];
 
+  // Beep using Web Audio API — no asset required
+  const playNewOrderSound = () => {
+    try {
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const playBeep = (freq: number, start: number, duration: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+        gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + duration + 0.05);
+      };
+      playBeep(880, 0, 0.25);
+      playBeep(1175, 0.28, 0.35);
+    } catch (e) {
+      console.warn('Audio playback failed:', e);
+    }
+  };
+
+  const isVisibleOrder = (o: any) =>
+    o && o.restaurant_id === restaurant.id &&
+    (o.status === 'new' || (o.payment_status === 'pago' && o.status !== 'cancelled'));
+
   useEffect(() => {
     fetchOrders();
-    
-    // Set up real-time subscription
+
+    // Real-time: detect new visible orders (insert OR transition to paid/new) and alert
     const channel = supabase
       .channel('orders-changes')
       .on('postgres_changes', {
@@ -63,16 +92,33 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
         schema: 'public',
         table: 'orders',
         filter: `restaurant_id=eq.${restaurant.id}`
-      }, (payload) => {
+      }, (payload: any) => {
         console.log('Order change detected:', payload);
+        const newRow = payload.new;
+        const oldRow = payload.old;
+        const becameVisible =
+          (payload.eventType === 'INSERT' && isVisibleOrder(newRow)) ||
+          (payload.eventType === 'UPDATE' && isVisibleOrder(newRow) && !isVisibleOrder(oldRow));
+        if (becameVisible) {
+          playNewOrderSound();
+          toast.success(`🔔 Novo pedido recebido!`, {
+            description: newRow?.customer_name ? `Cliente: ${newRow.customer_name}` : undefined,
+            duration: 8000,
+          });
+        }
         fetchOrders();
       })
       .subscribe();
 
+    // Fallback polling every 20s in case realtime drops
+    const pollId = setInterval(fetchOrders, 20000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(pollId);
     };
   }, [restaurant.id]);
+
 
   const fetchOrders = async () => {
     try {
