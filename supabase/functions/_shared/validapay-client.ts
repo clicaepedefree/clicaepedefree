@@ -17,8 +17,7 @@ export const VALIDAPAY_OAUTH_URL =
     ? "https://oauth2.validapay.com.br/auth/token"
     : "https://oauth2-sandbox.validapay.com.br/auth/token";
 
-const DEFAULT_SCOPES =
-  "pix.cob/write pix.cob/read accounts/read accounts/write checkouts/write checkouts/read";
+const DEFAULT_SCOPES = "pix.cob/write pix.cob/read";
 
 interface TokenCache {
   token: string;
