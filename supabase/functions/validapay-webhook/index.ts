@@ -72,17 +72,21 @@ Deno.serve(async (req) => {
       payload,
       headers: Object.fromEntries(req.headers.entries()),
     })
-    .select("id")
-    .single();
+  // Allow internal invocations from our own edge functions (e.g. check-pix-status polling)
+  // by checking if the apikey header matches our service role.
+  const apiKey = req.headers.get("apikey") || req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const isInternal = !!serviceKey && apiKey === serviceKey;
 
-  // If we require signatures in prod, reject when invalid
-  if (Deno.env.get("VALIDAPAY_ENVIRONMENT") === "production" && !signatureValid) {
+  // If we require signatures in prod, reject when invalid — UNLESS it's an internal call
+  if (Deno.env.get("VALIDAPAY_ENVIRONMENT") === "production" && !signatureValid && !isInternal) {
     await supabase
       .from("webhook_logs")
       .update({ error_message: "Invalid signature" })
       .eq("id", logRow?.id);
     return new Response("Invalid signature", { status: 401, headers: corsHeaders });
   }
+
 
   try {
     await processEvent(supabase, eventType, payload);
