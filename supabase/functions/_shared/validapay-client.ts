@@ -12,6 +12,13 @@ export const VALIDAPAY_BASE_URL =
     ? "https://api.validapay.com.br"
     : "https://sandbox.validapay.com.br";
 
+export const VALIDAPAY_OAUTH_URL =
+  ENV === "production"
+    ? "https://oauth2.validapay.com.br/auth/token"
+    : "https://oauth2-sandbox.validapay.com.br/auth/token";
+
+const DEFAULT_SCOPES = "pix.cob/write pix.cob/read";
+
 interface TokenCache {
   token: string;
   expiresAt: number;
@@ -20,11 +27,8 @@ interface TokenCache {
 let tokenCache: TokenCache | null = null;
 
 /**
- * Get a Bearer token. ValidaPay uses OAuth2 client_credentials.
- * Token is cached in-memory until expiry.
- *
- * NOTE: Exact OAuth2 token endpoint path is inferred — verify against
- * ValidaPay's "Autenticação" doc page if requests return 401.
+ * Get a Bearer token via OAuth2 client_credentials on ValidaPay's oauth2 host.
+ * Docs: https://docs.validapay.com.br/documentacao-validapay2/post-autenticacao
  */
 export async function getAccessToken(): Promise<string> {
   if (USE_STUBS) return "stub-token";
@@ -37,14 +41,17 @@ export async function getAccessToken(): Promise<string> {
     throw new Error("ValidaPay credentials not configured (VALIDAPAY_CLIENT_ID/SECRET)");
   }
 
-  const basic = btoa(`${CLIENT_ID}:${CLIENT_SECRET}`);
-  const res = await fetch(`${VALIDAPAY_BASE_URL}/v1/oauth/token`, {
+  const body = new URLSearchParams({
+    grant_type: "client_credentials",
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    scope: DEFAULT_SCOPES,
+  });
+
+  const res = await fetch(VALIDAPAY_OAUTH_URL, {
     method: "POST",
-    headers: {
-      Authorization: `Basic ${basic}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: "grant_type=client_credentials",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
   });
 
   if (!res.ok) {
@@ -60,6 +67,7 @@ export async function getAccessToken(): Promise<string> {
   tokenCache = { token, expiresAt: Date.now() + expiresIn * 1000 };
   return token;
 }
+
 
 async function apiRequest<T>(
   path: string,
