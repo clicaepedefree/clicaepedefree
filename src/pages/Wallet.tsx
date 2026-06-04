@@ -207,7 +207,8 @@ export default function Wallet() {
   };
 
   const hasPixKey = !!(pixKey.restaurant_pix_key && pixKey.restaurant_pix_key_holder_name && pixKey.restaurant_pix_key_holder_document);
-  const canRequestWithdrawal = hasPixKey && available > 0;
+  const subaccountReady = subaccountStatus === "approved";
+  const canRequestWithdrawal = hasPixKey && available > 0 && subaccountReady;
 
   return (
     <div className="min-h-screen bg-background">
@@ -272,7 +273,25 @@ export default function Wallet() {
               </Card>
             </div>
 
-            {!hasPixKey && (
+            {!subaccountReady && (
+              <Card className="border-primary/40 bg-primary/5">
+                <CardContent className="pt-6 flex gap-3 items-start">
+                  <AlertCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5"/>
+                  <div className="flex-1">
+                    <p className="font-semibold">Complete o cadastro bancário</p>
+                    <p className="text-sm text-muted-foreground">
+                      {subaccountStatus === "pending" && "Seu cadastro está em análise pelo gateway. Você poderá sacar assim que for aprovado."}
+                      {subaccountStatus === "rejected" && "Seu cadastro foi reprovado. Reenvie os dados na tela Conta bancária."}
+                      {subaccountStatus === "none" && "Para receber pagamentos PIX no seu saldo e sacar para sua conta, crie sua subconta de pagamentos."}
+                    </p>
+                  </div>
+                  <Button asChild size="sm">
+                    <Link to="/admin/settings?tab=bank">Cadastrar</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+            {subaccountReady && !hasPixKey && (
               <Card className="border-amber-500/40 bg-amber-50 dark:bg-amber-950/20">
                 <CardContent className="pt-6 flex gap-3">
                   <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0"/>
