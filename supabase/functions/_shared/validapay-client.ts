@@ -246,9 +246,68 @@ export async function createProposal(payload: CreateProposalPF | CreateProposalP
       status: "pending",
     };
   }
+
+  // Normalize to ValidaPay's expected snake_case schema
+  const addr = (payload as any).address || {};
+  const normalizedAddress = {
+    zip_code: String(addr.zipCode || "").replace(/\D/g, ""),
+    street: addr.street,
+    number: addr.number,
+    complement: addr.complement,
+    neighborhood: addr.neighborhood,
+    city: addr.city,
+    state: addr.state,
+  };
+
+  let apiPayload: Record<string, unknown>;
+  if (payload.type === "PF") {
+    apiPayload = {
+      type: "PF",
+      full_name: payload.fullName,
+      document_number: String(payload.document || "").replace(/\D/g, ""),
+      birth_date: payload.birthDate,
+      email: payload.email,
+      phone: String(payload.phone || "").replace(/\D/g, ""),
+      mother_name: payload.motherName,
+      address: normalizedAddress,
+      financial_details: payload.financialDetails,
+    };
+  } else {
+    const rep = payload.legalRepresentative;
+    apiPayload = {
+      type: "PJ",
+      company_name: payload.companyName,
+      trading_name: payload.tradingName,
+      document_number: String(payload.document || "").replace(/\D/g, ""),
+      email: payload.email,
+      phone: String(payload.phone || "").replace(/\D/g, ""),
+      founded_at: payload.foundedAt,
+      address: normalizedAddress,
+      legal_representative: {
+        full_name: rep.fullName,
+        document_number: String(rep.document || "").replace(/\D/g, ""),
+        birth_date: rep.birthDate,
+        email: rep.email,
+        phone: String(rep.phone || "").replace(/\D/g, ""),
+        mother_name: rep.motherName,
+      },
+      financial_details: payload.financialDetails,
+    };
+  }
+
+  const clean = (obj: any): any => {
+    if (Array.isArray(obj)) return obj.map(clean);
+    if (obj && typeof obj === "object") {
+      return Object.fromEntries(
+        Object.entries(obj).filter(([, v]) => v !== undefined && v !== null).map(([k, v]) => [k, clean(v)]),
+      );
+    }
+    return obj;
+  };
+
   return apiRequest("/v1/proposals", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(clean(apiPayload)),
   }, PROPOSALS_SCOPES);
 }
 
