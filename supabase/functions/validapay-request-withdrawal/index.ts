@@ -80,14 +80,11 @@ Deno.serve(async (req) => {
       .limit(1)
       .single();
     const fee = Number(settings?.withdrawal_fee ?? 5);
-    const minimum = Number(settings?.minimum_withdrawal ?? 10);
+    // Valor mínimo DESATIVADO para testes livres
+    // const minimum = Number(settings?.minimum_withdrawal ?? 10);
 
-    if (amount < minimum) {
-      return new Response(JSON.stringify({ error: `Valor mínimo: R$ ${minimum.toFixed(2)}` }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // if (amount < minimum) { ... }
+
     if (amount <= fee) {
       return new Response(JSON.stringify({ error: `Valor deve ser maior que a taxa de R$ ${fee.toFixed(2)}` }), {
         status: 400,
