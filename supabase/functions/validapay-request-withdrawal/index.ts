@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
     // Verify ownership
     const { data: restaurant } = await admin
       .from("restaurants")
-      .select("id, user_id")
+      .select("id, user_id, validapay_subaccount_id")
       .eq("id", restaurant_id)
       .single();
     if (!restaurant || restaurant.user_id !== userId) {
@@ -110,6 +110,23 @@ Deno.serve(async (req) => {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Require approved subaccount
+    const { data: subaccount } = await admin
+      .from("validapay_subaccounts")
+      .select("status, subaccount_id")
+      .eq("restaurant_id", restaurant_id)
+      .maybeSingle();
+    const accountId = restaurant.validapay_subaccount_id || subaccount?.subaccount_id || undefined;
+    if (!subaccount || subaccount.status !== "approved" || !accountId) {
+      return new Response(
+        JSON.stringify({
+          error: "Complete o cadastro bancário antes de sacar. Acesse Configurações → Conta bancária.",
+          code: "SUBACCOUNT_NOT_READY",
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // Business day check — DESATIVADO para testes livres
@@ -222,8 +239,7 @@ Deno.serve(async (req) => {
         amount: netAmount,
         pixKey: formattedKey,
         pixKeyType: keyType,
-        holderName: pm.restaurant_pix_key_holder_name,
-        holderDocument: String(pm.restaurant_pix_key_holder_document).replace(/\D/g, ""),
+        accountId,
       });
 
       await admin
