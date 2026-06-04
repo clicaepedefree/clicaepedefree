@@ -18,23 +18,25 @@ export const VALIDAPAY_OAUTH_URL =
     : "https://oauth2-sandbox.validapay.com.br/auth/token";
 
 const DEFAULT_SCOPES = "pix.cob/write pix.cob/read";
+const WALLET_SCOPES = "wallet/write";
 
 interface TokenCache {
   token: string;
   expiresAt: number;
 }
 
-let tokenCache: TokenCache | null = null;
+const tokenCache = new Map<string, TokenCache>();
 
 /**
  * Get a Bearer token via OAuth2 client_credentials on ValidaPay's oauth2 host.
  * Docs: https://docs.validapay.com.br/documentacao-validapay2/post-autenticacao
  */
-export async function getAccessToken(): Promise<string> {
+export async function getAccessToken(scope = DEFAULT_SCOPES, forceRefresh = false): Promise<string> {
   if (USE_STUBS) return "stub-token";
 
-  if (tokenCache && tokenCache.expiresAt > Date.now() + 30_000) {
-    return tokenCache.token;
+  const cached = tokenCache.get(scope);
+  if (!forceRefresh && cached && cached.expiresAt > Date.now() + 30_000) {
+    return cached.token;
   }
 
   if (!CLIENT_ID || !CLIENT_SECRET) {
@@ -45,7 +47,7 @@ export async function getAccessToken(): Promise<string> {
     grant_type: "client_credentials",
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET,
-    scope: DEFAULT_SCOPES,
+    scope,
   });
 
   const res = await fetch(VALIDAPAY_OAUTH_URL, {
@@ -64,7 +66,7 @@ export async function getAccessToken(): Promise<string> {
   const expiresIn = Number(data.expires_in || 3600);
   if (!token) throw new Error("ValidaPay auth returned no token");
 
-  tokenCache = { token, expiresAt: Date.now() + expiresIn * 1000 };
+  tokenCache.set(scope, { token, expiresAt: Date.now() + expiresIn * 1000 });
   return token;
 }
 
@@ -72,8 +74,10 @@ export async function getAccessToken(): Promise<string> {
 async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
+  scope = DEFAULT_SCOPES,
+  retryOnUnauthorized = true,
 ): Promise<T> {
-  const token = await getAccessToken();
+  const token = await getAccessToken(scope);
   const res = await fetch(`${VALIDAPAY_BASE_URL}${path}`, {
     ...init,
     headers: {
@@ -92,6 +96,29 @@ async function apiRequest<T>(
   }
 
   if (!res.ok) {
+    if (res.status === 401 && retryOnUnauthorized) {
+      tokenCache.delete(scope);
+      const freshToken = await getAccessToken(scope, true);
+      const retryRes = await fetch(`${VALIDAPAY_BASE_URL}${path}`, {
+        ...init,
+        headers: {
+          ...(init.headers || {}),
+          Authorization: `Bearer ${freshToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const retryText = await retryRes.text();
+      let retryJson: any = {};
+      try {
+        retryJson = retryText ? JSON.parse(retryText) : {};
+      } catch {
+        retryJson = { raw: retryText };
+      }
+      if (!retryRes.ok) {
+        throw new Error(`ValidaPay ${path} failed [${retryRes.status}]: ${retryText}`);
+      }
+      return retryJson as T;
+    }
     throw new Error(`ValidaPay ${path} failed [${res.status}]: ${text}`);
   }
   return json as T;
@@ -164,7 +191,7 @@ export async function createRefund(params: {
       amount: params.amount,
       reasonCode: params.reasonCode,
     }),
-  });
+  }, WALLET_SCOPES);
 }
 
 // ============================================================
@@ -196,7 +223,7 @@ export async function createWithdrawal(params: {
       holderName: params.holderName,
       holderDocument: params.holderDocument,
     }),
-  });
+  }, WALLET_SCOPES);
 }
 
 // ============================================================
