@@ -342,7 +342,7 @@ function SettingsSidebar({
       setOpenMenus((prev) => (prev.includes("cardapio") ? prev : [...prev, "cardapio"]));
     }
 
-    if (["delivery", "hours", "payment", "profile"].includes(currentTab || "")) {
+    if (["delivery", "hours", "payment", "bank", "profile"].includes(currentTab || "")) {
       setOpenMenus((prev) => (prev.includes("configuracoes") ? prev : [...prev, "configuracoes"]));
     }
   }, [currentTab]);
@@ -359,7 +359,7 @@ function SettingsSidebar({
     } else if (value === "whatsapp-robot") {
       onWhatsAppClick();
     } else if (value === "products" || value === "categories" || value === "addons" || 
-               value === "delivery" || value === "hours" || value === "payment" || value === "profile") {
+               value === "delivery" || value === "hours" || value === "payment" || value === "bank" || value === "profile") {
       navigate(`/admin/settings?tab=${value}`);
     } else if (item.subItems) {
       toggleMenu(item.value);
@@ -387,7 +387,7 @@ function SettingsSidebar({
             <SidebarMenu className="space-y-1 px-2">
               {menuItems.map((item) => {
                 const isActive = isSubItemActive(item) || 
-                  (item.value === 'configuracoes' && ['delivery', 'hours', 'payment', 'profile'].includes(currentTab || '')) ||
+                  (item.value === 'configuracoes' && ['delivery', 'hours', 'payment', 'bank', 'profile'].includes(currentTab || '')) ||
                   (item.value === 'cardapio' && ['products', 'categories', 'addons'].includes(currentTab || ''));
                 const isAccent = item.accent;
                 const isOpen = openMenus.includes(item.value);
