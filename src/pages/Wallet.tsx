@@ -116,6 +116,7 @@ export default function Wallet() {
         minimum_withdrawal: Number(settings.data.minimum_withdrawal ?? 10),
       });
     }
+    setSubaccountStatus((sub.data?.status as any) || "none");
     setRefreshing(false);
   };
 
