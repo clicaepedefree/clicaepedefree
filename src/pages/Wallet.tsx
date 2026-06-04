@@ -79,11 +79,12 @@ export default function Wallet() {
   });
   const [savingKey, setSavingKey] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [subaccountStatus, setSubaccountStatus] = useState<"none" | "pending" | "approved" | "rejected">("none");
 
   const fetchAll = async () => {
     if (!restaurant?.id) return;
     setRefreshing(true);
-    const [w, t, av, pm, settings] = await Promise.all([
+    const [w, t, av, pm, settings, sub] = await Promise.all([
       supabase.from("wallets").select("*").eq("restaurant_id", restaurant.id).maybeSingle(),
       supabase.from("wallet_transactions")
         .select("*")
@@ -99,6 +100,10 @@ export default function Wallet() {
       supabase.from("payment_gateway_settings")
         .select("withdrawal_fee, minimum_withdrawal")
         .limit(1)
+        .maybeSingle(),
+      supabase.from("validapay_subaccounts")
+        .select("status")
+        .eq("restaurant_id", restaurant.id)
         .maybeSingle(),
     ]);
     setWallet((w.data as any) || null);
