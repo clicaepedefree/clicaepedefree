@@ -18,7 +18,7 @@ export const VALIDAPAY_OAUTH_URL =
     : "https://oauth2-sandbox.validapay.com.br/auth/token";
 
 const DEFAULT_SCOPES = "pix.cob/write pix.cob/read";
-const WALLET_SCOPES = "wallet/write wallet/read";
+const WALLET_SCOPES = "wallet/write";
 
 interface TokenCache {
   token: string;
