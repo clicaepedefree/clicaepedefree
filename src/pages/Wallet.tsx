@@ -391,7 +391,6 @@ export default function Wallet() {
         available={available}
         restaurantId={restaurant.id}
         fee={withdrawalSettings.withdrawal_fee}
-        minimum={withdrawalSettings.minimum_withdrawal}
         onDone={fetchAll}
       />
     </div>
