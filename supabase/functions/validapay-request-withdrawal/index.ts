@@ -147,14 +147,29 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Normalize PIX key per type (Celcoin/ValidaPay strict format)
+    const rawKey = String(pm.restaurant_pix_key).trim();
+    const keyType = (pm.restaurant_pix_key_type || "auto").toLowerCase();
+    let formattedKey = rawKey;
+    if (keyType === "phone" || keyType === "celular" || keyType === "telefone") {
+      const digits = rawKey.replace(/\D/g, "");
+      // Brazilian phone PIX must be E.164: +55DDDNNNNNNNNN
+      const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
+      formattedKey = `+${withCountry}`;
+    } else if (keyType === "cpf" || keyType === "cnpj" || keyType === "document") {
+      formattedKey = rawKey.replace(/\D/g, "");
+    } else if (keyType === "email") {
+      formattedKey = rawKey.toLowerCase();
+    }
+
     // Call ValidaPay
     try {
       const result = await createWithdrawal({
         amount: netAmount,
-        pixKey: pm.restaurant_pix_key,
-        pixKeyType: pm.restaurant_pix_key_type || "auto",
+        pixKey: formattedKey,
+        pixKeyType: keyType,
         holderName: pm.restaurant_pix_key_holder_name,
-        holderDocument: pm.restaurant_pix_key_holder_document,
+        holderDocument: String(pm.restaurant_pix_key_holder_document).replace(/\D/g, ""),
       });
 
       await admin
