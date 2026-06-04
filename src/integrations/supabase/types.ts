@@ -730,6 +730,7 @@ export type Database = {
           tax_id: string | null
           updated_at: string
           user_id: string
+          validapay_subaccount_id: string | null
           whatsapp: string
         }
         Insert: {
@@ -749,6 +750,7 @@ export type Database = {
           tax_id?: string | null
           updated_at?: string
           user_id: string
+          validapay_subaccount_id?: string | null
           whatsapp: string
         }
         Update: {
@@ -768,6 +770,7 @@ export type Database = {
           tax_id?: string | null
           updated_at?: string
           user_id?: string
+          validapay_subaccount_id?: string | null
           whatsapp?: string
         }
         Relationships: []
@@ -789,6 +792,80 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      validapay_subaccounts: {
+        Row: {
+          account_type: string
+          approved_at: string | null
+          branch: string | null
+          created_at: string
+          form_id: string | null
+          holder_document: string
+          holder_email: string | null
+          holder_name: string
+          holder_phone: string | null
+          id: string
+          ispb: string | null
+          raw_request: Json | null
+          raw_response: Json | null
+          rejection_reason: string | null
+          restaurant_id: string
+          status: string
+          subaccount_id: string | null
+          subaccount_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_type: string
+          approved_at?: string | null
+          branch?: string | null
+          created_at?: string
+          form_id?: string | null
+          holder_document: string
+          holder_email?: string | null
+          holder_name: string
+          holder_phone?: string | null
+          id?: string
+          ispb?: string | null
+          raw_request?: Json | null
+          raw_response?: Json | null
+          rejection_reason?: string | null
+          restaurant_id: string
+          status?: string
+          subaccount_id?: string | null
+          subaccount_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_type?: string
+          approved_at?: string | null
+          branch?: string | null
+          created_at?: string
+          form_id?: string | null
+          holder_document?: string
+          holder_email?: string | null
+          holder_name?: string
+          holder_phone?: string | null
+          id?: string
+          ispb?: string | null
+          raw_request?: Json | null
+          raw_response?: Json | null
+          rejection_reason?: string | null
+          restaurant_id?: string
+          status?: string
+          subaccount_id?: string | null
+          subaccount_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validapay_subaccounts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wallet_transactions: {
         Row: {

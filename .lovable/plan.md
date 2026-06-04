@@ -1,125 +1,75 @@
+# Subcontas ValidaPay por restaurante
 
-# Migração PIX → ValidaPay + Carteira financeira
+## Objetivo
+Hoje todos os pagamentos passam pela conta master da Clica e Pede. Por isso o saque só funciona para chaves PIX no CNPJ da Clica e Pede e dá `OWNERSHIP_MISMATCH` quando o lojista usa a chave dele. A solução oficial do ValidaPay é criar uma **subconta** por restaurante (PF ou PJ). Aí cada cobrança fica na subconta do lojista, o saldo é do lojista e o saque sai para a chave PIX dele (mesma titularidade).
 
-Trabalho grande, organizado em 6 blocos. Vou executar tudo de uma vez, mas cada bloco é independente para facilitar revisão.
+## Visão geral do fluxo
+```text
+Cadastro restaurante ── (já existe) ──> Tabela restaurants
+        │
+        ▼
+[Onboarding ValidaPay] → POST /v1/proposals (PF ou PJ)
+        │ retorna formId (status pendente)
+        ▼
+Webhook account_approved → grava subaccount_id, branch, ispb
+        │
+        ▼
+Cobranças PIX → criadas COM header accountId = subaccount do lojista
+Saldo/Extrato → consultados na subconta
+Saque → /v1/wallet/withdraw com accountId da subconta → chave do lojista (mesma titularidade) ✅
+```
 
-## 1. Banco de dados (migração única)
+## Mudanças
 
-**Novas tabelas:**
-- `wallets` — uma por restaurante (saldo disponível, pendente, total recebido, total sacado, total taxas)
-- `wallet_transactions` — extrato unificado (tipo: venda/saque/reembolso/taxa, valor, saldo após, status)
-- `withdrawal_requests` — solicitações de saque (valor bruto, taxa, líquido, status, validapay_id, processado_em)
-- `refund_transactions` — devoluções (order_id, valor, motivo, validapay_id, status)
-- `payment_gateway_settings` — singleton, configs ValidaPay (taxa venda, taxa saque, mínimo saque, prazo liberação, ambiente)
-- `webhook_logs` — todo payload recebido, idempotência via event_id
+### 1. Banco de dados
+Nova tabela `validapay_subaccounts`:
+- `restaurant_id` (FK, único)
+- `form_id` (id do onboarding ValidaPay)
+- `subaccount_number`, `branch`, `ispb`, `holder_name`, `holder_document`
+- `account_type` ('PF' | 'PJ')
+- `status` ('pending' | 'approved' | 'rejected')
+- `raw_response` (jsonb para auditoria)
 
-**Alterações em `orders`:**
-- `payment_status` ganha valores: `pendente`, `pago`, `expirado`, `cancelado`, `reembolsado`
-- Novo: `validapay_charge_id`, `refunded_at`
+RLS: dono do restaurante lê o próprio registro; service_role faz tudo; super admin lê tudo.
 
-**Alterações em `payment_methods`:**
-- `restaurant_pix_key_holder_name`, `restaurant_pix_key_holder_document` (validação obrigatória pré-saque)
+Coluna nova em `restaurants`: `validapay_subaccount_id` (cópia rápida para consultas).
 
-**Funções/triggers:**
-- `compute_wallet_balance(restaurant_id)` — recalcula saldo a partir de wallet_transactions
-- Trigger ao inserir wallet_transaction → atualiza `wallets` (saldo)
-- RLS: dono enxerga sua wallet/transactions/saques; super_admin enxerga tudo; configurações só super_admin
+### 2. Edge functions novas
+- `validapay-create-subaccount` — recebe dados PF/PJ do dono, chama `POST /v1/proposals`, grava linha em `validapay_subaccounts` com status `pending`.
+- `validapay-onboarding-webhook` — recebe `account_approved` do ValidaPay, atualiza a subconta e popula `restaurants.validapay_subaccount_id`.
 
-## 2. Edge Functions (ValidaPay)
+### 3. Edge functions existentes (ajustes)
+- `_shared/validapay-client.ts`: adicionar parâmetro opcional `accountId` em `createPixCharge`, `getChargeStatus`, `createRefund`, `createWithdrawal` e enviar via header `accountId` quando presente. Função nova `getWalletBalance(accountId)` usando `GET /v1/wallet/balance`.
+- `validapay-create-charge`: buscar `validapay_subaccount_id` do restaurante e passar como `accountId` (fallback: master, para legado).
+- `validapay-request-withdrawal`: exigir subconta aprovada; chamar `/v1/wallet/withdraw` com `accountId` da subconta. Saldo passa a vir da subconta (não mais da nossa tabela `wallets`, ou sincronizamos com ela).
+- `validapay-refund-order`: idem charge.
+- `validapay-webhook` (cobranças): identificar subconta pela `accountId` retornada.
 
-**Cliente compartilhado:** `supabase/functions/_shared/validapay-client.ts`
-- Auth Bearer (token nos secrets, depois OAuth2 se necessário)
-- Base URL chaveada por `VALIDAPAY_ENVIRONMENT` (sandbox/produção)
-- Funções: `createPixCharge`, `getChargeStatus`, `createRefund`, `createWithdrawal`
+### 4. UI nova
+Página `/admin/configuracoes/conta-bancaria` (aba dentro de Configurações):
+- Se o restaurante ainda não tem subconta: formulário PF/PJ (nome, CPF/CNPJ, telefone, email, endereço, dados de renda/faturamento exigidos pelo `financialDetails`).
+- Estado: pendente → mostra "Em análise pelo ValidaPay".
+- Aprovado → mostra dados da subconta + permite cadastrar chave PIX para saque (a chave precisa ser do mesmo CPF/CNPJ informado no onboarding).
+- Reprovado → mostra motivo e botão para reenviar.
 
-**Funções novas:**
-- `validapay-create-charge` — substitui `create-pix-charge`. Cria cobrança via `POST /v1/charges/pix`, persiste `validapay_charge_id`, retorna EMV (copia-cola) + gera QR a partir do EMV
-- `validapay-webhook` — recebe eventos (`charge.paid`, `charge.expired`, `refund.completed`), valida sign secret, registra em `webhook_logs` com idempotência (event_id único), atualiza order + wallet
-- `validapay-request-withdrawal` — autenticada (JWT do dono). Valida: dia útil, saldo, chave PIX cadastrada, sem saque pendente. Desconta R$5, chama `POST /v1/wallet/withdraw`, cria `withdrawal_requests` e `wallet_transaction`
-- `validapay-refund-order` — autenticada. Verifica order PIX pago, chama `POST /v1/wallet/refunds`, atualiza order para `cancelado/reembolsado`, cria `wallet_transaction` negativa
+Bloqueio: até a subconta estar `approved`, a página `/admin/carteira` exibe banner "Complete o cadastro bancário para receber pagamentos" com CTA para `/admin/configuracoes/conta-bancaria`.
 
-**EFI:** mantida no código mas removida do `supabase/config.toml` ativo. Edge functions `create-pix-charge`/`pix-webhook`/`reconcile-pix-repasses` permanecem no repo mas frontend não as chama mais.
+### 5. Migração de dados existentes
+Restaurantes já cadastrados continuam usando a master account (compatibilidade). Saques só funcionam após criar a subconta. Uma flag clara em `wallets.is_subaccount_active` indica em qual modo o restaurante está.
 
-## 3. Frontend — Carteira (loja)
+## Detalhes técnicos
+- ValidaPay routes envolvidas: `POST /v1/proposals` (PF/PJ), `GET /v1/proposals/:formId` (status), `GET /v1/accounts/subaccounts` (listar), `GET /v1/wallet/balance` (com header `accountId`), `POST /v1/wallet/withdraw`, `POST /v1/charges/pix`. O header `accountId` é como o ValidaPay roteia operações para a subconta.
+- Webhook de onboarding precisa estar `verify_jwt = false` em `supabase/config.toml` (público).
+- `financialDetails` exige códigos do apêndice ValidaPay — vamos mapear na UI com selects pré-preenchidos.
+- Todas as escritas em `validapay_subaccounts` apenas via service_role (edge function).
 
-Nova rota `/admin/carteira` com 3 abas:
+## O que NÃO entra agora
+- Migrar cobranças antigas da master para subcontas (impossível retroativamente).
+- Split de pagamentos (taxa da Clica e Pede via split) — pode ser feito em etapa seguinte usando `POST /v1/charges/pix` com split para a master.
 
-**Aba "Resumo":**
-- Cards: Saldo disponível, Saldo pendente, Total recebido PIX, Total sacado, Total taxas, Qtd. vendas PIX
-- Botão grande "Solicitar saque" → abre modal
-
-**Aba "Extrato":**
-- Tabela paginada (cliente, txid, data, valor bruto, taxa, líquido, status, tipo)
-- Filtros: período, status, busca por cliente/valor
-
-**Aba "Configurar PIX":**
-- Cadastro de chave PIX da loja (tipo, chave, titular, documento) — campos obrigatórios pra liberar saque
-
-**Modal de saque:**
-- Mostra saldo disponível
-- Input valor (validação: ≤ saldo, ≥ mínimo configurado)
-- Aviso: "Taxa de R$5,00 — você receberá R$X"
-- Bloqueio se: sábado/domingo, sem chave PIX, saque pendente já existente
-
-## 4. Frontend — Pedidos (cancelamento com reembolso)
-
-Em `OrdersKanban.tsx`:
-- Botão "Cancelar pedido" para orders com `payment_method=pix_online` e `payment_status=pago` → abre modal:
-  > "Este pedido possui pagamento PIX online. Deseja cancelar a transação e realizar o reembolso ao cliente?"
-- Confirmar chama `validapay-refund-order`
-- Pedidos `pix_online` com `payment_status=pendente` ficam num "limbo" visual e não podem ser aceitos (já é a regra hoje, vou reforçar)
-
-## 5. Frontend — Super Admin (Gateway ValidaPay)
-
-Nova aba no SuperAdmin "Gateway ValidaPay":
-
-**Configurações:**
-- Client ID, Client Secret, chave PIX recebedora, URL webhook, Webhook Sign Secret, Ambiente (sandbox/prod)
-- Taxa por venda (default R$1), taxa de saque (R$5), valor mínimo saque, prazo liberação, toggle saque automático
-- *Nota:* credenciais sensíveis ficam em **secrets** (Lovable Cloud), apenas valores não-sensíveis em `payment_gateway_settings`
-
-**Dashboard:**
-- Volume transacionado, total recebido, total reembolsos, total saques, taxas geradas, transações pendentes, erros webhook, falhas saque
-
-**Logs:**
-- Lista `webhook_logs` (filtro por evento/status) e falhas de saque/reembolso
-
-## 6. Secrets necessários
-
-Vou pedir via `add_secret`:
-- `VALIDAPAY_CLIENT_ID`
-- `VALIDAPAY_CLIENT_SECRET`
-- `VALIDAPAY_WEBHOOK_SECRET`
-- `VALIDAPAY_ENVIRONMENT` (`sandbox` ou `production`)
-
-Webhook público URL será: `https://defowjmlqmheecydnyrj.supabase.co/functions/v1/validapay-webhook` — cadastrar no painel ValidaPay.
-
----
-
-## Detalhes técnicos importantes
-
-- **Idempotência webhook:** `webhook_logs.event_id` UNIQUE; se duplicado, retorna 200 sem processar
-- **Saldo:** sempre derivado de `wallet_transactions` (audit trail), `wallets.balance` é cache atualizado por trigger
-- **Dias úteis:** validação no edge function comparando `EXTRACT(DOW)` (1-5). Feriados nacionais via lista hardcoded por enquanto (BR_HOLIDAYS_2026)
-- **Concorrência de saque:** `UNIQUE INDEX` parcial em `withdrawal_requests(restaurant_id) WHERE status IN ('pending','processing')` → impede duplicidade
-- **Status financeiro vs operacional:** order só passa de `pending` para outros status se `payment_status='pago'` (constraint no trigger `validate_order_payload`)
-- **EFI mantida desativada:** `supabase/config.toml` mantém os blocos pra não quebrar build; código frontend não chama mais
-
-## O que NÃO está nesse escopo (avisos)
-
-- OAuth2 token refresh da ValidaPay — primeira versão usa Bearer fixo. Se a API exigir refresh, adicionamos cache de token na próxima rodada
-- Calendário de feriados dinâmico — hardcoded 2026 por ora
-- Push notifications de webhook — só atualização em tela
-- Multi-currency — apenas BRL
-
-## Ordem de execução
-
-1. Migração SQL (esperar aprovação do usuário)
-2. Pedir secrets ValidaPay
-3. Edge functions ValidaPay
-4. Frontend Carteira + rota
-5. Modal de cancelamento/reembolso em OrdersKanban
-6. Super Admin Gateway
-7. Atualizar memória do projeto
-
-Confirma a estrutura? Após aprovação inicio pela migração SQL.
+## Próximos passos depois deste plano
+1. Migration da tabela `validapay_subaccounts` + coluna em `restaurants`.
+2. Edge functions de onboarding + webhook.
+3. Ajustar client compartilhado e funções de charge/refund/withdraw.
+4. UI de onboarding e bloqueios.
+5. Testar fluxo em sandbox: criar subconta → aprovar → cobrar → sacar.

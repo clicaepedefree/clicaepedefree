@@ -54,9 +54,10 @@ Deno.serve(async (req) => {
 
     const { data: order } = await admin
       .from("orders")
-      .select("id, restaurant_id, total, payment_status, payment_method, validapay_charge_id, restaurants!inner(user_id)")
+      .select("id, restaurant_id, total, payment_status, payment_method, validapay_charge_id, restaurants!inner(user_id, validapay_subaccount_id)")
       .eq("id", order_id)
       .single();
+    const subaccountId = (order as any)?.restaurants?.validapay_subaccount_id || undefined;
     if (!order || (order as any).restaurants.user_id !== userId) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
@@ -98,6 +99,7 @@ Deno.serve(async (req) => {
         chargeId: order.validapay_charge_id,
         amount,
         reasonCode: "CUSTOMER_REQUEST",
+        accountId: subaccountId,
       });
 
       await admin
