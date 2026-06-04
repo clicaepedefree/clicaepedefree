@@ -70,13 +70,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Business day check
-    if (!isBusinessDay(new Date())) {
-      return new Response(JSON.stringify({ error: "Saques disponíveis apenas em dias úteis" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Business day check — DESATIVADO para testes livres
+    // if (!isBusinessDay(new Date())) { ... }
 
     // Load gateway settings
     const { data: settings } = await admin
