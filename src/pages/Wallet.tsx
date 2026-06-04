@@ -233,9 +233,14 @@ export default function Wallet() {
                 <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Saldo disponível</CardTitle></CardHeader>
                 <CardContent>
                   <div className="text-3xl font-bold text-primary">{fmtBRL(available)}</div>
-                  <Button className="mt-4 w-full" size="lg" onClick={() => setWithdrawOpen(true)} disabled={!hasPixKey || available <= 0}>
+                  <Button className="mt-4 w-full" size="lg" onClick={() => setWithdrawOpen(true)} disabled={!canRequestWithdrawal}>
                     <ArrowUpCircle className="h-4 w-4 mr-2"/>Solicitar saque
                   </Button>
+                  {hasPixKey && available < withdrawalSettings.minimum_withdrawal && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Saque mínimo: {fmtBRL(withdrawalSettings.minimum_withdrawal)}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -390,6 +395,8 @@ export default function Wallet() {
         onOpenChange={setWithdrawOpen}
         available={available}
         restaurantId={restaurant.id}
+        fee={withdrawalSettings.withdrawal_fee}
+        minimum={withdrawalSettings.minimum_withdrawal}
         onDone={fetchAll}
       />
     </div>
@@ -402,23 +409,32 @@ export default function Wallet() {
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
-function WithdrawModal({ open, onOpenChange, available, restaurantId, onDone }: {
+function WithdrawModal({ open, onOpenChange, available, restaurantId, fee, minimum, onDone }: {
   open: boolean;
   onOpenChange: (b: boolean) => void;
   available: number;
   restaurantId: string;
+  fee: number;
+  minimum: number;
   onDone: () => void;
 }) {
   const { toast } = useToast();
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
-  const fee = 5;
   const numAmount = Number(amount.replace(",", ".")) || 0;
   const net = Math.max(0, numAmount - fee);
 
   const submit = async () => {
     if (numAmount <= 0) {
       toast({ title: "Informe um valor", variant: "destructive" });
+      return;
+    }
+    if (numAmount < minimum) {
+      toast({
+        title: "Valor abaixo do mínimo",
+        description: `O saque mínimo é ${fmtBRL(minimum)}.`,
+        variant: "destructive",
+      });
       return;
     }
     setLoading(true);
