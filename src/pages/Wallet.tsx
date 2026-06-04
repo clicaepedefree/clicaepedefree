@@ -201,7 +201,7 @@ export default function Wallet() {
   };
 
   const hasPixKey = !!(pixKey.restaurant_pix_key && pixKey.restaurant_pix_key_holder_name && pixKey.restaurant_pix_key_holder_document);
-  const canRequestWithdrawal = hasPixKey && available >= withdrawalSettings.minimum_withdrawal;
+  const canRequestWithdrawal = hasPixKey && available > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -236,11 +236,6 @@ export default function Wallet() {
                   <Button className="mt-4 w-full" size="lg" onClick={() => setWithdrawOpen(true)} disabled={!canRequestWithdrawal}>
                     <ArrowUpCircle className="h-4 w-4 mr-2"/>Solicitar saque
                   </Button>
-                  {hasPixKey && available < withdrawalSettings.minimum_withdrawal && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Saque mínimo: {fmtBRL(withdrawalSettings.minimum_withdrawal)}
-                    </p>
-                  )}
                 </CardContent>
               </Card>
 
