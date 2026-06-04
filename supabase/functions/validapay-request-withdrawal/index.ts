@@ -6,21 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Hardcoded BR national holidays for 2026 (extend as needed)
-// Apenas feriados nacionais obrigatórios (Corpus Christi é facultativo)
-const BR_HOLIDAYS_2026 = new Set([
-  "2026-01-01","2026-02-16","2026-02-17","2026-04-03","2026-04-21",
-  "2026-05-01","2026-09-07","2026-10-12","2026-11-02",
-  "2026-11-15","2026-12-25",
-]);
-
-function isBusinessDay(d: Date): boolean {
-  const day = d.getUTCDay();
-  if (day === 0 || day === 6) return false;
-  const ymd = d.toISOString().slice(0, 10);
-  if (BR_HOLIDAYS_2026.has(ymd)) return false;
-  return true;
-}
+// Feriados e dias úteis — desativado para testes livres
+// const BR_HOLIDAYS_2026 = new Set([...]);
+// function isBusinessDay(d: Date): boolean { ... }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -82,13 +70,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Business day check
-    if (!isBusinessDay(new Date())) {
-      return new Response(JSON.stringify({ error: "Saques disponíveis apenas em dias úteis" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Business day check — DESATIVADO para testes livres
+    // if (!isBusinessDay(new Date())) { ... }
 
     // Load gateway settings
     const { data: settings } = await admin
@@ -97,14 +80,11 @@ Deno.serve(async (req) => {
       .limit(1)
       .single();
     const fee = Number(settings?.withdrawal_fee ?? 5);
-    const minimum = Number(settings?.minimum_withdrawal ?? 10);
+    // Valor mínimo DESATIVADO para testes livres
+    // const minimum = Number(settings?.minimum_withdrawal ?? 10);
 
-    if (amount < minimum) {
-      return new Response(JSON.stringify({ error: `Valor mínimo: R$ ${minimum.toFixed(2)}` }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // if (amount < minimum) { ... }
+
     if (amount <= fee) {
       return new Response(JSON.stringify({ error: `Valor deve ser maior que a taxa de R$ ${fee.toFixed(2)}` }), {
         status: 400,
