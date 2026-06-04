@@ -7,9 +7,10 @@ const corsHeaders = {
 };
 
 // Hardcoded BR national holidays for 2026 (extend as needed)
+// Apenas feriados nacionais obrigatórios (Corpus Christi é facultativo)
 const BR_HOLIDAYS_2026 = new Set([
   "2026-01-01","2026-02-16","2026-02-17","2026-04-03","2026-04-21",
-  "2026-05-01","2026-06-04","2026-09-07","2026-10-12","2026-11-02",
+  "2026-05-01","2026-09-07","2026-10-12","2026-11-02",
   "2026-11-15","2026-12-25",
 ]);
 
