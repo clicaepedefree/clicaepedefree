@@ -42,6 +42,8 @@ import { PaymentMethodsManager } from "@/components/dashboard/PaymentMethodsMana
 import { RestaurantSettings } from "@/components/dashboard/RestaurantSettings";
 import { DeliveryZoneManager } from "@/components/dashboard/DeliveryZoneManager";
 import { OperatingHoursManager } from "@/components/dashboard/OperatingHoursManager";
+import { BankAccountManager } from "@/components/dashboard/BankAccountManager";
+import { Landmark } from "lucide-react";
 
 interface MenuItem {
   title: string;
@@ -74,6 +76,7 @@ const menuItems: MenuItem[] = [
       { title: "Horário de funcionamento", value: "hours", icon: Clock },
       { title: "Áreas de entrega", value: "delivery", icon: MapPin },
       { title: "Formas de pagamento", value: "payment", icon: CreditCard },
+      { title: "Conta bancária", value: "bank", icon: Landmark },
       { title: "Perfil do restaurante", value: "profile", icon: Store },
     ]
   },
@@ -120,6 +123,13 @@ const settingsCards = [
     description: "Configure métodos de pagamento",
     icon: CreditCard, 
     value: "payment",
+    color: "primary"
+  },
+  {
+    title: "Conta bancária",
+    description: "Cadastro para receber pagamentos",
+    icon: Landmark,
+    value: "bank",
     color: "primary"
   },
   { 
@@ -200,6 +210,8 @@ export default function Settings() {
         return <OperatingHoursManager restaurant={restaurant} />;
       case "payment":
         return <PaymentMethodsManager restaurant={restaurant} />;
+      case "bank":
+        return <BankAccountManager restaurant={restaurant} />;
       case "profile":
         return <RestaurantSettings restaurant={restaurant} onUpdate={handleRestaurantUpdate} />;
       default:
