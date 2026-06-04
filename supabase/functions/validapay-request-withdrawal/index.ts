@@ -6,21 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Hardcoded BR national holidays for 2026 (extend as needed)
-// Apenas feriados nacionais obrigatórios (Corpus Christi é facultativo)
-const BR_HOLIDAYS_2026 = new Set([
-  "2026-01-01","2026-02-16","2026-02-17","2026-04-03","2026-04-21",
-  "2026-05-01","2026-09-07","2026-10-12","2026-11-02",
-  "2026-11-15","2026-12-25",
-]);
-
-function isBusinessDay(d: Date): boolean {
-  const day = d.getUTCDay();
-  if (day === 0 || day === 6) return false;
-  const ymd = d.toISOString().slice(0, 10);
-  if (BR_HOLIDAYS_2026.has(ymd)) return false;
-  return true;
-}
+// Feriados e dias úteis — desativado para testes livres
+// const BR_HOLIDAYS_2026 = new Set([...]);
+// function isBusinessDay(d: Date): boolean { ... }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
