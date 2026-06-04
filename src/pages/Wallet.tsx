@@ -427,10 +427,19 @@ function WithdrawModal({ open, onOpenChange, available, restaurantId, fee, onDon
       body: { restaurant_id: restaurantId, amount: numAmount },
     });
     setLoading(false);
-    if (error || (data as any)?.error) {
+    let errMsg: string | undefined = (data as any)?.error;
+    if (error) {
+      try {
+        const body = await (error as any).context?.json?.();
+        errMsg = body?.error || errMsg || error.message;
+      } catch {
+        errMsg = errMsg || error.message;
+      }
+    }
+    if (errMsg) {
       toast({
         title: "Erro ao solicitar saque",
-        description: (data as any)?.error || error?.message,
+        description: errMsg,
         variant: "destructive",
       });
       return;
