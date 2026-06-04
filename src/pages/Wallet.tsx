@@ -466,9 +466,10 @@ function WithdrawModal({ open, onOpenChange, available, restaurantId, fee, minim
           </div>
           <div>
             <Label>Valor do saque</Label>
-            <Input type="number" step="0.01" max={available} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0,00" />
+            <Input type="number" step="0.01" min={minimum} max={available} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0,00" />
           </div>
           <div className="bg-amber-50 dark:bg-amber-950/20 p-3 rounded-md text-sm space-y-1">
+            <div>Saque mínimo: <span className="font-medium">{fmtBRL(minimum)}</span></div>
             <div>Taxa de saque: <span className="font-medium">{fmtBRL(fee)}</span></div>
             <div>Você receberá: <span className="font-semibold text-primary">{fmtBRL(net)}</span></div>
           </div>
@@ -478,7 +479,7 @@ function WithdrawModal({ open, onOpenChange, available, restaurantId, fee, minim
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
-          <Button onClick={submit} disabled={loading || numAmount <= 0 || numAmount > available}>
+          <Button onClick={submit} disabled={loading || numAmount < minimum || numAmount > available}>
             {loading ? "Processando..." : "Confirmar saque"}
           </Button>
         </DialogFooter>
