@@ -214,17 +214,34 @@ export async function createWithdrawal(params: {
     };
   }
 
+  // Normalize pixKeyType to ValidaPay's expected uppercase enum
+  const typeMap: Record<string, string> = {
+    cpf: "CPF",
+    cnpj: "CNPJ",
+    email: "EMAIL",
+    phone: "PHONE",
+    celular: "PHONE",
+    telefone: "PHONE",
+    evp: "EVP",
+    aleatoria: "EVP",
+    random: "EVP",
+  };
+  const normalizedType =
+    typeMap[(params.pixKeyType || "").toLowerCase()] ||
+    params.pixKeyType.toUpperCase();
+
+  // Per official ValidaPay docs, body only accepts amount, pixKey, pixKeyType
+  // https://docs.validapay.com.br/documentacao-validapay2/post-saque-master-account
   return apiRequest("/v1/wallet/withdraw", {
     method: "POST",
     body: JSON.stringify({
       amount: params.amount,
       pixKey: params.pixKey,
-      pixKeyType: params.pixKeyType,
-      holderName: params.holderName,
-      holderDocument: params.holderDocument,
+      pixKeyType: normalizedType,
     }),
   }, WALLET_SCOPES);
 }
+
 
 // ============================================================
 // Webhook signature verification (HMAC-SHA256)
