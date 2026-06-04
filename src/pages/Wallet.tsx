@@ -403,13 +403,12 @@ export default function Wallet() {
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
-function WithdrawModal({ open, onOpenChange, available, restaurantId, fee, minimum, onDone }: {
+function WithdrawModal({ open, onOpenChange, available, restaurantId, fee, onDone }: {
   open: boolean;
   onOpenChange: (b: boolean) => void;
   available: number;
   restaurantId: string;
   fee: number;
-  minimum: number;
   onDone: () => void;
 }) {
   const { toast } = useToast();
@@ -421,14 +420,6 @@ function WithdrawModal({ open, onOpenChange, available, restaurantId, fee, minim
   const submit = async () => {
     if (numAmount <= 0) {
       toast({ title: "Informe um valor", variant: "destructive" });
-      return;
-    }
-    if (numAmount < minimum) {
-      toast({
-        title: "Valor abaixo do mínimo",
-        description: `O saque mínimo é ${fmtBRL(minimum)}.`,
-        variant: "destructive",
-      });
       return;
     }
     setLoading(true);
@@ -460,20 +451,19 @@ function WithdrawModal({ open, onOpenChange, available, restaurantId, fee, minim
           </div>
           <div>
             <Label>Valor do saque</Label>
-            <Input type="number" step="0.01" min={minimum} max={available} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0,00" />
+            <Input type="number" step="0.01" min={0.01} max={available} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0,00" />
           </div>
           <div className="bg-amber-50 dark:bg-amber-950/20 p-3 rounded-md text-sm space-y-1">
-            <div>Saque mínimo: <span className="font-medium">{fmtBRL(minimum)}</span></div>
             <div>Taxa de saque: <span className="font-medium">{fmtBRL(fee)}</span></div>
             <div>Você receberá: <span className="font-semibold text-primary">{fmtBRL(net)}</span></div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Saques são processados apenas em dias úteis. O valor cai na chave PIX cadastrada.
+            O valor cai na chave PIX cadastrada em instantes.
           </p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
-          <Button onClick={submit} disabled={loading || numAmount < minimum || numAmount > available}>
+          <Button onClick={submit} disabled={loading || numAmount <= 0 || numAmount > available}>
             {loading ? "Processando..." : "Confirmar saque"}
           </Button>
         </DialogFooter>
