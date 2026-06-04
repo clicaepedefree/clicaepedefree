@@ -239,6 +239,22 @@ export interface CreateProposalPJ {
   financialDetails?: Record<string, unknown>;
 }
 
+const digitsOnly = (value: unknown) => String(value || "").replace(/\D/g, "");
+const formatBrazilianPhone = (value: unknown) => {
+  const digits = digitsOnly(value);
+  if (!digits) return "";
+  return digits.startsWith("55") ? `+${digits}` : `+55${digits}`;
+};
+const formatValidaPayDate = (value: unknown) => {
+  const text = String(value || "");
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return iso ? `${iso[3]}-${iso[2]}-${iso[1]}` : text;
+};
+const defaultWebhookUrl = () => {
+  const baseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "");
+  return baseUrl ? `${baseUrl}/functions/v1/validapay-onboarding-webhook` : undefined;
+};
+
 export async function createProposal(payload: CreateProposalPF | CreateProposalPJ): Promise<any> {
   if (USE_STUBS) {
     return {
@@ -247,13 +263,13 @@ export async function createProposal(payload: CreateProposalPF | CreateProposalP
     };
   }
 
-  // Normalize to ValidaPay's expected snake_case schema
+  // Normalize to ValidaPay's expected camelCase schema
   const addr = (payload as any).address || {};
   const normalizedAddress = {
-    zip_code: String(addr.zipCode || "").replace(/\D/g, ""),
+    postalCode: digitsOnly(addr.zipCode),
     street: addr.street,
     number: addr.number,
-    complement: addr.complement,
+    addressComplement: addr.complement || "",
     neighborhood: addr.neighborhood,
     city: addr.city,
     state: addr.state,
@@ -262,36 +278,49 @@ export async function createProposal(payload: CreateProposalPF | CreateProposalP
   let apiPayload: Record<string, unknown>;
   if (payload.type === "PF") {
     apiPayload = {
-      type: "PF",
-      full_name: payload.fullName,
-      document_number: String(payload.document || "").replace(/\D/g, ""),
-      birth_date: payload.birthDate,
+      documentNumber: digitsOnly(payload.document),
+      phoneNumber: formatBrazilianPhone(payload.phone),
       email: payload.email,
-      phone: String(payload.phone || "").replace(/\D/g, ""),
-      mother_name: payload.motherName,
+      motherName: payload.motherName,
+      fullName: payload.fullName,
+      socialName: "",
+      birthDate: formatValidaPayDate(payload.birthDate),
       address: normalizedAddress,
-      financial_details: payload.financialDetails,
+      isPoliticallyExposedPerson: false,
+      financialDetails: payload.financialDetails || {
+        declaredIncome: "DINP01",
+        occupation: "ONP01",
+        netWorth: "NWNP01",
+      },
+      webhookUrl: defaultWebhookUrl(),
     };
   } else {
     const rep = payload.legalRepresentative;
     apiPayload = {
-      type: "PJ",
-      company_name: payload.companyName,
-      trading_name: payload.tradingName,
-      document_number: String(payload.document || "").replace(/\D/g, ""),
-      email: payload.email,
-      phone: String(payload.phone || "").replace(/\D/g, ""),
-      founded_at: payload.foundedAt,
-      address: normalizedAddress,
-      legal_representative: {
-        full_name: rep.fullName,
-        document_number: String(rep.document || "").replace(/\D/g, ""),
-        birth_date: rep.birthDate,
+      contactNumber: formatBrazilianPhone(payload.phone),
+      documentNumber: digitsOnly(payload.document),
+      businessEmail: payload.email,
+      businessName: payload.companyName,
+      tradingName: payload.tradingName || payload.companyName,
+      companyType: "PJ",
+      owner: [{
+        ownerType: "SOCIO",
+        documentNumber: digitsOnly(rep.document),
+        fullName: rep.fullName,
+        phoneNumber: formatBrazilianPhone(rep.phone),
         email: rep.email,
-        phone: String(rep.phone || "").replace(/\D/g, ""),
-        mother_name: rep.motherName,
-      },
-      financial_details: payload.financialDetails,
+        motherName: rep.motherName,
+        socialName: "",
+        birthDate: formatValidaPayDate(rep.birthDate),
+        address: normalizedAddress,
+        isPoliticallyExposedPerson: false,
+        financialOwnerDetails: {
+          ownerDeclaredIncome: "ODIB01",
+          ownerDeclaredRevenue: "ODRB01",
+        },
+      }],
+      businessAddress: normalizedAddress,
+      webhookUrl: defaultWebhookUrl(),
     };
   }
 

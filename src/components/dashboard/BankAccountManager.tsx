@@ -38,6 +38,7 @@ export function BankAccountManager({ restaurant }: Props) {
   const [accountType, setAccountType] = useState<"PF" | "PJ">("PF");
   const [form, setForm] = useState({
     fullName: "",
+    motherName: "",
     document: "",
     birthDate: "",
     email: "",
@@ -45,6 +46,7 @@ export function BankAccountManager({ restaurant }: Props) {
     companyName: "",
     tradingName: "",
     repName: "",
+    repMotherName: "",
     repDocument: "",
     repBirthDate: "",
     repEmail: "",
@@ -80,13 +82,14 @@ export function BankAccountManager({ restaurant }: Props) {
 
     let payload: any;
     if (accountType === "PF") {
-      if (!form.fullName || !form.document || !form.birthDate || !form.email || !form.phone) {
+      if (!form.fullName || !form.motherName || !form.document || !form.birthDate || !form.email || !form.phone) {
         toast({ title: "Preencha todos os campos", variant: "destructive" });
         return;
       }
       payload = {
         type: "PF",
         fullName: form.fullName.trim(),
+        motherName: form.motherName.trim(),
         document: onlyDigits(form.document),
         birthDate: form.birthDate,
         email: form.email.trim().toLowerCase(),
@@ -100,7 +103,7 @@ export function BankAccountManager({ restaurant }: Props) {
       };
     } else {
       if (!form.companyName || !form.document || !form.email || !form.phone ||
-          !form.repName || !form.repDocument || !form.repBirthDate || !form.repEmail || !form.repPhone) {
+          !form.repName || !form.repMotherName || !form.repDocument || !form.repBirthDate || !form.repEmail || !form.repPhone) {
         toast({ title: "Preencha todos os campos", variant: "destructive" });
         return;
       }
@@ -119,6 +122,7 @@ export function BankAccountManager({ restaurant }: Props) {
         },
         legalRepresentative: {
           fullName: form.repName.trim(),
+          motherName: form.repMotherName.trim(),
           document: onlyDigits(form.repDocument),
           birthDate: form.repBirthDate,
           email: form.repEmail.trim().toLowerCase(),
@@ -231,6 +235,10 @@ export function BankAccountManager({ restaurant }: Props) {
               <Label>Nome completo</Label>
               <Input value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} />
             </div>
+            <div className="md:col-span-2">
+              <Label>Nome da mãe</Label>
+              <Input value={form.motherName} onChange={e => setForm({ ...form, motherName: e.target.value })} />
+            </div>
             <div>
               <Label>CPF</Label>
               <Input value={form.document} onChange={e => setForm({ ...form, document: e.target.value })} />
@@ -278,6 +286,10 @@ export function BankAccountManager({ restaurant }: Props) {
                 <div className="md:col-span-2">
                   <Label>Nome completo</Label>
                   <Input value={form.repName} onChange={e => setForm({ ...form, repName: e.target.value })} />
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Nome da mãe</Label>
+                  <Input value={form.repMotherName} onChange={e => setForm({ ...form, repMotherName: e.target.value })} />
                 </div>
                 <div>
                   <Label>CPF</Label>
