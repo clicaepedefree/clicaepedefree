@@ -47,6 +47,11 @@ interface PixKeyData {
   restaurant_pix_key_holder_document: string | null;
 }
 
+interface WithdrawalSettings {
+  withdrawal_fee: number;
+  minimum_withdrawal: number;
+}
+
 const fmtBRL = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v || 0);
 
@@ -68,13 +73,17 @@ export default function Wallet() {
     restaurant_pix_key_holder_name: "",
     restaurant_pix_key_holder_document: "",
   });
+  const [withdrawalSettings, setWithdrawalSettings] = useState<WithdrawalSettings>({
+    withdrawal_fee: 5,
+    minimum_withdrawal: 10,
+  });
   const [savingKey, setSavingKey] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchAll = async () => {
     if (!restaurant?.id) return;
     setRefreshing(true);
-    const [w, t, av, pm] = await Promise.all([
+    const [w, t, av, pm, settings] = await Promise.all([
       supabase.from("wallets").select("*").eq("restaurant_id", restaurant.id).maybeSingle(),
       supabase.from("wallet_transactions")
         .select("*")
@@ -87,11 +96,21 @@ export default function Wallet() {
         .eq("restaurant_id", restaurant.id)
         .eq("method_type", "pix")
         .maybeSingle(),
+      supabase.from("payment_gateway_settings")
+        .select("withdrawal_fee, minimum_withdrawal")
+        .limit(1)
+        .maybeSingle(),
     ]);
     setWallet((w.data as any) || null);
     setTxs((t.data as any) || []);
     setAvailable(Number(av.data ?? 0));
     if (pm.data) setPixKey(pm.data as any);
+    if (settings.data) {
+      setWithdrawalSettings({
+        withdrawal_fee: Number(settings.data.withdrawal_fee ?? 5),
+        minimum_withdrawal: Number(settings.data.minimum_withdrawal ?? 10),
+      });
+    }
     setRefreshing(false);
   };
 
@@ -182,6 +201,7 @@ export default function Wallet() {
   };
 
   const hasPixKey = !!(pixKey.restaurant_pix_key && pixKey.restaurant_pix_key_holder_name && pixKey.restaurant_pix_key_holder_document);
+  const canRequestWithdrawal = hasPixKey && available >= withdrawalSettings.minimum_withdrawal;
 
   return (
     <div className="min-h-screen bg-background">
