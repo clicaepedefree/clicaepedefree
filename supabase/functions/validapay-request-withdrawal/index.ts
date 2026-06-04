@@ -158,6 +158,18 @@ Deno.serve(async (req) => {
       );
     }
 
+    const { data: wallet } = await admin
+      .from("wallets")
+      .select("id")
+      .eq("restaurant_id", restaurant_id)
+      .single();
+    if (!wallet?.id) {
+      return new Response(JSON.stringify({ error: "Carteira não encontrada para este restaurante" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const netAmount = amount - fee;
 
     // Create withdrawal_requests row first (UNIQUE INDEX blocks concurrent pending)
@@ -222,13 +234,6 @@ Deno.serve(async (req) => {
           processed_at: new Date().toISOString(),
         })
         .eq("id", wr.id);
-
-      // Get wallet
-      const { data: wallet } = await admin
-        .from("wallets")
-        .select("id")
-        .eq("restaurant_id", restaurant_id)
-        .single();
 
       await admin.from("wallet_transactions").insert({
         wallet_id: wallet.id,
