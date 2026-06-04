@@ -6,6 +6,48 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function extractValidaPayError(err: unknown) {
+  const message = err instanceof Error ? err.message : String(err);
+  const jsonStart = message.indexOf("{\"error\"");
+  if (jsonStart === -1) return { message, code: null as string | null };
+
+  try {
+    const parsed = JSON.parse(message.slice(jsonStart));
+    return {
+      message: parsed?.error?.message || message,
+      code: parsed?.error?.code || null,
+    };
+  } catch {
+    return { message, code: null as string | null };
+  }
+}
+
+function withdrawalErrorResponse(err: unknown) {
+  const parsed = extractValidaPayError(err);
+  if (parsed.code === "OWNERSHIP_MISMATCH") {
+    return {
+      status: 400,
+      body: {
+        error: "A chave PIX não pertence ao CPF/CNPJ informado. Confira a chave, o tipo da chave e o documento do titular no cadastro PIX.",
+        code: parsed.code,
+      },
+    };
+  }
+  if (parsed.message.includes("Não encontramos a chave informada")) {
+    return {
+      status: 400,
+      body: {
+        error: "Chave PIX não encontrada. Confira se a chave e o tipo selecionado estão corretos.",
+        code: parsed.code || "PIX_KEY_NOT_FOUND",
+      },
+    };
+  }
+  if (parsed.message.includes("ValidaPay /v1/wallet/withdraw failed [400]")) {
+    return { status: 400, body: { error: parsed.message, code: parsed.code || "WITHDRAWAL_REJECTED" } };
+  }
+  return { status: 500, body: { error: parsed.message || "Unknown error", code: parsed.code } };
+}
+
 // Feriados e dias úteis — desativado para testes livres
 // const BR_HOLIDAYS_2026 = new Set([...]);
 // function isBusinessDay(d: Date): boolean { ... }
@@ -213,7 +255,11 @@ Deno.serve(async (req) => {
           error_message: err instanceof Error ? err.message : String(err),
         })
         .eq("id", wr.id);
-      throw err;
+      const mapped = withdrawalErrorResponse(err);
+      return new Response(JSON.stringify(mapped.body), {
+        status: mapped.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
   } catch (err) {
     console.error("validapay-request-withdrawal error:", err);
