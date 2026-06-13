@@ -24,6 +24,15 @@ function extractValidaPayError(err: unknown) {
 
 function withdrawalErrorResponse(err: unknown) {
   const parsed = extractValidaPayError(err);
+  if (parsed.message.includes("não faz referência à conta Efí autenticada")) {
+    return {
+      status: 400,
+      body: {
+        error: "A chave PIX pagadora da plataforma não está vinculada à conta EFI autenticada. Atualize a chave master do gateway para uma chave PIX da conta EFI.",
+        code: "PAYER_PIX_KEY_NOT_LINKED",
+      },
+    };
+  }
   if (parsed.message.includes("EFI send pix failed")) {
     return {
       status: 400,
@@ -130,7 +139,7 @@ Deno.serve(async (req) => {
     // Load gateway settings
     const { data: settings } = await admin
       .from("payment_gateway_settings")
-      .select("withdrawal_fee, minimum_withdrawal")
+      .select("withdrawal_fee, minimum_withdrawal, master_pix_key")
       .limit(1)
       .single();
     const fee = Number(settings?.withdrawal_fee ?? 5);
@@ -235,6 +244,7 @@ Deno.serve(async (req) => {
       const result = await sendPix({
         amount: netAmount,
         destinationKey: formattedKey,
+        payerKey: settings?.master_pix_key || undefined,
         description: `Saque Clica e Pede ${wr.id.slice(0, 8)}`,
       });
 
