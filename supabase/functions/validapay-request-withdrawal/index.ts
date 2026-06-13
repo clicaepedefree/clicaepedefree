@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
     // Verify ownership
     const { data: restaurant } = await admin
       .from("restaurants")
-      .select("id, user_id, validapay_subaccount_id")
+      .select("id, user_id")
       .eq("id", restaurant_id)
       .single();
     if (!restaurant || restaurant.user_id !== userId) {
@@ -112,22 +112,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Require approved subaccount
-    const { data: subaccount } = await admin
-      .from("validapay_subaccounts")
-      .select("status, subaccount_id")
-      .eq("restaurant_id", restaurant_id)
-      .maybeSingle();
-    const accountId = restaurant.validapay_subaccount_id || subaccount?.subaccount_id || undefined;
-    if (!subaccount || subaccount.status !== "approved" || !accountId) {
-      return new Response(
-        JSON.stringify({
-          error: "Complete o cadastro bancário antes de sacar. Acesse Configurações → Conta bancária.",
-          code: "SUBACCOUNT_NOT_READY",
-        }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
+    // No subaccount required — withdrawals go out from the platform's
+    // master ValidaPay wallet to the restaurant's registered PIX key.
 
     // Business day check — DESATIVADO para testes livres
     // if (!isBusinessDay(new Date())) { ... }
