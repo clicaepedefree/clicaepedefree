@@ -134,20 +134,18 @@ export function OrderConfirmationModal({
 
   const fetchPaymentMethods = async () => {
     try {
-      const { data, error } = await supabase
-        .from('payment_methods')
-        .select('*')
-        .eq('restaurant_id', restaurant!.id);
+      const { data, error } = await (supabase as any).rpc('get_public_payment_methods', {
+        _restaurant_id: restaurant!.id,
+      });
 
       if (error) throw error;
 
-      const all = data || [];
-      const active = all.filter((m: any) => m.is_active);
-
-      // Build the visible list: active methods + synthetic 'pix_online' if enabled
-      const pixMethod = all.find((m: any) => m.method_type === 'pix');
-      const list: any[] = [...active];
-      if (pixMethod?.pix_online_enabled && pixMethod?.restaurant_pix_key) {
+      const all = (data || []) as any[];
+      // Only safe fields are returned now (method_type, is_active, pix_key for offline,
+      // pix_online_enabled, has_online_pix). Sensitive payout/holder data is never exposed.
+      const pixMethod = all.find((m) => m.method_type === 'pix');
+      const list: any[] = all.map((m) => ({ method_type: m.method_type, is_active: m.is_active }));
+      if (pixMethod?.pix_online_enabled && pixMethod?.has_online_pix) {
         list.unshift({ method_type: 'pix_online', is_active: true });
       }
       setAvailablePaymentMethods(list);
