@@ -267,31 +267,13 @@ export default function Wallet() {
               </Card>
             </div>
 
-            {!subaccountReady && (
-              <Card className="border-primary/40 bg-primary/5">
-                <CardContent className="pt-6 flex gap-3 items-start">
-                  <AlertCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5"/>
-                  <div className="flex-1">
-                    <p className="font-semibold">Complete o cadastro bancário</p>
-                    <p className="text-sm text-muted-foreground">
-                      {subaccountStatus === "pending" && "Seu cadastro está em análise pelo gateway. Você poderá sacar assim que for aprovado."}
-                      {subaccountStatus === "rejected" && "Seu cadastro foi reprovado. Reenvie os dados na tela Conta bancária."}
-                      {subaccountStatus === "none" && "Para receber pagamentos PIX no seu saldo e sacar para sua conta, crie sua subconta de pagamentos."}
-                    </p>
-                  </div>
-                  <Button asChild size="sm">
-                    <Link to="/admin/settings?tab=bank">Cadastrar</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-            {subaccountReady && !hasPixKey && (
+            {!hasPixKey && (
               <Card className="border-amber-500/40 bg-amber-50 dark:bg-amber-950/20">
                 <CardContent className="pt-6 flex gap-3">
                   <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0"/>
                   <div>
                     <p className="font-semibold">Cadastre sua chave PIX</p>
-                    <p className="text-sm text-muted-foreground">É obrigatório cadastrar chave, nome e CPF/CNPJ do titular para liberar saques.</p>
+                    <p className="text-sm text-muted-foreground">É obrigatório cadastrar chave, nome e CPF/CNPJ do titular para liberar saques. Acesse a aba <strong>Chave PIX</strong> acima.</p>
                   </div>
                 </CardContent>
               </Card>
