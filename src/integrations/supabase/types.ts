@@ -1206,6 +1206,17 @@ export type Database = {
         Args: { restaurant_id_param: string; target_time?: string; tz?: string }
         Returns: number
       }
+      get_public_payment_methods: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          has_online_pix: boolean
+          id: string
+          is_active: boolean
+          method_type: string
+          pix_key: string
+          pix_online_enabled: boolean
+        }[]
+      }
       get_public_restaurant_by_slug: {
         Args: { slug_input: string }
         Returns: {
