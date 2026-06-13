@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { sendPix } from "../_shared/efi-client.ts";
+import { createWithdrawal } from "../_shared/validapay-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -237,22 +237,22 @@ Deno.serve(async (req) => {
       formattedKey = rawKey.toLowerCase();
     }
 
-    // ValidaPay master withdrawals only allow same-titularity PIX keys.
-    // Restaurant payouts are third-party transfers, so we send a PIX out from
-    // the platform payout account directly to the registered restaurant key.
+    // ValidaPay master wallet withdrawal — sends PIX from the platform's
+    // ValidaPay balance to the restaurant's registered PIX key.
     try {
-      const result = await sendPix({
+      const result = await createWithdrawal({
         amount: netAmount,
-        destinationKey: formattedKey,
-        payerKey: settings?.master_pix_key || undefined,
-        description: `Saque Clica e Pede ${wr.id.slice(0, 8)}`,
+        pixKey: formattedKey,
+        pixKeyType: pm.restaurant_pix_key_type || "auto",
+        holderDocument: pm.restaurant_pix_key_holder_document,
+        holderName: pm.restaurant_pix_key_holder_name,
       });
 
       await admin
         .from("withdrawal_requests")
         .update({
           status: "completed",
-          validapay_withdrawal_id: result.idEnvio || null,
+          validapay_withdrawal_id: result.withdrawalId || result.id || null,
           processed_at: new Date().toISOString(),
         })
         .eq("id", wr.id);
@@ -267,7 +267,7 @@ Deno.serve(async (req) => {
         net_amount: netAmount,
         status: "completed",
         description: `Saque para chave PIX ${pm.restaurant_pix_key.slice(0, 4)}…`,
-        metadata: { payout_provider: "efi", efi: result },
+        metadata: { payout_provider: "validapay", validapay: result },
       });
 
       return new Response(JSON.stringify({ success: true, withdrawal_id: wr.id }), {
