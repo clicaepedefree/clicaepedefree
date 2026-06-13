@@ -180,17 +180,28 @@ export async function getPixChargeStatus(txid: string) {
 export interface SendPixInput {
   amount: number;
   destinationKey: string;
+  payerKey?: string;
   description?: string;
+}
+
+function normalizePixKey(key: string): string {
+  const raw = String(key || "").trim();
+  if (!raw) return raw;
+  if (raw.includes("@")) return raw.toLowerCase();
+  if (raw.startsWith("+")) return `+${raw.replace(/\D/g, "")}`;
+  return raw;
 }
 
 export async function sendPix(input: SendPixInput) {
   const token = await getEfiAccessToken();
   const idEnvio = generateTxid();
+  const payerKey = normalizePixKey(input.payerKey || EFI_PIX_KEY);
+  const destinationKey = normalizePixKey(input.destinationKey);
 
   const body = {
     valor: input.amount.toFixed(2),
-    pagador: { chave: EFI_PIX_KEY, infoPagador: input.description?.slice(0, 140) || "Repasse" },
-    favorecido: { chave: input.destinationKey },
+    pagador: { chave: payerKey, infoPagador: input.description?.slice(0, 140) || "Repasse" },
+    favorecido: { chave: destinationKey },
   };
 
   const res = await efiFetch(`/v3/gn/pix/${idEnvio}`, {
