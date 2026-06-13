@@ -179,22 +179,11 @@ export async function createWithdrawal(params: {
   const normalizedType =
     typeMap[(params.pixKeyType || "").toLowerCase()] || params.pixKeyType.toUpperCase();
 
-  const document = String(params.holderDocument || "").replace(/\D/g, "");
-
   const body: Record<string, unknown> = {
     amount: params.amount,
     pixKey: params.pixKey,
     pixKeyType: normalizedType,
   };
-  if (document) {
-    body.documentNumber = document;
-    body.taxId = document;
-    body.holderDocument = document;
-  }
-  if (params.holderName) {
-    body.holderName = params.holderName;
-    body.recipientName = params.holderName;
-  }
 
   return apiRequest("/v1/wallet/withdraw", {
     method: "POST",
