@@ -202,8 +202,7 @@ export default function Wallet() {
   };
 
   const hasPixKey = !!(pixKey.restaurant_pix_key && pixKey.restaurant_pix_key_holder_name && pixKey.restaurant_pix_key_holder_document);
-  const subaccountReady = subaccountStatus === "approved";
-  const canRequestWithdrawal = hasPixKey && available > 0 && subaccountReady;
+  const canRequestWithdrawal = hasPixKey && available > 0;
 
   return (
     <div className="min-h-screen bg-background">
