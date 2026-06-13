@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { createWithdrawal } from "../_shared/validapay-client.ts";
+import { sendPix } from "../_shared/efi-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,6 +24,15 @@ function extractValidaPayError(err: unknown) {
 
 function withdrawalErrorResponse(err: unknown) {
   const parsed = extractValidaPayError(err);
+  if (parsed.message.includes("EFI send pix failed")) {
+    return {
+      status: 400,
+      body: {
+        error: "Não foi possível enviar o PIX para a chave cadastrada. Confira a chave PIX e tente novamente.",
+        code: "PIX_SEND_FAILED",
+      },
+    };
+  }
   if (parsed.code === "OWNERSHIP_MISMATCH") {
     return {
       status: 400,
@@ -219,21 +228,21 @@ Deno.serve(async (req) => {
       formattedKey = rawKey.toLowerCase();
     }
 
-    // Call ValidaPay (no accountId — uses platform's master wallet)
+    // ValidaPay master withdrawals only allow same-titularity PIX keys.
+    // Restaurant payouts are third-party transfers, so we send a PIX out from
+    // the platform payout account directly to the registered restaurant key.
     try {
-      const result = await createWithdrawal({
+      const result = await sendPix({
         amount: netAmount,
-        pixKey: formattedKey,
-        pixKeyType: keyType,
-        holderDocument: pm.restaurant_pix_key_holder_document,
-        holderName: pm.restaurant_pix_key_holder_name,
+        destinationKey: formattedKey,
+        description: `Saque Clica e Pede ${wr.id.slice(0, 8)}`,
       });
 
       await admin
         .from("withdrawal_requests")
         .update({
           status: "completed",
-          validapay_withdrawal_id: result.withdrawalId || result.id || null,
+          validapay_withdrawal_id: result.idEnvio || null,
           processed_at: new Date().toISOString(),
         })
         .eq("id", wr.id);
@@ -248,7 +257,7 @@ Deno.serve(async (req) => {
         net_amount: netAmount,
         status: "completed",
         description: `Saque para chave PIX ${pm.restaurant_pix_key.slice(0, 4)}…`,
-        metadata: { validapay: result },
+        metadata: { payout_provider: "efi", efi: result },
       });
 
       return new Response(JSON.stringify({ success: true, withdrawal_id: wr.id }), {
