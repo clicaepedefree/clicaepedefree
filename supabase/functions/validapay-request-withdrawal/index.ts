@@ -219,13 +219,12 @@ Deno.serve(async (req) => {
       formattedKey = rawKey.toLowerCase();
     }
 
-    // Call ValidaPay
+    // Call ValidaPay (no accountId — uses platform's master wallet)
     try {
       const result = await createWithdrawal({
         amount: netAmount,
         pixKey: formattedKey,
         pixKeyType: keyType,
-        accountId,
       });
 
       await admin
