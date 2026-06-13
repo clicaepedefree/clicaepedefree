@@ -42,8 +42,6 @@ import { PaymentMethodsManager } from "@/components/dashboard/PaymentMethodsMana
 import { RestaurantSettings } from "@/components/dashboard/RestaurantSettings";
 import { DeliveryZoneManager } from "@/components/dashboard/DeliveryZoneManager";
 import { OperatingHoursManager } from "@/components/dashboard/OperatingHoursManager";
-import { BankAccountManager } from "@/components/dashboard/BankAccountManager";
-import { Landmark } from "lucide-react";
 
 interface MenuItem {
   title: string;
