@@ -79,7 +79,7 @@ export default function Wallet() {
   });
   const [savingKey, setSavingKey] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [subaccountStatus, setSubaccountStatus] = useState<"none" | "pending" | "approved" | "rejected">("none");
+  
 
   const fetchAll = async () => {
     if (!restaurant?.id) return;
