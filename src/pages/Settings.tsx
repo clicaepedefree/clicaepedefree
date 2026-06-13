@@ -200,8 +200,6 @@ export default function Settings() {
         return <OperatingHoursManager restaurant={restaurant} />;
       case "payment":
         return <PaymentMethodsManager restaurant={restaurant} />;
-      case "payment":
-        return <PaymentMethodsManager restaurant={restaurant} />;
       case "profile":
         return <RestaurantSettings restaurant={restaurant} onUpdate={handleRestaurantUpdate} />;
       default:
