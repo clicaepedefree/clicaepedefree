@@ -84,7 +84,7 @@ export default function Wallet() {
   const fetchAll = async () => {
     if (!restaurant?.id) return;
     setRefreshing(true);
-    const [w, t, av, pm, settings, sub] = await Promise.all([
+    const [w, t, av, pm, settings] = await Promise.all([
       supabase.from("wallets").select("*").eq("restaurant_id", restaurant.id).maybeSingle(),
       supabase.from("wallet_transactions")
         .select("*")
@@ -101,10 +101,6 @@ export default function Wallet() {
         .select("withdrawal_fee, minimum_withdrawal")
         .limit(1)
         .maybeSingle(),
-      supabase.from("validapay_subaccounts")
-        .select("status")
-        .eq("restaurant_id", restaurant.id)
-        .maybeSingle(),
     ]);
     setWallet((w.data as any) || null);
     setTxs((t.data as any) || []);
@@ -116,7 +112,6 @@ export default function Wallet() {
         minimum_withdrawal: Number(settings.data.minimum_withdrawal ?? 10),
       });
     }
-    setSubaccountStatus((sub.data?.status as any) || "none");
     setRefreshing(false);
   };
 
