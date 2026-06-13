@@ -24,29 +24,11 @@ function extractValidaPayError(err: unknown) {
 
 function withdrawalErrorResponse(err: unknown) {
   const parsed = extractValidaPayError(err);
-  if (parsed.message.includes("não faz referência à conta Efí autenticada")) {
-    return {
-      status: 400,
-      body: {
-        error: "A chave PIX pagadora da plataforma não está vinculada à conta EFI autenticada. Atualize a chave master do gateway para uma chave PIX da conta EFI.",
-        code: "PAYER_PIX_KEY_NOT_LINKED",
-      },
-    };
-  }
-  if (parsed.message.includes("EFI send pix failed")) {
-    return {
-      status: 400,
-      body: {
-        error: "Não foi possível enviar o PIX para a chave cadastrada. Confira a chave PIX e tente novamente.",
-        code: "PIX_SEND_FAILED",
-      },
-    };
-  }
   if (parsed.code === "OWNERSHIP_MISMATCH") {
     return {
       status: 400,
       body: {
-        error: "A chave PIX não pertence ao CPF/CNPJ informado. Confira a chave, o tipo da chave e o documento do titular no cadastro PIX.",
+        error: "A ValidaPay recusou o saque porque o endpoint oficial só permite saque para chave PIX da mesma titularidade da conta ValidaPay. Confira se a chave é da conta master ou use subcontas/split para repasse a terceiros.",
         code: parsed.code,
       },
     };
@@ -244,8 +226,6 @@ Deno.serve(async (req) => {
         amount: netAmount,
         pixKey: formattedKey,
         pixKeyType: pm.restaurant_pix_key_type || "auto",
-        holderDocument: pm.restaurant_pix_key_holder_document,
-        holderName: pm.restaurant_pix_key_holder_name,
       });
 
       await admin
