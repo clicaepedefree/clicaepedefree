@@ -122,13 +122,6 @@ const settingsCards = [
     value: "payment",
     color: "primary"
   },
-  {
-    title: "Conta bancária",
-    description: "Cadastro para receber pagamentos",
-    icon: Landmark,
-    value: "bank",
-    color: "primary"
-  },
   { 
     title: "Perfil do Restaurante", 
     description: "Ajustes gerais do restaurante",
