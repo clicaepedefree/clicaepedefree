@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { sendPix } from "../_shared/efi-client.ts";
+import { createWithdrawal } from "../_shared/validapay-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
