@@ -74,7 +74,6 @@ const menuItems: MenuItem[] = [
       { title: "Horário de funcionamento", value: "hours", icon: Clock },
       { title: "Áreas de entrega", value: "delivery", icon: MapPin },
       { title: "Formas de pagamento", value: "payment", icon: CreditCard },
-      { title: "Conta bancária", value: "bank", icon: Landmark },
       { title: "Perfil do restaurante", value: "profile", icon: Store },
     ]
   },
