@@ -39,9 +39,22 @@ export function useMenuData(slug: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (slug) {
-      fetchMenuData();
-    }
+    if (!slug) return;
+    fetchMenuData();
+
+    // Refetch quando a aba volta a ficar visível ou a janela ganha foco,
+    // assim clientes/lojistas veem produtos recém-cadastrados sem precisar dar F5.
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchMenuData();
+    };
+    const onFocus = () => fetchMenuData();
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   const fetchMenuData = async () => {
@@ -71,14 +84,33 @@ export function useMenuData(slug: string | undefined) {
           .select('id, name, description, price, category_id, image_url, is_active, is_featured, display_order')
           .eq('restaurant_id', restaurant.id)
           .eq('is_active', true)
-          .order('display_order', { ascending: true }),
+          .order('display_order', { ascending: true })
+          .limit(2000),
       ]);
 
       if (categoriesResult.error) throw categoriesResult.error;
       if (productsResult.error) throw productsResult.error;
 
-      setCategories(categoriesResult.data || []);
-      setProducts(productsResult.data || []);
+      const cats = categoriesResult.data || [];
+      const prods = productsResult.data || [];
+
+      // Diagnóstico: detecta produtos cuja categoria não existe nas categorias do restaurante.
+      // Isso normalmente indica que o lojista excluiu a categoria mas manteve o produto,
+      // ou que o produto foi gravado com category_id de outro restaurante.
+      const catIds = new Set(cats.map((c) => c.id));
+      const orphans = prods.filter((p) => !catIds.has(p.category_id));
+      if (orphans.length > 0) {
+        console.warn(
+          `[Cardápio] ${orphans.length} produto(s) sem categoria visível no restaurante "${restaurant.name}" (slug: ${restaurant.slug}). IDs:`,
+          orphans.map((o) => o.id)
+        );
+      }
+      console.info(
+        `[Cardápio] ${restaurant.slug} → ${cats.length} categoria(s), ${prods.length} produto(s) ativo(s).`
+      );
+
+      setCategories(cats);
+      setProducts(prods);
     } catch (error) {
       console.error("Erro ao carregar cardápio:", error);
     } finally {
