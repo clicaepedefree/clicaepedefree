@@ -28,7 +28,7 @@ function withdrawalErrorResponse(err: unknown) {
     return {
       status: 400,
       body: {
-        error: "A ValidaPay recusou o saque porque o endpoint oficial só permite saque para chave PIX da mesma titularidade da conta ValidaPay. Confira se a chave é da conta master ou use subcontas/split para repasse a terceiros.",
+        error: "A ValidaPay exige que saques automáticos sejam feitos para uma chave PIX da mesma titularidade da conta master. O saque foi mantido para processamento manual pela Clica e Pede.",
         code: parsed.code,
       },
     };
@@ -46,6 +46,10 @@ function withdrawalErrorResponse(err: unknown) {
     return { status: 400, body: { error: parsed.message, code: parsed.code || "WITHDRAWAL_REJECTED" } };
   }
   return { status: 500, body: { error: parsed.message || "Unknown error", code: parsed.code } };
+}
+
+function isOwnershipMismatch(err: unknown) {
+  return extractValidaPayError(err).code === "OWNERSHIP_MISMATCH";
 }
 
 // Feriados e dias úteis — desativado para testes livres
@@ -255,6 +259,28 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } catch (err) {
+      if (isOwnershipMismatch(err)) {
+        const message =
+          "Saque recebido e reservado para processamento manual pela Clica e Pede. A ValidaPay recusou o pagamento automático porque a chave PIX não tem a mesma titularidade da conta master.";
+        await admin
+          .from("withdrawal_requests")
+          .update({
+            status: "pending",
+            error_message: message,
+          })
+          .eq("id", wr.id);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            manual_review: true,
+            withdrawal_id: wr.id,
+            message,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
       await admin
         .from("withdrawal_requests")
         .update({

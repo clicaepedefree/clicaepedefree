@@ -34,10 +34,9 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .select("id, restaurant_id, total, payment_status, validapay_charge_id, pix_qrcode, pix_copia_cola, pix_expires_at, restaurants!inner(validapay_subaccount_id)")
+      .select("id, restaurant_id, total, payment_status, validapay_charge_id, pix_qrcode, pix_copia_cola, pix_expires_at")
       .eq("id", order_id)
       .maybeSingle();
-    const subaccountId = (order as any)?.restaurants?.validapay_subaccount_id || undefined;
 
     if (orderErr || !order) {
       return new Response(JSON.stringify({ error: "Order not found" }), {
@@ -78,8 +77,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create new charge on ValidaPay (use subaccount when available)
-    const charge = await createPixCharge(amount, subaccountId);
+    // Payment slip model: every online PIX charge is created on the
+    // Clica e Pede master ValidaPay account. The restaurant balance is
+    // controlled by our internal wallet ledger after the webhook confirms
+    // payment and deducts the per-order platform fee.
+    const charge = await createPixCharge(amount);
     const expiresAt = new Date(Date.now() + PIX_EXPIRATION_SECONDS * 1000).toISOString();
 
     // Generate QR Code from EMV using public quickchart
