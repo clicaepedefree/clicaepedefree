@@ -445,7 +445,11 @@ function WithdrawModal({ open, onOpenChange, available, restaurantId, fee, onDon
       });
       return;
     }
-    toast({ title: "Saque solicitado!", description: "Você receberá o PIX em instantes." });
+    const manualReview = Boolean((data as any)?.manual_review);
+    toast({
+      title: manualReview ? "Saque solicitado para análise" : "Saque solicitado!",
+      description: (data as any)?.message || "Você receberá o PIX em instantes.",
+    });
     setAmount("");
     onOpenChange(false);
     onDone();
