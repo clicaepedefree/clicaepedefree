@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
   }
 
   // Log webhook
-  const { data: logRow } = await supabase
+  const { data: logRow, error: logErr } = await supabase
     .from("webhook_logs")
     .insert({
       provider: "validapay",
@@ -72,6 +72,12 @@ Deno.serve(async (req) => {
       payload,
       headers: Object.fromEntries(req.headers.entries()),
     })
+    .select("id")
+    .single();
+
+  if (logErr) {
+    console.error("Failed to persist ValidaPay webhook log:", logErr);
+  }
   // Allow internal invocations from our own edge functions (e.g. check-pix-status polling)
   // by checking if the apikey header matches our service role.
   const apiKey = req.headers.get("apikey") || req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") || "";
@@ -147,17 +153,26 @@ async function handlePaid(supabase: any, chargeId: string, amount: number, raw: 
     console.warn("No order for charge:", chargeId);
     return;
   }
-  if (order.payment_status === "pago") return; // already
+  if (order.payment_status === "pago") {
+    await markPixTransactionPaid(supabase, order.id, chargeId, raw);
+    return; // already
+  }
 
-  // Mark order paid
-  await supabase
-    .from("orders")
-    .update({
-      payment_status: "pago",
-      pix_paid_at: new Date().toISOString(),
-      status: "new",
-    })
-    .eq("id", order.id);
+  const totalAmount = Number(order.total);
+  const receivedAmount = normalizeReceivedAmount(amount, totalAmount);
+  if (receivedAmount > 0 && Math.abs(totalAmount - receivedAmount) > 0.01) {
+    await supabase
+      .from("pix_transactions")
+      .update({
+        status: "failed",
+        error_message: `Amount mismatch: expected ${totalAmount}, received ${receivedAmount}`,
+        raw_payload: raw,
+      })
+      .eq("order_id", order.id)
+      .eq("transaction_type", "cobranca")
+      .eq("status", "pending");
+    throw new Error(`ValidaPay amount mismatch for charge ${chargeId}`);
+  }
 
   // Load fee from settings
   const { data: settings } = await supabase
@@ -173,23 +188,74 @@ async function handlePaid(supabase: any, chargeId: string, amount: number, raw: 
     .select("id")
     .eq("restaurant_id", order.restaurant_id)
     .single();
+  if (!wallet?.id) {
+    throw new Error(`Wallet not found for restaurant ${order.restaurant_id}`);
+  }
 
-  const totalAmount = Number(order.total);
   const netAmount = Math.max(0, totalAmount - fee);
 
-  await supabase.from("wallet_transactions").insert({
-    wallet_id: wallet.id,
-    restaurant_id: order.restaurant_id,
-    order_id: order.id,
-    transaction_type: "venda",
-    amount: totalAmount,
-    fee,
-    net_amount: netAmount,
-    status: "completed",
-    description: `Venda PIX pedido #${order.id.slice(0, 8)}`,
-    customer_name: order.customer_name,
-    metadata: { charge_id: chargeId, raw },
-  });
+  const { data: existingWalletTx } = await supabase
+    .from("wallet_transactions")
+    .select("id")
+    .eq("order_id", order.id)
+    .eq("transaction_type", "venda")
+    .maybeSingle();
+
+  if (!existingWalletTx) {
+    const { error: walletTxErr } = await supabase.from("wallet_transactions").insert({
+      wallet_id: wallet.id,
+      restaurant_id: order.restaurant_id,
+      order_id: order.id,
+      transaction_type: "venda",
+      amount: totalAmount,
+      fee,
+      net_amount: netAmount,
+      status: "completed",
+      description: `Venda PIX pedido #${order.id.slice(0, 8)}`,
+      customer_name: order.customer_name,
+      metadata: { charge_id: chargeId, raw },
+    });
+    if (walletTxErr) throw walletTxErr;
+  }
+
+  // Mark order paid only after wallet ledger has been recorded.
+  const { error: orderUpdateErr } = await supabase
+    .from("orders")
+    .update({
+      payment_status: "pago",
+      pix_paid_at: new Date().toISOString(),
+      status: "new",
+    })
+    .eq("id", order.id);
+  if (orderUpdateErr) throw orderUpdateErr;
+
+  await markPixTransactionPaid(supabase, order.id, chargeId, raw);
+}
+
+function normalizeReceivedAmount(amount: number, expectedAmount: number) {
+  if (!amount) return 0;
+  const centsAsCurrency = amount / 100;
+  if (
+    Number.isFinite(centsAsCurrency) &&
+    Math.abs(expectedAmount - centsAsCurrency) <= 0.01 &&
+    Math.abs(expectedAmount - amount) > 0.01
+  ) {
+    return centsAsCurrency;
+  }
+  return amount;
+}
+
+async function markPixTransactionPaid(supabase: any, orderId: string, chargeId: string, raw: any) {
+  await supabase
+    .from("pix_transactions")
+    .update({
+      status: "success",
+      efi_e2e_id: raw.endToEndId || raw.e2eId || raw.end_to_end_id || null,
+      raw_payload: raw,
+    })
+    .eq("order_id", orderId)
+    .eq("transaction_type", "cobranca")
+    .eq("efi_txid", chargeId);
 }
 
 async function handleExpired(supabase: any, chargeId: string) {
