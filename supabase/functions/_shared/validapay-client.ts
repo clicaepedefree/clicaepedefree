@@ -186,6 +186,7 @@ export async function createWithdrawal(params: {
     pixKeyType: normalizedType,
   };
   if (params.description) body.description = params.description;
+  if (params.accountId) body.accountId = params.accountId;
 
   // /wallet/withdraw is restricted to the same holder as the origin account.
   // For marketplace payouts to restaurant PIX keys, ValidaPay's official route
@@ -193,7 +194,7 @@ export async function createWithdrawal(params: {
   return apiRequest("/v1/wallet/pix-transfer", {
     method: "POST",
     body: JSON.stringify(body),
-  }, WALLET_SCOPES, params.accountId);
+  }, WALLET_SCOPES);
 }
 
 // ============================================================
