@@ -28,7 +28,7 @@ function withdrawalErrorResponse(err: unknown) {
     return {
       status: 400,
       body: {
-        error: "A ValidaPay recusou o saque porque o endpoint oficial só permite saque para chave PIX da mesma titularidade da conta ValidaPay. Confira se a chave é da conta master ou use subcontas/split para repasse a terceiros.",
+        error: "A ValidaPay recusou a transferência porque a chave PIX não pertence ao CPF/CNPJ informado. Confira a chave, o tipo da chave e o documento do titular no cadastro PIX.",
         code: parsed.code,
       },
     };
@@ -42,7 +42,10 @@ function withdrawalErrorResponse(err: unknown) {
       },
     };
   }
-  if (parsed.message.includes("ValidaPay /v1/wallet/withdraw failed [400]")) {
+  if (
+    parsed.message.includes("ValidaPay /v1/wallet/withdraw failed [400]") ||
+    parsed.message.includes("ValidaPay /v1/wallet/pix-transfer failed [400]")
+  ) {
     return { status: 400, body: { error: parsed.message, code: parsed.code || "WITHDRAWAL_REJECTED" } };
   }
   return { status: 500, body: { error: parsed.message || "Unknown error", code: parsed.code } };
@@ -112,8 +115,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // No subaccount required — withdrawals go out from the platform's
-    // master ValidaPay wallet to the restaurant's registered PIX key.
+    const { data: subaccount } = await admin
+      .from("validapay_subaccounts")
+      .select("status, subaccount_number, subaccount_id")
+      .eq("restaurant_id", restaurant_id)
+      .maybeSingle();
+
+    const accountId = subaccount?.subaccount_number || subaccount?.subaccount_id || null;
 
     // Business day check — DESATIVADO para testes livres
     // if (!isBusinessDay(new Date())) { ... }
@@ -219,13 +227,17 @@ Deno.serve(async (req) => {
       formattedKey = rawKey.toLowerCase();
     }
 
-    // ValidaPay master wallet withdrawal — sends PIX from the platform's
-    // ValidaPay balance to the restaurant's registered PIX key.
+    // Marketplace payout: use ValidaPay PIX transfer instead of the same-holder
+    // withdrawal endpoint, because restaurant PIX keys belong to third parties.
     try {
       const result = await createWithdrawal({
         amount: netAmount,
         pixKey: formattedKey,
         pixKeyType: pm.restaurant_pix_key_type || "auto",
+        holderDocument: pm.restaurant_pix_key_holder_document,
+        holderName: pm.restaurant_pix_key_holder_name,
+        description: `Repasse Clica e Pede ${wr.id}`,
+        accountId: subaccount?.status === "approved" ? accountId || undefined : undefined,
       });
 
       await admin
@@ -247,7 +259,12 @@ Deno.serve(async (req) => {
         net_amount: netAmount,
         status: "completed",
         description: `Saque para chave PIX ${pm.restaurant_pix_key.slice(0, 4)}…`,
-        metadata: { payout_provider: "validapay", validapay: result },
+        metadata: {
+          payout_provider: "validapay",
+          payout_method: "pix-transfer",
+          origin_account_id: subaccount?.status === "approved" ? accountId : "master",
+          validapay: result,
+        },
       });
 
       return new Response(JSON.stringify({ success: true, withdrawal_id: wr.id }), {
