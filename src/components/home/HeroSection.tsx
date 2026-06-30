@@ -205,7 +205,7 @@ export function HeroSection() {
                 <span className="text-lg">⚡</span> Automático!
               </div>
               <div className="absolute -bottom-4 -left-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-5 py-2.5 rounded-2xl shadow-xl font-bold text-sm animate-float animation-delay-500">
-                🎁 Grátis até 60 pedidos/mês
+                🎁 USE 100% GRÁTIS
               </div>
 
               {/* Live counter */}
