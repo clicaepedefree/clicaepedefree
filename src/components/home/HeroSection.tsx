@@ -98,9 +98,9 @@ export function HeroSection() {
                   <CheckCircle2 className="w-4 h-4" />
                   USE 100% GRÁTIS
                 </div>
-                <div className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-full text-sm font-medium">
-                  <X className="w-4 h-4" />
-                  Sem cartão de crédito
+                <div className="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-medium">
+                  <CheckCircle2 className="w-4 h-4" />
+                  SEM LIMITE DE VENDAS
                 </div>
               </div>
 
