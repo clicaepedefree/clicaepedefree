@@ -86,16 +86,16 @@ export function OnboardingHelpDialog({ restaurantId }: OnboardingHelpDialogProps
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Precisa de ajuda? Nós podemos cadastrar o seu cardápio para você!
+              Nós vamos cadastrar o seu cardápio para você!
             </h2>
 
             {/* Description */}
             <div className="text-gray-700 mb-6 space-y-3 max-w-xl">
               <p>
-                Não precisa perder tempo e quebrar a cabeça para configurar seu cardápio, solicite apoio da nossa equipe e suporte e nós fazemos isso para você!
+                Não precisa perder tempo e quebrar a cabeça para configurar seu cardápio. Solicite apoio da nossa equipe de suporte e nós fazemos isso para você!
               </p>
               <p>
-                Cadastramos todos seus produtos, fotos, descrição, valores, categorias e você recebe pronto para trabalhar! Quer aproveitar? Clique no botão abaixo e solicite com o Suporte
+                Cadastramos todos os seus produtos, fotos, descrições, preços e categorias para que você receba tudo pronto para começar a vender. Quer aproveitar? Clique no botão abaixo e solicite o cadastro com o nosso suporte.
               </p>
             </div>
 
@@ -104,16 +104,9 @@ export function OnboardingHelpDialog({ restaurantId }: OnboardingHelpDialogProps
               onClick={handleWhatsAppClick}
               className="bg-green-600 hover:bg-green-700 text-white text-lg py-6 px-8 rounded-lg font-semibold"
             >
-              Preciso que cadastrem meu cardápio
+              SOLICITAR O CADASTRO DE PRODUTOS
             </Button>
 
-            {/* Skip link */}
-            <button
-              onClick={handleClose}
-              className="mt-4 text-sm text-gray-500 hover:text-gray-700 underline"
-            >
-              Não, obrigado. Vou cadastrar sozinho
-            </button>
           </div>
         </div>
       </DialogContent>
