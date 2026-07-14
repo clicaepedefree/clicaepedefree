@@ -1,8 +1,1 @@
 project_id = "defowjmlqmheecydnyrj"
-
-[functions.validapay-webhook]
-verify_jwt = false
-
-
-[functions.pix-webhook]
-verify_jwt = false
