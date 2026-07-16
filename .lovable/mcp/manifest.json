@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "sdk_version": "0.23.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://defowjmlqmheecydnyrj.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "clica-e-pede-mcp",
+      "version": "0.1.0",
+      "title": "Clica e Pede"
+    },
+    "tools": [
+      {
+        "name": "list_my_restaurants",
+        "title": "Listar meus restaurantes",
+        "description": "Lista os restaurantes que pertencem ao usuário autenticado.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_orders",
+        "title": "Listar pedidos",
+        "description": "Lista os pedidos mais recentes de um restaurante do usuário. Filtra opcionalmente por status.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "restaurantId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "ID do restaurante"
+            },
+            "status": {
+              "description": "Filtrar por status do pedido",
+              "type": "string",
+              "enum": [
+                "pending",
+                "preparing",
+                "delivering",
+                "completed",
+                "delivered",
+                "cancelled"
+              ]
+            },
+            "limit": {
+              "description": "Máximo de pedidos (padrão 50)",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          "required": [
+            "restaurantId"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_products",
+        "title": "Listar produtos do cardápio",
+        "description": "Lista os produtos do cardápio de um restaurante do usuário.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "restaurantId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "ID do restaurante"
+            },
+            "onlyActive": {
+              "description": "Retornar apenas produtos ativos",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "restaurantId"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "sales_summary",
+        "title": "Resumo de vendas",
+        "description": "Retorna quantidade de pedidos e faturamento de um restaurante em um período (pedidos cancelados são excluídos).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "restaurantId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "ID do restaurante"
+            },
+            "days": {
+              "description": "Últimos N dias (padrão 30)",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 90
+            }
+          },
+          "required": [
+            "restaurantId"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
