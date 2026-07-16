@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,9 @@ export default function Login() {
   const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawNext = searchParams.get("next");
+  const nextPath = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/admin";
   const authIntentRef = useRef<"signin" | null>(null);
 
   useEffect(() => {
@@ -29,7 +32,7 @@ export default function Login() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!mounted) return;
         if (session) {
-          navigate("/admin", { replace: true });
+          navigate(nextPath, { replace: true });
           return;
         }
       } catch (error) {
@@ -44,7 +47,7 @@ export default function Login() {
       if (!mounted) return;
       if (event === "SIGNED_IN" && session) {
         authIntentRef.current = null;
-        navigate("/admin", { replace: true });
+        navigate(nextPath, { replace: true });
       }
     });
 
@@ -53,7 +56,7 @@ export default function Login() {
       clearTimeout(timeout);
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, nextPath]);
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
