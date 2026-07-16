@@ -38,7 +38,6 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
     credit_card: { label: "Cartão de Crédito", icon: CreditCard },
     food_voucher: { label: "Vale Alimentação", icon: CreditCard },
     meal_voucher: { label: "Vale Refeição", icon: CreditCard },
-    pix: { label: "PIX", icon: Smartphone }
   };
 
   useEffect(() => {
