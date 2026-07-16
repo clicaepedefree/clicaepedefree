@@ -23,6 +23,7 @@ const SuperAdminAuth = lazy(() => import("./pages/SuperAdminAuth"));
 const SuperAdminGateway = lazy(() => import("./pages/SuperAdminGateway"));
 const RegistrationPending = lazy(() => import("./pages/RegistrationPending"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/super-admin/auth" element={<SuperAdminAuth />} />
             <Route path="/super-admin/gateway" element={<SuperAdminGateway />} />
             <Route path="/cadastro-pendente" element={<RegistrationPending />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
