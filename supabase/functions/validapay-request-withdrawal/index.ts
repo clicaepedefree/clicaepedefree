@@ -257,28 +257,9 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } catch (err) {
-      if (isOwnershipMismatch(err)) {
-        const message =
-          "Saque recebido e reservado para processamento manual pela Clica e Pede. A ValidaPay recusou o pagamento automático porque a chave PIX não tem a mesma titularidade da conta master.";
-        await admin
-          .from("withdrawal_requests")
-          .update({
-            status: "pending",
-            error_message: message,
-          })
-          .eq("id", wr.id);
-
-        return new Response(
-          JSON.stringify({
-            success: true,
-            manual_review: true,
-            withdrawal_id: wr.id,
-            message,
-          }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
-
+      // Sempre marcar como "failed" quando a ValidaPay recusa — assim o saldo
+      // do lojista é liberado imediatamente para uma nova tentativa. Nunca
+      // deixar em "pending", pois isso trava o saldo disponível indefinidamente.
       await admin
         .from("withdrawal_requests")
         .update({
