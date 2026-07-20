@@ -118,8 +118,7 @@ Deno.serve(async (req) => {
     // No subaccount required — withdrawals go out from the platform's
     // master ValidaPay wallet to the restaurant's registered PIX key.
 
-    // Business day check — DESATIVADO para testes livres
-    // if (!isBusinessDay(new Date())) { ... }
+    // Sem restrição de dia útil ou horário — saques 24/7
 
     // Load gateway settings
     const { data: settings } = await admin
