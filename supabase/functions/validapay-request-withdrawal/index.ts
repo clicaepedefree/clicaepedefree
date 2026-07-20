@@ -52,9 +52,8 @@ function isOwnershipMismatch(err: unknown) {
   return extractValidaPayError(err).code === "OWNERSHIP_MISMATCH";
 }
 
-// Feriados e dias úteis — desativado para testes livres
-// const BR_HOLIDAYS_2026 = new Set([...]);
-// function isBusinessDay(d: Date): boolean { ... }
+// Saques liberados 24/7 — qualquer dia da semana e qualquer horário,
+// inclusive no mesmo instante em que a loja recebeu o pagamento.
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -119,8 +118,7 @@ Deno.serve(async (req) => {
     // No subaccount required — withdrawals go out from the platform's
     // master ValidaPay wallet to the restaurant's registered PIX key.
 
-    // Business day check — DESATIVADO para testes livres
-    // if (!isBusinessDay(new Date())) { ... }
+    // Sem restrição de dia útil ou horário — saques 24/7
 
     // Load gateway settings
     const { data: settings } = await admin
