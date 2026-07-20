@@ -228,6 +228,8 @@ Deno.serve(async (req) => {
         amount: netAmount,
         pixKey: formattedKey,
         pixKeyType: pm.restaurant_pix_key_type || "auto",
+        holderDocument: pm.restaurant_pix_key_holder_document,
+        holderName: pm.restaurant_pix_key_holder_name,
       });
 
       await admin
