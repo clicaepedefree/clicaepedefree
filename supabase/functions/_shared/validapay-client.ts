@@ -184,8 +184,13 @@ export async function createWithdrawal(params: {
     pixKey: params.pixKey,
     pixKeyType: normalizedType,
   };
+  if (params.holderDocument) body.holderDocument = params.holderDocument.replace(/\D/g, "");
+  if (params.holderName) body.holderName = params.holderName;
 
-  return apiRequest("/v1/wallet/withdraw", {
+  // Uses pix-transfer (third-party PIX) so lojistas can withdraw to their own
+  // PIX keys without needing a subaccount. /v1/wallet/withdraw is restricted
+  // to same-titularity and rejects with OWNERSHIP_MISMATCH.
+  return apiRequest("/v1/wallet/pix-transfer", {
     method: "POST",
     body: JSON.stringify(body),
   }, WALLET_SCOPES, params.accountId);
