@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Navigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, BarChart3 } from "lucide-react";
+import { Navigate } from "react-router-dom";
+import { BarChart3 } from "lucide-react";
 import { subDays } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { useAuth } from "@/hooks/useAuth";
+import { AppShell } from "@/components/layout/AppShell";
 
 import { AnalyticsFilters } from "@/components/analytics/AnalyticsFilters";
 import { TopProductsChart } from "@/components/analytics/TopProductsChart";
@@ -13,7 +13,7 @@ import { AverageTicketChart } from "@/components/analytics/AverageTicketChart";
 import { ComparativeStats } from "@/components/analytics/ComparativeStats";
 
 export default function Analytics() {
-  const { user, restaurant, loading } = useAuth();
+  const { user, restaurant, loading, logout } = useAuth();
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 29),
     to: new Date(),
@@ -30,32 +30,16 @@ export default function Analytics() {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/criar-conta" replace />;
-  }
-
-  if (!restaurant) {
-    return <Navigate to="/admin" replace />;
-  }
+  if (!user) return <Navigate to="/criar-conta" replace />;
+  if (!restaurant) return <Navigate to="/admin" replace />;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="h-16 border-b bg-card flex items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/admin">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-semibold text-foreground">Relatórios e Analytics</h1>
-          </div>
-        </div>
-        <div className="text-sm text-muted-foreground">{restaurant.name}</div>
-      </header>
-
+    <AppShell restaurant={restaurant} onLogout={logout} title="Analytics" subtitle={restaurant.name}>
       <main className="p-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-2 mb-6">
+          <BarChart3 className="h-6 w-6 text-primary" />
+          <h2 className="text-xl font-semibold text-foreground">Relatórios e Analytics</h2>
+        </div>
         <AnalyticsFilters dateRange={dateRange} onDateRangeChange={setDateRange} />
         <div className="space-y-6">
           <ComparativeStats restaurantId={restaurant.id} />
@@ -66,6 +50,6 @@ export default function Analytics() {
           </div>
         </div>
       </main>
-    </div>
+    </AppShell>
   );
 }

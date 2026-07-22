@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,12 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Wallet as WalletIcon, ArrowDownCircle, ArrowUpCircle, RefreshCw, AlertCircle } from "lucide-react";
+import { Wallet as WalletIcon, ArrowDownCircle, ArrowUpCircle, RefreshCw, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AppShell } from "@/components/layout/AppShell";
 
 interface WalletRow {
   id: string;
@@ -58,7 +59,7 @@ const fmtBRL = (v: number) =>
 const PAGE_SIZE = 20;
 
 export default function Wallet() {
-  const { user, restaurant, loading } = useAuth();
+  const { user, restaurant, loading, logout } = useAuth();
   const { toast } = useToast();
   const [wallet, setWallet] = useState<WalletRow | null>(null);
   const [available, setAvailable] = useState(0);
@@ -205,21 +206,17 @@ export default function Wallet() {
   const canRequestWithdrawal = hasPixKey && available > 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container py-4 flex items-center gap-3">
-          <Button asChild variant="ghost" size="sm"><Link to="/admin"><ArrowLeft className="h-4 w-4 mr-2"/>Voltar</Link></Button>
+    <AppShell restaurant={restaurant} onLogout={logout} title="Carteira" subtitle={restaurant.name}>
+      <main className="container py-6 space-y-6">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <WalletIcon className="h-5 w-5 text-primary" />
-            <h1 className="text-xl font-semibold">Carteira</h1>
+            <h2 className="text-xl font-semibold">Carteira</h2>
           </div>
-          <Button size="sm" variant="ghost" className="ml-auto" onClick={fetchAll} disabled={refreshing}>
+          <Button size="sm" variant="ghost" onClick={fetchAll} disabled={refreshing}>
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
           </Button>
         </div>
-      </header>
-
-      <main className="container py-6 space-y-6">
         <Tabs defaultValue="overview">
           <TabsList>
             <TabsTrigger value="overview">Resumo</TabsTrigger>
@@ -394,7 +391,7 @@ export default function Wallet() {
         fee={withdrawalSettings.withdrawal_fee}
         onDone={fetchAll}
       />
-    </div>
+    </AppShell>
   );
 }
 

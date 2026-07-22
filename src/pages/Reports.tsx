@@ -1,16 +1,17 @@
 import { useEffect, useState, useMemo } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, FileText, Download } from "lucide-react";
+import { FileText, Download } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPaymentMethod } from "@/lib/payment-labels";
+import { AppShell } from "@/components/layout/AppShell";
 
 interface OrderRow {
   id: string;
@@ -42,7 +43,7 @@ function downloadCSV(filename: string, rows: string[][]) {
 }
 
 export default function Reports() {
-  const { user, restaurant, loading } = useAuth();
+  const { user, restaurant, loading, logout } = useAuth();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [fetching, setFetching] = useState(true);
   const [reconciling, setReconciling] = useState(false);
@@ -150,21 +151,12 @@ export default function Reports() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="h-16 border-b bg-card flex items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/admin"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
-          <div className="flex items-center gap-2">
-            <FileText className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-semibold text-foreground">Relatórios</h1>
-          </div>
-        </div>
-        <div className="text-sm text-muted-foreground">{restaurant.name}</div>
-      </header>
-
+    <AppShell restaurant={restaurant} onLogout={logout} title="Relatórios" subtitle={restaurant.name}>
       <main className="p-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-2 mb-6">
+          <FileText className="h-6 w-6 text-primary" />
+          <h2 className="text-xl font-semibold text-foreground">Relatórios</h2>
+        </div>
         <Tabs defaultValue="sales" className="space-y-6">
           <TabsList>
             <TabsTrigger value="sales">Vendas</TabsTrigger>
@@ -320,6 +312,6 @@ export default function Reports() {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
+    </AppShell>
   );
 }
