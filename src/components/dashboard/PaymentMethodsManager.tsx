@@ -32,13 +32,8 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const methodLabels = {
-    cash: { label: "Dinheiro", icon: DollarSign },
-    debit_card: { label: "Cartão de Débito", icon: CreditCard },
-    credit_card: { label: "Cartão de Crédito", icon: CreditCard },
-    food_voucher: { label: "Vale Alimentação", icon: CreditCard },
-    meal_voucher: { label: "Vale Refeição", icon: CreditCard },
-  };
+  const methodLabels: Record<string, { label: string; icon: any }> = {};
+
 
   useEffect(() => {
     fetchPaymentMethods();
