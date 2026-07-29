@@ -65,6 +65,8 @@ interface OrderConfirmationModalProps {
   getCartTotal: () => number;
 }
 
+const DEFAULT_PAYMENT_METHODS = [{ method_type: 'pix_online', is_active: true }];
+
 export function OrderConfirmationModal({
   open,
   onOpenChange,
@@ -100,7 +102,7 @@ export function OrderConfirmationModal({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   
   const [changeAmount, setChangeAmount] = useState('');
-  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>([]);
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>(DEFAULT_PAYMENT_METHODS);
   const [restaurantPixKey, setRestaurantPixKey] = useState('');
 
   useEffect(() => {
@@ -134,26 +136,25 @@ export function OrderConfirmationModal({
 
   const fetchPaymentMethods = async () => {
     try {
-      const { data, error } = await (supabase as any).rpc('get_public_payment_methods', {
+      const { error } = await (supabase as any).rpc('get_public_payment_methods', {
         _restaurant_id: restaurant!.id,
       });
 
       if (error) throw error;
 
-      const all = (data || []) as any[];
-      // Apenas PIX Online é aceito como forma de pagamento.
-      const pixMethod = all.find((m) => m.method_type === 'pix');
-      const list: any[] = [];
-      if (pixMethod?.pix_online_enabled && pixMethod?.has_online_pix) {
-        list.push({ method_type: 'pix_online', is_active: true });
-      }
+      // PIX Online é a única forma de pagamento do sistema e deve aparecer
+      // por padrão, mesmo quando o restaurante ainda não possui registro em
+      // payment_methods. A cobrança é gerada na conta master ValidaPay.
+      const list = DEFAULT_PAYMENT_METHODS;
       setAvailablePaymentMethods(list);
 
-      if (list.length > 0 && !paymentMethod) {
-        setPaymentMethod({ type: list[0].method_type as PaymentMethod['type'] });
+      if (!paymentMethod || paymentMethod.type !== 'pix_online') {
+        setPaymentMethod({ type: 'pix_online' });
       }
     } catch (error) {
       console.error('Erro ao buscar formas de pagamento:', error);
+      setAvailablePaymentMethods(DEFAULT_PAYMENT_METHODS);
+      setPaymentMethod({ type: 'pix_online' });
     }
   };
 
@@ -504,7 +505,7 @@ export function OrderConfirmationModal({
               
               {availablePaymentMethods.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Nenhuma forma de pagamento configurada pelo estabelecimento.
+                  PIX Online está disponível como forma de pagamento padrão.
                 </p>
               )}
               
@@ -562,8 +563,8 @@ export function OrderConfirmationModal({
               disabled={cartEntries.length === 0 || !isAddressValid || !isPaymentValid}
             >
               <Phone className="h-4 w-4" />
-              <span className="hidden sm:inline">Enviar para WhatsApp</span>
-              <span className="sm:hidden">Enviar Pedido</span>
+              <span className="hidden sm:inline">Finalizar e pagar com PIX</span>
+              <span className="sm:hidden">Pagar com PIX</span>
               <ExternalLink className="h-4 w-4" />
             </Button>
           </div>

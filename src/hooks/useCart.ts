@@ -145,6 +145,7 @@ export function useCart() {
         food_voucher: 'Vale Alimentação',
         meal_voucher: 'Vale Refeição',
         pix: 'PIX',
+        pix_online: 'PIX Online',
         cash: 'Dinheiro',
         card: 'Cartão', // Legacy support
         debit: 'Cartão de Débito', // Legacy support
