@@ -141,18 +141,13 @@ export function OrderConfirmationModal({
       if (error) throw error;
 
       const all = (data || []) as any[];
-      // Only safe fields are returned now (method_type, is_active, pix_key for offline,
-      // pix_online_enabled, has_online_pix). Sensitive payout/holder data is never exposed.
+      // Apenas PIX Online é aceito como forma de pagamento.
       const pixMethod = all.find((m) => m.method_type === 'pix');
-      const list: any[] = all.map((m) => ({ method_type: m.method_type, is_active: m.is_active }));
+      const list: any[] = [];
       if (pixMethod?.pix_online_enabled && pixMethod?.has_online_pix) {
-        list.unshift({ method_type: 'pix_online', is_active: true });
+        list.push({ method_type: 'pix_online', is_active: true });
       }
       setAvailablePaymentMethods(list);
-
-      if (pixMethod?.pix_key) {
-        setRestaurantPixKey(pixMethod.pix_key);
-      }
 
       if (list.length > 0 && !paymentMethod) {
         setPaymentMethod({ type: list[0].method_type as PaymentMethod['type'] });
@@ -161,6 +156,7 @@ export function OrderConfirmationModal({
       console.error('Erro ao buscar formas de pagamento:', error);
     }
   };
+
 
   const handleDeliveryZoneChange = (zoneId: string) => {
     const zone = deliveryZones.find(z => z.id === zoneId);
