@@ -69,6 +69,7 @@ const App = () => (
             <Route path="/super-admin" element={<SuperAdmin />} />
             <Route path="/super-admin/auth" element={<SuperAdminAuth />} />
             <Route path="/super-admin/gateway" element={<SuperAdminGateway />} />
+            <Route path="/super-admin/financeiro" element={<SuperAdminFinance />} />
             <Route path="/cadastro-pendente" element={<RegistrationPending />} />
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
