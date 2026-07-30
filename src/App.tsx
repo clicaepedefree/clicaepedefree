@@ -21,6 +21,7 @@ const Wallet = lazy(() => import("./pages/Wallet"));
 const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const SuperAdminAuth = lazy(() => import("./pages/SuperAdminAuth"));
 const SuperAdminGateway = lazy(() => import("./pages/SuperAdminGateway"));
+const SuperAdminFinance = lazy(() => import("./pages/SuperAdminFinance"));
 const RegistrationPending = lazy(() => import("./pages/RegistrationPending"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
