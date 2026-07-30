@@ -1157,9 +1157,42 @@ export type Database = {
       }
     }
     Functions: {
+      admin_list_pix_transactions: {
+        Args: {
+          _dir?: string
+          _document?: string
+          _from?: string
+          _limit?: number
+          _max_amount?: number
+          _min_amount?: number
+          _offset?: number
+          _payer?: string
+          _restaurant_id?: string
+          _sort?: string
+          _status?: string
+          _to?: string
+        }
+        Returns: {
+          amount: number
+          created_at: string
+          customer_document: string
+          customer_name: string
+          id: string
+          paid_at: string
+          payment_status: string
+          pix_txid: string
+          restaurant_id: string
+          restaurant_name: string
+          total_count: number
+        }[]
+      }
       admin_mark_restaurant_paid: {
         Args: { for_time?: string; restaurant_id: string }
         Returns: string
+      }
+      admin_pix_financial_summary: {
+        Args: { _from?: string; _restaurant_id?: string; _to?: string }
+        Returns: Json
       }
       admin_set_restaurant_block: {
         Args: {

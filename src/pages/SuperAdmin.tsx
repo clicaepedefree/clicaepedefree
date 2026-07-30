@@ -256,6 +256,15 @@ const SuperAdmin = () => {
             <Button
               variant="secondary"
               size="sm"
+              onClick={() => navigate('/super-admin/financeiro')}
+              className="flex items-center gap-2"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Financeiro · PIX
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => navigate('/super-admin/gateway')}
               className="flex items-center gap-2"
             >

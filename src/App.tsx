@@ -21,6 +21,7 @@ const Wallet = lazy(() => import("./pages/Wallet"));
 const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const SuperAdminAuth = lazy(() => import("./pages/SuperAdminAuth"));
 const SuperAdminGateway = lazy(() => import("./pages/SuperAdminGateway"));
+const SuperAdminFinance = lazy(() => import("./pages/SuperAdminFinance"));
 const RegistrationPending = lazy(() => import("./pages/RegistrationPending"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/super-admin" element={<SuperAdmin />} />
             <Route path="/super-admin/auth" element={<SuperAdminAuth />} />
             <Route path="/super-admin/gateway" element={<SuperAdminGateway />} />
+            <Route path="/super-admin/financeiro" element={<SuperAdminFinance />} />
             <Route path="/cadastro-pendente" element={<RegistrationPending />} />
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
