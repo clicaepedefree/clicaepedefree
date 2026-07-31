@@ -53,15 +53,20 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
-    fetchOrders();
+    setOrders([]);
+    setStats({ totalOrders: 0, totalRevenue: 0, averageOrderValue: 0, todayOrders: 0 });
+    setSelectedOrder(null);
+    setLoading(true);
+    fetchOrders(restaurant.id);
   }, [restaurant.id]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (restaurantId = restaurant.id) => {
     try {
       // Use the secure view instead of direct table access
       const { data, error } = await supabase
         .from('secure_orders_view')
         .select('*')
+        .eq('restaurant_id', restaurantId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -76,7 +81,7 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
       });
 
       setOrders(filteredOrders);
-      calculateStats(data || []); // Use all orders for stats
+      calculateStats(data || []); // Use all orders from the selected restaurant for stats
     } catch (error: any) {
       console.error('Erro ao buscar pedidos:', error);
       // Log security access attempt
@@ -126,7 +131,8 @@ export function OrdersDashboard({ restaurant }: OrdersDashboardProps) {
       const { error } = await supabase
         .from('orders')
         .update({ status: newStatus })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .eq('restaurant_id', restaurant.id);
 
       if (error) throw error;
       

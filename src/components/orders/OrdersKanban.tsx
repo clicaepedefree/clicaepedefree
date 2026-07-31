@@ -109,7 +109,11 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
     (o.status === "new" || (o.payment_status === "pago" && o.status !== "cancelled"));
 
   useEffect(() => {
-    fetchOrders();
+    setOrders([]);
+    setSelectedId(null);
+    setCancelTarget(null);
+    setLoading(true);
+    fetchOrders(restaurant.id);
     const channel = supabase
       .channel("orders-changes")
       .on(
@@ -128,12 +132,12 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
               duration: 8000,
             });
           }
-          fetchOrders();
+          fetchOrders(restaurant.id);
         },
       )
       .subscribe();
 
-    const pollId = setInterval(fetchOrders, 20000);
+    const pollId = setInterval(() => fetchOrders(restaurant.id), 20000);
     return () => {
       supabase.removeChannel(channel);
       clearInterval(pollId);
@@ -141,11 +145,12 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurant.id]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (restaurantId = restaurant.id) => {
     try {
       const { data, error } = await supabase
         .from("secure_orders_view")
         .select("*")
+        .eq("restaurant_id", restaurantId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       setOrders(data || []);
@@ -167,7 +172,11 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
       return;
     }
     try {
-      const { error } = await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", orderId)
+        .eq("restaurant_id", restaurant.id);
       if (error) throw error;
       fetchOrders();
       toast.success("Status atualizado");

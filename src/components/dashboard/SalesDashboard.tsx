@@ -43,10 +43,19 @@ export function SalesDashboard({ restaurant }: SalesDashboardProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSalesData();
+    setStats({
+      todayRevenue: 0, todayOrders: 0,
+      weekRevenue: 0, weekOrders: 0,
+      monthRevenue: 0, monthOrders: 0,
+      totalRevenue: 0, totalOrders: 0,
+      averageOrderValue: 0,
+      previousWeekRevenue: 0, previousMonthRevenue: 0
+    });
+    setLoading(true);
+    fetchSalesData(restaurant.id);
   }, [restaurant.id]);
 
-  const fetchSalesData = async () => {
+  const fetchSalesData = async (restaurantId = restaurant.id) => {
     try {
       const now = new Date();
       const previousMonthStart = startOfMonth(subMonths(now, 1));
@@ -54,7 +63,7 @@ export function SalesDashboard({ restaurant }: SalesDashboardProps) {
       const { data, error } = await supabase
         .from('orders')
         .select('total, created_at, status')
-        .eq('restaurant_id', restaurant.id)
+        .eq('restaurant_id', restaurantId)
         .neq('status', 'cancelled')
         .gte('created_at', previousMonthStart.toISOString());
 
@@ -65,14 +74,17 @@ export function SalesDashboard({ restaurant }: SalesDashboardProps) {
       const { count: totalCount, error: countError } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
-        .eq('restaurant_id', restaurant.id)
+        .eq('restaurant_id', restaurantId)
         .neq('status', 'cancelled');
 
       const { data: allTotals, error: totalError } = await supabase
         .from('orders')
         .select('total')
-        .eq('restaurant_id', restaurant.id)
+        .eq('restaurant_id', restaurantId)
         .neq('status', 'cancelled');
+
+      if (countError) throw countError;
+      if (totalError) throw totalError;
 
       const allOrderTotals = allTotals || [];
       const totalRevenue = allOrderTotals.reduce((sum, o) => sum + Number(o.total), 0);
