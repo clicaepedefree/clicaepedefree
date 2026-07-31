@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, Phone, Mail, Calendar, LogOut, Shield, DollarSign, Lock, Unlock, TrendingUp, CloudUpload, ExternalLink } from "lucide-react";
+import { Building2, Users, Phone, Mail, Calendar, LogOut, Shield, DollarSign, Lock, Unlock, TrendingUp, CloudUpload, ExternalLink, Tag } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -30,6 +30,7 @@ interface RestaurantWithEmail {
   is_blocked: boolean;
   revenue_block_exempt_until?: string;
   tax_id?: string;
+  selected_plan?: string;
 }
 
 const SuperAdmin = () => {
@@ -107,6 +108,16 @@ const SuperAdmin = () => {
       return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
     }
     return whatsapp;
+  };
+
+  const formatPlan = (plan?: string | null) => {
+    const planLabels: Record<string, string> = {
+      gratis: "Grátis — até 60 pedidos/mês",
+      basico: "Básico — R$109,90/mês",
+      essencial: "Essencial — R$159,90/mês",
+    };
+
+    return plan ? planLabels[plan] || plan : "-";
   };
 
   const formatCurrency = (value: number) => {
@@ -409,6 +420,7 @@ const SuperAdmin = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>WhatsApp</TableHead>
                     <TableHead>CPF/CNPJ</TableHead>
+                    <TableHead>Plano</TableHead>
                     <TableHead>Fat. Mês Atual</TableHead>
                     <TableHead>Vendas Mês</TableHead>
                     <TableHead>Status</TableHead>
@@ -447,6 +459,12 @@ const SuperAdmin = () => {
                       </TableCell>
                       <TableCell>
                         {restaurant.tax_id || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-muted-foreground" />
+                          <span>{formatPlan(restaurant.selected_plan)}</span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-0.5">
