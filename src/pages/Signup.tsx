@@ -283,10 +283,9 @@ export default function Signup() {
                     <SelectValue placeholder="Selecione o plano" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gratis">Grátis — até 30 pedidos/mês</SelectItem>
-                    <SelectItem value="basico">Básico Ilimitado — R$109,90/mês</SelectItem>
-                    <SelectItem value="essencial">Essencial Ilimitado — R$199,50/mês</SelectItem>
-                    <SelectItem value="completo">Completo — R$249,30/mês</SelectItem>
+                    <SelectItem value="gratis">Grátis — até 60 pedidos/mês</SelectItem>
+                    <SelectItem value="basico">Básico — R$109,90/mês</SelectItem>
+                    <SelectItem value="essencial">Essencial — R$159,90/mês</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">Você pode mudar de plano a qualquer momento.</p>

@@ -81,8 +81,12 @@ serve(async (req) => {
       restaurantName,
       responsibleName,
       whatsapp,
-      taxId
+      taxId,
+      selectedPlan
     } = await req.json();
+
+    const allowedPlans = new Set(['gratis', 'basico', 'essencial']);
+    const plan = allowedPlans.has(selectedPlan) ? selectedPlan : 'gratis';
 
     // Basic input validation
     if (!restaurantName || typeof restaurantName !== 'string' || restaurantName.length > 200 ||
@@ -116,6 +120,7 @@ serve(async (req) => {
         responsible_name: responsibleName,
         whatsapp: whatsapp,
         tax_id: taxId,
+        selected_plan: plan,
         slug: slug
       })
       .select()
@@ -196,6 +201,7 @@ Responsável: ${responsibleName}
 CPF/CNPJ: ${taxId}
 WhatsApp: ${whatsapp}
 Email: ${email || 'N/A'}
+Plano desejado: ${plan}
 Slug (URL): ${slug}
 Data de cadastro: ${new Date().toLocaleDateString('pt-BR')}
 
