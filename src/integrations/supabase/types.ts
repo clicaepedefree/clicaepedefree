@@ -726,7 +726,6 @@ export type Database = {
           pickup_enabled: boolean | null
           responsible_name: string | null
           revenue_block_exempt_until: string | null
-          selected_plan: string | null
           slug: string
           tax_id: string | null
           updated_at: string
@@ -747,7 +746,6 @@ export type Database = {
           pickup_enabled?: boolean | null
           responsible_name?: string | null
           revenue_block_exempt_until?: string | null
-          selected_plan?: string
           slug: string
           tax_id?: string | null
           updated_at?: string
@@ -768,7 +766,6 @@ export type Database = {
           pickup_enabled?: boolean | null
           responsible_name?: string | null
           revenue_block_exempt_until?: string | null
-          selected_plan?: string
           slug?: string
           tax_id?: string | null
           updated_at?: string
@@ -1281,7 +1278,6 @@ export type Database = {
           name: string
           responsible_name: string
           revenue_block_exempt_until: string
-          selected_plan: string | null
           slug: string
           tax_id: string
           total_revenue: number
