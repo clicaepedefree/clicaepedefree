@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, CheckCircle2, Users, Clock, Star, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { openSignupWhatsApp } from "@/lib/signup-cta";
 import { useState, useEffect } from "react";
 
 // Counter animation hook
@@ -109,7 +110,7 @@ export function HeroSection() {
                 <Button 
                   size="lg" 
                   className="group relative text-lg px-8 py-7 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/30 transform hover:scale-[1.02] transition-all duration-300 rounded-2xl btn-shine animate-pulse-glow" 
-                  onClick={() => window.location.href = '/criar-conta'}
+                  onClick={openSignupWhatsApp}
                 >
                   <span className="flex items-center gap-2">
                     Criar meu cardápio grátis agora

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { openSignupWhatsApp } from "@/lib/signup-cta";
 
 export function ExitIntentPopup() {
   const [isVisible, setIsVisible] = useState(false);
@@ -60,7 +60,7 @@ export function ExitIntentPopup() {
             className="w-full py-7 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg text-lg font-bold rounded-xl mb-4" 
             onClick={() => {
               setIsVisible(false);
-              window.location.href = '/criar-conta';
+              openSignupWhatsApp();
             }}
           >
             Quero testar grátis

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, CheckCircle2, Rocket, Clock, Shield } from "lucide-react";
-import { Link } from "react-router-dom";
+import { openSignupWhatsApp } from "@/lib/signup-cta";
 import { useEffect, useRef, useState } from "react";
 
 export function CTASection() {
@@ -66,7 +66,7 @@ export function CTASection() {
             <Button 
               size="lg" 
               className="group text-xl px-12 py-8 bg-white text-emerald-700 hover:bg-gray-50 shadow-2xl hover:shadow-3xl transform hover:scale-[1.02] transition-all duration-300 rounded-2xl font-bold" 
-              onClick={() => window.location.href = '/criar-conta'}
+              onClick={openSignupWhatsApp}
             >
               Criar meu cardápio grátis agora
               <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
