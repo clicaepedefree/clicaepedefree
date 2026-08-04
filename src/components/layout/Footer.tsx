@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Phone, Mail, MessageSquare, Heart } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { SIGNUP_WHATSAPP_URL } from "@/lib/signup-cta";
 export function Footer() {
   return <footer className="bg-foreground text-white py-16">
       <div className="container mx-auto px-4">
@@ -24,9 +25,9 @@ export function Footer() {
             <h4 className="text-lg font-semibold mb-4 text-primary-glow">Plataforma</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/criar-conta" className="text-white/80 hover:text-primary-glow transition-colors">
+                <a href={SIGNUP_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="text-white/80 hover:text-primary-glow transition-colors">
                   Criar Conta
-                </Link>
+                </a>
               </li>
               <li>
                 <Link to="/admin" className="text-white/80 hover:text-primary-glow transition-colors">
