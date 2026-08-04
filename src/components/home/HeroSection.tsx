@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, CheckCircle2, Users, Clock, Star, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { openSignupWhatsApp } from "@/lib/signup-cta";
 import { useState, useEffect } from "react";
 
 // Counter animation hook

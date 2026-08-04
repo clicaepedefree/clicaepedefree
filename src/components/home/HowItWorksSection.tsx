@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronRight, Smartphone, Share2, MessageCircle, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { openSignupWhatsApp } from "@/lib/signup-cta";
 import { useEffect, useRef, useState } from "react";
 
 export function HowItWorksSection() {
