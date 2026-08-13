@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
     const { data: order } = await supabase
       .from("orders")
-      .select("id, payment_status, pix_txid, validapay_charge_id, pix_expires_at")
+      .select("id, payment_status, pix_txid, validapay_charge_id, pix_expires_at, total")
       .eq("id", orderId)
       .maybeSingle();
 
@@ -47,13 +47,48 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check expiration
-    if (order.pix_expires_at && new Date(order.pix_expires_at) < new Date()) {
+    // ALWAYS ask ValidaPay first — a payment can land after the local QR
+    // expiration window, and the webhook may never arrive.
+    const chargeId = order.validapay_charge_id || order.pix_txid;
+    let providerSaysPaid = false;
+    let providerReachable = false;
+    if (chargeId) {
+      try {
+        const validapayStatus = await getChargeStatus(chargeId);
+        providerReachable = true;
+        const normalizedStatus = String(validapayStatus?.status || "").toLowerCase();
+        if (["paid", "approved", "aprovado", "concluida", "concluída", "completed", "settled"].includes(normalizedStatus)) {
+          providerSaysPaid = true;
+          await supabase.functions.invoke("validapay-webhook", {
+            body: {
+              event: "charge.paid",
+              eventId: `poll_${chargeId}`,
+              data: { chargeId, amount: validapayStatus?.amount ?? order.total },
+            },
+          });
+          return new Response(JSON.stringify({ status: "pago" }), {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch (e) {
+        console.warn("ValidaPay status check fallback failed:", e);
+      }
+    }
+
+    // Only expire when the provider confirms it is still unpaid.
+    if (
+      !providerSaysPaid &&
+      providerReachable &&
+      order.pix_expires_at &&
+      new Date(order.pix_expires_at) < new Date()
+    ) {
       if (["aguardando_pagamento", "pendente"].includes(order.payment_status)) {
         await supabase
           .from("orders")
           .update({ payment_status: "expirado", status: "cancelled" })
-          .eq("id", orderId);
+          .eq("id", orderId)
+          .neq("payment_status", "pago");
         await supabase
           .from("pix_transactions")
           .update({ status: "expired" })
@@ -65,26 +100,6 @@ Deno.serve(async (req) => {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-    }
-
-    // Active polling fallback to ValidaPay (in case webhook didn't arrive)
-    const chargeId = order.validapay_charge_id || order.pix_txid;
-    if (chargeId) {
-      try {
-        const validapayStatus = await getChargeStatus(chargeId);
-        const normalizedStatus = String(validapayStatus?.status || "").toLowerCase();
-        if (["paid", "approved", "aprovado", "concluida", "completed"].includes(normalizedStatus)) {
-          await supabase.functions.invoke("validapay-webhook", {
-            body: { event: "charge.paid", data: { chargeId, amount: validapayStatus?.amount } },
-          });
-          return new Response(JSON.stringify({ status: "pago" }), {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } catch (e) {
-        console.warn("ValidaPay status check fallback failed:", e);
-      }
     }
 
     return new Response(JSON.stringify({ status: order.payment_status }), {
