@@ -108,11 +108,20 @@ Deno.serve(async (req) => {
       .select("id, user_id")
       .eq("id", restaurant_id)
       .single();
-    if (!restaurant || restaurant.user_id !== userId) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
+    if (!restaurant) {
+      return new Response(JSON.stringify({ error: "Restaurante não encontrado" }), {
+        status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    if (restaurant.user_id !== userId) {
+      const { data: isAdmin } = await admin.rpc("is_super_admin", { check_user_id: userId });
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Sem permissão para sacar desta loja. Faça login com a conta dona do restaurante." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     // No subaccount required — withdrawals go out from the platform's
