@@ -94,12 +94,35 @@ serve(async (req) => {
         "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
       };
 
+      // Extract embedded JSON payloads (Next.js/Nuxt/JSON-LD) used by iFood, Goomer, Anota AI...
+      const extractEmbedded = (html: string) => {
+        const chunks: string[] = [];
+        const re = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(html))) {
+          const body = m[1];
+          if (!body) continue;
+          if (/"price"|"preco"|"products"|"menu"|"itens"|"items"/i.test(body) && body.length > 200) {
+            chunks.push(body);
+          }
+        }
+        return chunks.join("\n").slice(0, 30000);
+      };
+
+      const score = (t: string) => (t && /\d/.test(t) ? t.length : 0);
+      const consider = (t: string) => {
+        if (score(t) > score(menuText)) menuText = t;
+      };
+
       // 1) Direct fetch
       let directError = "";
       try {
         const resp = await fetchWithTimeout(parsed.toString(), browserHeaders);
         if (resp.ok) {
-          menuText = clean(await resp.text());
+          const html = await resp.text();
+          const embedded = extractEmbedded(html);
+          consider(clean(html));
+          if (embedded) consider(clean(embedded));
         } else {
           directError = `HTTP ${resp.status}`;
         }
@@ -107,25 +130,50 @@ serve(async (req) => {
         directError = (e as Error).message;
       }
 
-      // 2) Fallback: reader proxy (handles JS-rendered menus like iFood/Goomer/Anota AI)
-      const looksThin = !menuText || menuText.length < 400 || !/\d/.test(menuText);
-      if (looksThin) {
-        console.log("Direct fetch insufficient, trying reader proxy.", directError);
-        try {
-          const readerUrl = `https://r.jina.ai/${parsed.toString()}`;
-          const resp = await fetchWithTimeout(readerUrl, {
-            "User-Agent": browserHeaders["User-Agent"],
-            "Accept": "text/plain,*/*",
-            "X-Return-Format": "markdown",
-          });
-          if (resp.ok) {
-            const text = (await resp.text()).slice(0, 30000);
-            if (text.trim().length > (menuText?.length ?? 0)) menuText = text.trim();
-          } else {
-            console.error("Reader proxy failed:", resp.status);
+      // 2) Fallbacks: reader / CORS proxies (handle JS-rendered or bot-blocked menus)
+      const looksThin = () => !menuText || menuText.length < 400 || !/\d/.test(menuText);
+      if (looksThin()) {
+        console.log("Direct fetch insufficient, trying proxies.", directError);
+        const target = parsed.toString();
+        const proxies: { url: string; headers: Record<string, string>; raw?: boolean }[] = [
+          {
+            url: `https://r.jina.ai/${target}`,
+            headers: { "User-Agent": browserHeaders["User-Agent"], Accept: "text/plain,*/*" },
+            raw: true,
+          },
+          {
+            url: `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
+            headers: browserHeaders,
+          },
+          {
+            url: `https://corsproxy.io/?url=${encodeURIComponent(target)}`,
+            headers: browserHeaders,
+          },
+          {
+            url: `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(target)}`,
+            headers: browserHeaders,
+          },
+        ];
+
+        for (const p of proxies) {
+          if (!looksThin()) break;
+          try {
+            const resp = await fetchWithTimeout(p.url, p.headers);
+            if (!resp.ok) {
+              console.error("Proxy failed:", p.url.split("/")[2], resp.status);
+              continue;
+            }
+            const body = (await resp.text()).slice(0, 200000);
+            if (p.raw) {
+              consider(body.trim().slice(0, 30000));
+            } else {
+              const embedded = extractEmbedded(body);
+              consider(clean(body));
+              if (embedded) consider(clean(embedded));
+            }
+          } catch (e) {
+            console.error("Proxy error:", p.url.split("/")[2], (e as Error).message);
           }
-        } catch (e) {
-          console.error("Reader proxy error:", (e as Error).message);
         }
       }
 
@@ -134,6 +182,7 @@ serve(async (req) => {
           `Não foi possível ler o cardápio desse link${directError ? ` (${directError})` : ""}. Tente outro link ou importe o PDF.`,
         );
       }
+
     } else if (type === "pdf") {
 
       if (!content) throw new Error("PDF content is required");
