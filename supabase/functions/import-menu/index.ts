@@ -45,16 +45,23 @@ serve(async (req) => {
 
     if (type === "url") {
       if (!url) throw new Error("URL is required");
-      console.log("Fetching URL:", url);
+      let target = url.trim();
+      if (!/^https?:\/\//i.test(target)) target = `https://${target}`;
+      let parsed: URL;
       try {
-        const fetchResp = await fetch(url, {
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; MenuImporter/1.0)" },
-        });
-        if (!fetchResp.ok) throw new Error(`Failed to fetch URL: ${fetchResp.status}`);
-        const html = await fetchResp.text();
-        // Strip HTML tags for cleaner input
-        menuText = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+        parsed = new URL(target);
+      } catch {
+        throw new Error("Link inválido. Verifique o endereço informado.");
+      }
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        throw new Error("Link inválido. Use um endereço http(s).");
+      }
+
+      const clean = (raw: string) =>
+        raw
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, " ")
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, " ")
+          .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, " ")
           .replace(/<[^>]+>/g, " ")
           .replace(/&amp;/g, "&")
           .replace(/&lt;/g, "<")
@@ -65,13 +72,70 @@ serve(async (req) => {
           .replace(/&#\d+;/g, "")
           .replace(/&\w+;/g, "")
           .replace(/[^\x20-\x7E\xC0-\xFF\u00C0-\u024F\n]/g, " ")
-          .replace(/\s+/g, " ")
+          .replace(/[ \t]+/g, " ")
+          .replace(/\n{3,}/g, "\n\n")
           .trim()
           .slice(0, 30000);
+
+      const fetchWithTimeout = async (u: string, headers: Record<string, string>) => {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 25000);
+        try {
+          return await fetch(u, { headers, redirect: "follow", signal: ctrl.signal });
+        } finally {
+          clearTimeout(t);
+        }
+      };
+
+      const browserHeaders = {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+      };
+
+      // 1) Direct fetch
+      let directError = "";
+      try {
+        const resp = await fetchWithTimeout(parsed.toString(), browserHeaders);
+        if (resp.ok) {
+          menuText = clean(await resp.text());
+        } else {
+          directError = `HTTP ${resp.status}`;
+        }
       } catch (e) {
-        throw new Error(`Não foi possível acessar o link: ${(e as Error).message}`);
+        directError = (e as Error).message;
+      }
+
+      // 2) Fallback: reader proxy (handles JS-rendered menus like iFood/Goomer/Anota AI)
+      const looksThin = !menuText || menuText.length < 400 || !/\d/.test(menuText);
+      if (looksThin) {
+        console.log("Direct fetch insufficient, trying reader proxy.", directError);
+        try {
+          const readerUrl = `https://r.jina.ai/${parsed.toString()}`;
+          const resp = await fetchWithTimeout(readerUrl, {
+            "User-Agent": browserHeaders["User-Agent"],
+            "Accept": "text/plain,*/*",
+            "X-Return-Format": "markdown",
+          });
+          if (resp.ok) {
+            const text = (await resp.text()).slice(0, 30000);
+            if (text.trim().length > (menuText?.length ?? 0)) menuText = text.trim();
+          } else {
+            console.error("Reader proxy failed:", resp.status);
+          }
+        } catch (e) {
+          console.error("Reader proxy error:", (e as Error).message);
+        }
+      }
+
+      if (!menuText || menuText.length < 100) {
+        throw new Error(
+          `Não foi possível ler o cardápio desse link${directError ? ` (${directError})` : ""}. Tente outro link ou importe o PDF.`,
+        );
       }
     } else if (type === "pdf") {
+
       if (!content) throw new Error("PDF content is required");
       menuText = content.slice(0, 30000);
     } else {
