@@ -45,6 +45,16 @@ export default {
 					DEFAULT: 'hsl(var(--accent))',
 					foreground: 'hsl(var(--accent-foreground))'
 				},
+				ink: {
+					DEFAULT: 'hsl(var(--ink))',
+					soft: 'hsl(var(--ink-soft))'
+				},
+				flame: {
+					DEFAULT: 'hsl(var(--flame))',
+					foreground: 'hsl(var(--flame-foreground))'
+				},
+				mint: 'hsl(var(--mint))',
+
 				whatsapp: {
 					DEFAULT: 'hsl(var(--whatsapp))',
 					foreground: 'hsl(var(--whatsapp-foreground))'
@@ -76,7 +86,9 @@ export default {
 			backgroundImage: {
 				'gradient-hero': 'var(--gradient-hero)',
 				'gradient-card': 'var(--gradient-card)',
-				'gradient-accent': 'var(--gradient-accent)'
+				'gradient-accent': 'var(--gradient-accent)',
+				'gradient-flame': 'var(--gradient-flame)',
+				'gradient-ink': 'var(--gradient-ink)'
 			},
 			boxShadow: {
 				'brand': 'var(--shadow-brand)',

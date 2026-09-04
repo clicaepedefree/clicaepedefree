@@ -44,6 +44,18 @@
     --input: 20 6% 90%;
     --ring: 208 55% 35%;
 
+    /* Landing page (premium SaaS) tokens */
+    --ink: 222 47% 8%;
+    --ink-soft: 220 40% 14%;
+    --flame: 18 95% 55%;
+    --flame-foreground: 0 0% 100%;
+    --mint: 158 72% 42%;
+    --gradient-flame: linear-gradient(135deg, hsl(24 95% 58%), hsl(12 92% 52%));
+    --gradient-ink: linear-gradient(160deg, hsl(222 47% 8%), hsl(220 45% 16%));
+    --shadow-flame: 0 20px 50px -18px hsl(18 95% 55% / 0.55);
+    --shadow-soft: 0 24px 60px -30px hsl(222 47% 8% / 0.35);
+
+
     /* Custom Clic design tokens */
     --gradient-hero: linear-gradient(135deg, hsl(208 55% 35%), hsl(204 71% 63%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(20 6% 98%));
