@@ -1,5 +1,5 @@
 import { XCircle, Store, Clock, ShoppingCart, MessageSquareWarning, FolderSearch, Repeat, TrendingDown } from "lucide-react";
-import dashboard from "@/assets/mockup-dashboard.png.asset.json";
+import dashboard from "@/assets/mockup-dashboard.png";
 
 const problems = [
   { icon: Repeat, text: "Clientes compram uma vez e nunca mais voltam." },
@@ -70,7 +70,7 @@ export function LandingProblem() {
           <div className="relative">
             <div className="absolute -inset-4 rounded-[2.5rem] bg-primary/10 blur-2xl" />
             <img
-              src={dashboard.url}
+              src={dashboard}
               alt="Painel do sistema com métricas de vendas e faturamento do restaurante"
               className="relative w-full rounded-2xl"
               loading="lazy"

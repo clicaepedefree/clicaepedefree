@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PlayCircle, ShieldCheck, Clock3, Sparkles } from "lucide-react";
 import { openSignupWhatsApp } from "@/lib/signup-cta";
-import devices from "@/assets/mockup-devices.png.asset.json";
+import devices from "@/assets/mockup-devices.png";
 
 const scrollTo = (id: string) => () => {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -73,7 +73,7 @@ export function LandingHero() {
           <div className="relative">
             <div className="absolute inset-6 rounded-[3rem] bg-flame/20 blur-3xl" />
             <img
-              src={devices.url}
+              src={devices}
               alt="Sistema de gestão para restaurantes em computador, tablet e celular"
               className="relative w-full drop-shadow-2xl"
               loading="eager"

@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Bot, HeartHandshake, ShoppingBag, Workflow, Repeat2, Gift, Coins, Undo2 } from "lucide-react";
 import { openSignupWhatsApp } from "@/lib/signup-cta";
-import disparo from "@/assets/mockup-disparo.png.asset.json";
-import cardapio from "@/assets/mockup-cardapio.png.asset.json";
+import disparo from "@/assets/mockup-disparo.png";
+import cardapio from "@/assets/mockup-cardapio.png";
 
 const pillars = [
   {
@@ -116,7 +116,7 @@ export function LandingPillars() {
               </p>
             </div>
             <img
-              src={disparo.url}
+              src={disparo}
               alt="Tela de disparo em massa de mensagens no WhatsApp para clientes do restaurante"
               className="w-full rounded-2xl"
               loading="lazy"
@@ -162,7 +162,7 @@ export function LandingPillars() {
             <div className="relative">
               <div className="absolute -inset-6 rounded-[3rem] bg-mint/10 blur-3xl" />
               <img
-                src={disparo.url}
+                src={disparo}
                 alt="Automação de mensagens de WhatsApp dentro do sistema"
                 className="relative w-full rounded-2xl shadow-[var(--shadow-soft)]"
                 loading="lazy"
@@ -178,7 +178,7 @@ export function LandingPillars() {
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="order-2 lg:order-1 flex justify-center">
               <img
-                src={cardapio.url}
+                src={cardapio}
                 alt="Cardápio digital do restaurante aberto no celular"
                 className="w-64 md:w-80 drop-shadow-2xl"
                 loading="lazy"

@@ -1,10 +1,10 @@
 import {
   Boxes, Store, Wallet, PlugZap, Smartphone, Bot, BarChart3, Gift, Coins, Undo2, Repeat2, Facebook, Utensils, CheckCircle2,
 } from "lucide-react";
-import caixa from "@/assets/mockup-caixa.png.asset.json";
-import financeiro from "@/assets/mockup-financeiro.png.asset.json";
-import mesas from "@/assets/mockup-mesas.png.asset.json";
-import dashboard from "@/assets/mockup-dashboard.png.asset.json";
+import caixa from "@/assets/mockup-caixa.png";
+import financeiro from "@/assets/mockup-financeiro.png";
+import mesas from "@/assets/mockup-mesas.png";
+import dashboard from "@/assets/mockup-dashboard.png";
 
 const features = [
   { icon: Smartphone, label: "Cardápio digital" },
@@ -84,8 +84,8 @@ export function LandingOperation() {
               </p>
             </div>
             <div className="space-y-4">
-              <img src={caixa.url} alt="Tela de gestão de caixa do sistema" className="w-full rounded-2xl shadow-[var(--shadow-soft)]" loading="lazy" />
-              <img src={financeiro.url} alt="Relatório de movimentação de caixa" className="w-full rounded-2xl shadow-[var(--shadow-soft)]" loading="lazy" />
+              <img src={caixa} alt="Tela de gestão de caixa do sistema" className="w-full rounded-2xl shadow-[var(--shadow-soft)]" loading="lazy" />
+              <img src={financeiro} alt="Relatório de movimentação de caixa" className="w-full rounded-2xl shadow-[var(--shadow-soft)]" loading="lazy" />
             </div>
           </div>
         </div>
@@ -125,10 +125,10 @@ export function LandingOperation() {
             </h2>
           </div>
           <div className="mt-14 grid gap-6 lg:grid-cols-2">
-            <img src={dashboard.url} alt="Painel com métricas de vendas do restaurante" className="w-full rounded-3xl shadow-[var(--shadow-soft)]" loading="lazy" />
-            <img src={mesas.url} alt="Atendimento e gestão de mesas no sistema" className="w-full rounded-3xl shadow-[var(--shadow-soft)]" loading="lazy" />
-            <img src={caixa.url} alt="Gestão de caixa e resumo por forma de pagamento" className="w-full rounded-3xl shadow-[var(--shadow-soft)]" loading="lazy" />
-            <img src={financeiro.url} alt="Movimentação financeira detalhada" className="w-full rounded-3xl shadow-[var(--shadow-soft)]" loading="lazy" />
+            <img src={dashboard} alt="Painel com métricas de vendas do restaurante" className="w-full rounded-3xl shadow-[var(--shadow-soft)]" loading="lazy" />
+            <img src={mesas} alt="Atendimento e gestão de mesas no sistema" className="w-full rounded-3xl shadow-[var(--shadow-soft)]" loading="lazy" />
+            <img src={caixa} alt="Gestão de caixa e resumo por forma de pagamento" className="w-full rounded-3xl shadow-[var(--shadow-soft)]" loading="lazy" />
+            <img src={financeiro} alt="Movimentação financeira detalhada" className="w-full rounded-3xl shadow-[var(--shadow-soft)]" loading="lazy" />
           </div>
         </div>
       </section>
