@@ -1,27 +1,23 @@
-import { HeroSection } from "@/components/home/HeroSection";
-import { BenefitsSection } from "@/components/home/BenefitsSection";
-import { HowItWorksSection } from "@/components/home/HowItWorksSection";
-import { PricingSection } from "@/components/home/PricingSection";
-import { TestimonialsSection } from "@/components/home/TestimonialsSection";
-import { FAQSection } from "@/components/home/FAQSection";
-import { CTASection } from "@/components/home/CTASection";
-import { SEOSection } from "@/components/home/SEOSection";
 import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import { LandingHero } from "@/components/landing/LandingHero";
+import { LandingProblem } from "@/components/landing/LandingProblem";
+import { LandingPillars } from "@/components/landing/LandingPillars";
+import { LandingOperation } from "@/components/landing/LandingOperation";
+import { LandingClose } from "@/components/landing/LandingClose";
+import { LandingFooter } from "@/components/landing/LandingFooter";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <HeroSection />
-      <BenefitsSection />
-      <HowItWorksSection />
-      <PricingSection />
-      <TestimonialsSection />
-      <FAQSection />
-      <CTASection />
-      <SEOSection />
-      <Footer />
+      <main>
+        <LandingHero />
+        <LandingProblem />
+        <LandingPillars />
+        <LandingOperation />
+        <LandingClose />
+      </main>
+      <LandingFooter />
     </div>
   );
 };
