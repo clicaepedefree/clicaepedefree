@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { User, ArrowRight, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { openSignupWhatsApp } from "@/lib/signup-cta";
+import { scrollToPlans } from "@/lib/signup-cta";
 
 const links = [
   { label: "Benefícios", href: "#beneficios" },
@@ -44,7 +44,7 @@ export function Navbar() {
           <Button
             size="sm"
             className="group rounded-xl bg-gradient-flame px-5 font-bold text-flame-foreground shadow-[var(--shadow-flame)] transition-transform hover:scale-105"
-            onClick={openSignupWhatsApp}
+            onClick={scrollToPlans}
           >
             COMEÇAR TESTE GRÁTIS
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -85,7 +85,7 @@ export function Navbar() {
               className="w-full rounded-xl bg-gradient-flame font-bold text-flame-foreground"
               onClick={() => {
                 setIsMobileMenuOpen(false);
-                openSignupWhatsApp();
+                scrollToPlans();
               }}
             >
               COMEÇAR TESTE GRÁTIS
