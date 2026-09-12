@@ -1,6 +1,6 @@
 import { Mail, MessageSquare } from "lucide-react";
 import logo from "@/assets/logo.png";
-import { openSignupWhatsApp } from "@/lib/signup-cta";
+import { scrollToPlans } from "@/lib/signup-cta";
 
 export function LandingFooter() {
   return (
@@ -26,7 +26,7 @@ export function LandingFooter() {
               <li><a href="#planos" className="hover:text-white">Preço</a></li>
               <li><a href="#como-funciona" className="hover:text-white">Como funciona</a></li>
               <li>
-                <button onClick={openSignupWhatsApp} className="hover:text-white">
+                <button onClick={scrollToPlans} className="hover:text-white">
                   Começar teste grátis
                 </button>
               </li>

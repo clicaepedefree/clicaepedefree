@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowRight, Check, Quote, Star, Calendar, Rocket, Headphones, ShieldCheck } from "lucide-react";
-import { openSignupWhatsApp } from "@/lib/signup-cta";
+import { Link } from "react-router-dom";
+import { scrollToPlans } from "@/lib/signup-cta";
 
 const testimonials = [
   {
@@ -119,11 +120,13 @@ export function LandingClose() {
 
             <Button
               size="lg"
-              onClick={openSignupWhatsApp}
+              asChild
               className="group mt-10 h-14 w-full rounded-2xl bg-gradient-flame text-base font-bold text-flame-foreground shadow-[var(--shadow-flame)] transition-transform hover:scale-[1.01]"
             >
-              COMEÇAR TESTE GRÁTIS
-              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              <Link to="/criar-conta">
+                COMEÇAR TESTE GRÁTIS
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Link>
             </Button>
             <p className="mt-4 text-center text-sm text-white/55">
               <ShieldCheck className="mr-1 inline h-4 w-4" /> Configuração feita pela nossa equipe
@@ -203,7 +206,7 @@ export function LandingClose() {
           </p>
           <Button
             size="lg"
-            onClick={openSignupWhatsApp}
+            onClick={scrollToPlans}
             className="group mt-9 h-14 rounded-2xl bg-gradient-flame px-10 text-base font-bold text-flame-foreground shadow-[var(--shadow-flame)] transition-transform hover:scale-[1.02]"
           >
             COMEÇAR TESTE GRÁTIS
