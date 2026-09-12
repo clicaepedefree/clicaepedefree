@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PlayCircle, ShieldCheck, Clock3, Sparkles } from "lucide-react";
-import { openSignupWhatsApp } from "@/lib/signup-cta";
+import { scrollToPlans } from "@/lib/signup-cta";
 import devices from "@/assets/mockup-devices.png";
 
 const scrollTo = (id: string) => () => {
@@ -43,7 +43,7 @@ export function LandingHero() {
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
               <Button
                 size="lg"
-                onClick={openSignupWhatsApp}
+                onClick={scrollToPlans}
                 className="group h-14 rounded-2xl bg-gradient-flame px-8 text-base font-bold text-flame-foreground shadow-[var(--shadow-flame)] transition-transform hover:scale-[1.02]"
               >
                 COMEÇAR TESTE GRÁTIS
