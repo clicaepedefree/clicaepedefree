@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_drafts: {
+        Row: {
+          created_at: string
+          cta: string | null
+          daily_budget_cents: number
+          destination_url: string | null
+          duration_days: number
+          headline: string | null
+          id: string
+          objective: string
+          primary_text: string | null
+          product_id: string | null
+          restaurant_id: string
+          status: string
+          targeting: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cta?: string | null
+          daily_budget_cents?: number
+          destination_url?: string | null
+          duration_days?: number
+          headline?: string | null
+          id?: string
+          objective?: string
+          primary_text?: string | null
+          product_id?: string | null
+          restaurant_id: string
+          status?: string
+          targeting?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cta?: string | null
+          daily_budget_cents?: number
+          destination_url?: string | null
+          duration_days?: number
+          headline?: string | null
+          id?: string
+          objective?: string
+          primary_text?: string | null
+          product_id?: string | null
+          restaurant_id?: string
+          status?: string
+          targeting?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_drafts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_drafts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       addon_groups: {
         Row: {
           created_at: string

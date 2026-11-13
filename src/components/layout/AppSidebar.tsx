@@ -1,3 +1,4 @@
+import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -74,6 +75,7 @@ const items: Item[] = [
     ],
   },
   { title: "Marketing", value: "marketing", icon: Send, path: "/admin?section=marketing", accent: true },
+  { title: "Marketing com IA", value: "ai-marketing", icon: Sparkles, path: "/admin/marketing", accent: true },
   { title: "Robô de WhatsApp", value: "whatsapp-robot", icon: MessageCircle, accent: true, action: "whatsapp-robot" },
 ];
 
@@ -99,6 +101,7 @@ export function AppSidebar({
     if (p === "/admin/orders") return "orders";
     if (p === "/admin/carteira") return "wallet";
     if (p === "/admin/reports") return "reports";
+    if (p === "/admin/marketing") return "ai-marketing";
     if (p === "/admin/analytics") return "reports";
     if (p.startsWith("/admin/settings") && tab) return tab;
     if (p === "/admin") return section === "marketing" ? "marketing" : "dashboard";
