@@ -1,75 +1,34 @@
-# Subcontas ValidaPay por restaurante
+# Marketing com IA (Tráfego Pago) — Etapa 1
 
-## Objetivo
-Hoje todos os pagamentos passam pela conta master da Clica e Pede. Por isso o saque só funciona para chaves PIX no CNPJ da Clica e Pede e dá `OWNERSHIP_MISMATCH` quando o lojista usa a chave dele. A solução oficial do ValidaPay é criar uma **subconta** por restaurante (PF ou PJ). Aí cada cobrança fica na subconta do lojista, o saldo é do lojista e o saque sai para a chave PIX dele (mesma titularidade).
+## Estrutura atual (resumo)
+- Painel do lojista em `/admin/*` (Pedidos, Configurações, Relatórios, Carteira), com menu lateral fixo.
+- Cada loja tem seus produtos, categorias, fotos, preços e o link público do cardápio (`/cardapio/:slug`), protegidos por loja.
+- Já existe IA no sistema (importação de cardápio) rodando no servidor.
+- Nada disso será alterado: cardápio, pedidos, login, links e dados continuam iguais.
 
-## Visão geral do fluxo
-```text
-Cadastro restaurante ── (já existe) ──> Tabela restaurants
-        │
-        ▼
-[Onboarding ValidaPay] → POST /v1/proposals (PF ou PJ)
-        │ retorna formId (status pendente)
-        ▼
-Webhook account_approved → grava subaccount_id, branch, ispb
-        │
-        ▼
-Cobranças PIX → criadas COM header accountId = subaccount do lojista
-Saldo/Extrato → consultados na subconta
-Saque → /v1/wallet/withdraw com accountId da subconta → chave do lojista (mesma titularidade) ✅
-```
+## O que a Etapa 1 entrega
+1. Nova página **Marketing com IA** em `/admin/marketing`, com item no menu lateral (grupo Marketing).
+2. **Cartão "Conta Meta"**: mostra "Não conectada" e o botão "Conectar conta Meta" desabilitado com aviso "disponível em breve" (a conexão real é a Etapa 2).
+3. **Criador de anúncio** com produtos reais da loja:
+   - Lista/busca dos produtos ativos (foto, nome, preço).
+   - Ao escolher, preenche nome, foto, descrição, preço e o link do cardápio.
+   - Botão **"Gerar texto com IA"**: cria título, texto principal e chamada para ação (em português, sem prometer resultados). Tudo editável.
+   - **Prévia** no estilo de post do Facebook/Instagram (feed).
+4. **Configuração da campanha (rascunho)**: objetivo (Tráfego / Vendas / Engajamento), orçamento diário (mínimo R$ 6), cidade + raio, idade, destino = link do cardápio. Mostra apenas **previsão de gasto** (diário × dias), sem estimar cliques ou vendas.
+5. **Salvar como rascunho** — nada é enviado à Meta nesta etapa.
+6. **Aba Resultados**: estado vazio honesto ("Conecte sua conta Meta para ver resultados") — nenhum número fictício.
 
-## Mudanças
-
-### 1. Banco de dados
-Nova tabela `validapay_subaccounts`:
-- `restaurant_id` (FK, único)
-- `form_id` (id do onboarding ValidaPay)
-- `subaccount_number`, `branch`, `ispb`, `holder_name`, `holder_document`
-- `account_type` ('PF' | 'PJ')
-- `status` ('pending' | 'approved' | 'rejected')
-- `raw_response` (jsonb para auditoria)
-
-RLS: dono do restaurante lê o próprio registro; service_role faz tudo; super admin lê tudo.
-
-Coluna nova em `restaurants`: `validapay_subaccount_id` (cópia rápida para consultas).
-
-### 2. Edge functions novas
-- `validapay-create-subaccount` — recebe dados PF/PJ do dono, chama `POST /v1/proposals`, grava linha em `validapay_subaccounts` com status `pending`.
-- `validapay-onboarding-webhook` — recebe `account_approved` do ValidaPay, atualiza a subconta e popula `restaurants.validapay_subaccount_id`.
-
-### 3. Edge functions existentes (ajustes)
-- `_shared/validapay-client.ts`: adicionar parâmetro opcional `accountId` em `createPixCharge`, `getChargeStatus`, `createRefund`, `createWithdrawal` e enviar via header `accountId` quando presente. Função nova `getWalletBalance(accountId)` usando `GET /v1/wallet/balance`.
-- `validapay-create-charge`: buscar `validapay_subaccount_id` do restaurante e passar como `accountId` (fallback: master, para legado).
-- `validapay-request-withdrawal`: exigir subconta aprovada; chamar `/v1/wallet/withdraw` com `accountId` da subconta. Saldo passa a vir da subconta (não mais da nossa tabela `wallets`, ou sincronizamos com ela).
-- `validapay-refund-order`: idem charge.
-- `validapay-webhook` (cobranças): identificar subconta pela `accountId` retornada.
-
-### 4. UI nova
-Página `/admin/configuracoes/conta-bancaria` (aba dentro de Configurações):
-- Se o restaurante ainda não tem subconta: formulário PF/PJ (nome, CPF/CNPJ, telefone, email, endereço, dados de renda/faturamento exigidos pelo `financialDetails`).
-- Estado: pendente → mostra "Em análise pelo ValidaPay".
-- Aprovado → mostra dados da subconta + permite cadastrar chave PIX para saque (a chave precisa ser do mesmo CPF/CNPJ informado no onboarding).
-- Reprovado → mostra motivo e botão para reenviar.
-
-Bloqueio: até a subconta estar `approved`, a página `/admin/carteira` exibe banner "Complete o cadastro bancário para receber pagamentos" com CTA para `/admin/configuracoes/conta-bancaria`.
-
-### 5. Migração de dados existentes
-Restaurantes já cadastrados continuam usando a master account (compatibilidade). Saques só funcionam após criar a subconta. Uma flag clara em `wallets.is_subaccount_active` indica em qual modo o restaurante está.
+## Pontos que dependem de você (para Etapas 2–4)
+Como cada restaurante conecta **a própria** conta de anúncios, é preciso um App próprio no Meta for Developers:
+- Criar App tipo "Empresa" e adicionar os produtos **Login do Facebook para Empresas** e **Marketing API**.
+- Permissões: `ads_management`, `ads_read`, `business_management`, `pages_show_list`, `pages_read_engagement` (e `instagram_basic` para Instagram).
+- **Verificação da empresa** (Business Verification) e **Análise do App** (App Review) para uso por lojistas externos — sem isso só funciona para contas de teste/administradores do App.
+- Cadastrar a URL de retorno que eu informar na Etapa 2.
+- Credenciais que pedirei de forma segura: **App ID** e **App Secret**.
+- Cada lojista precisará ter uma Página do Facebook e uma conta de anúncios com forma de pagamento.
 
 ## Detalhes técnicos
-- ValidaPay routes envolvidas: `POST /v1/proposals` (PF/PJ), `GET /v1/proposals/:formId` (status), `GET /v1/accounts/subaccounts` (listar), `GET /v1/wallet/balance` (com header `accountId`), `POST /v1/wallet/withdraw`, `POST /v1/charges/pix`. O header `accountId` é como o ValidaPay roteia operações para a subconta.
-- Webhook de onboarding precisa estar `verify_jwt = false` em `supabase/config.toml` (público).
-- `financialDetails` exige códigos do apêndice ValidaPay — vamos mapear na UI com selects pré-preenchidos.
-- Todas as escritas em `validapay_subaccounts` apenas via service_role (edge function).
-
-## O que NÃO entra agora
-- Migrar cobranças antigas da master para subcontas (impossível retroativamente).
-- Split de pagamentos (taxa da Clica e Pede via split) — pode ser feito em etapa seguinte usando `POST /v1/charges/pix` com split para a master.
-
-## Próximos passos depois deste plano
-1. Migration da tabela `validapay_subaccounts` + coluna em `restaurants`.
-2. Edge functions de onboarding + webhook.
-3. Ajustar client compartilhado e funções de charge/refund/withdraw.
-4. UI de onboarding e bloqueios.
-5. Testar fluxo em sandbox: criar subconta → aprovar → cobrar → sacar.
+- Tabela `ad_drafts` (restaurant_id, product_id, objetivo, orçamento em centavos, segmentação jsonb, título, texto, cta, status `draft`, timestamps) com RLS por dono da loja (mesmo padrão das outras tabelas) + GRANTs.
+- Tabelas de conexão/tokens e IDs da Meta ficam para a Etapa 2/3 (tokens só no servidor, nunca no navegador).
+- Função de servidor `generate-ad-copy`: valida login e posse do produto, chama a IA (Lovable AI, saída estruturada), retorna {headline, primaryText, cta}. Trata limites/créditos com mensagem clara.
+- Arquivos novos: `src/pages/Marketing.tsx`, `src/components/marketing/*` (ProductPicker, AdComposer, AdPreview, CampaignSettings, MetaConnectionCard, ResultsEmpty); rota em `App.tsx` e item no `AppSidebar`.
