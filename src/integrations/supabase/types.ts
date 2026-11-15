@@ -1364,6 +1364,10 @@ export type Database = {
         Args: { _restaurant_id: string }
         Returns: boolean
       }
+      restaurant_menu_is_public: {
+        Args: { _restaurant_id: string }
+        Returns: boolean
+      }
       update_monthly_revenues: {
         Args: { target_time?: string; tz?: string }
         Returns: number
