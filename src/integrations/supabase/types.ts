@@ -194,6 +194,53 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          address: string
+          complement: string
+          created_at: string
+          id: string
+          name: string
+          neighborhood: string
+          number: string
+          phone: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string
+          complement?: string
+          created_at?: string
+          id?: string
+          name: string
+          neighborhood?: string
+          number?: string
+          phone: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          complement?: string
+          created_at?: string
+          id?: string
+          name?: string
+          neighborhood?: string
+          number?: string
+          phone?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_zones: {
         Row: {
           created_at: string
@@ -375,6 +422,8 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          customer_address_details: Json | null
+          customer_id: string | null
           customer_name: string | null
           customer_phone: string | null
           delivery_fee: number
@@ -403,6 +452,8 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
+          customer_address_details?: Json | null
+          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           delivery_fee?: number
@@ -431,6 +482,8 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
+          customer_address_details?: Json | null
+          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           delivery_fee?: number
@@ -457,6 +510,13 @@ export type Database = {
           validapay_charge_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -1277,6 +1337,20 @@ export type Database = {
         Args: { target_time?: string; tz?: string }
         Returns: number
       }
+      create_customer_order: {
+        Args: {
+          _address: string
+          _delivery_fee: number
+          _details: Json
+          _items: Json
+          _name: string
+          _phone: string
+          _restaurant_id: string
+          _subtotal: number
+          _total: number
+        }
+        Returns: string
+      }
       create_public_order: {
         Args: {
           _address: string
@@ -1292,6 +1366,33 @@ export type Database = {
           _total: number
         }
         Returns: string
+      }
+      crm_customers: {
+        Args: {
+          _last_from?: string
+          _last_to?: string
+          _page?: number
+          _registered_from?: string
+          _registered_to?: string
+          _restaurant_id: string
+          _search?: string
+          _sort?: string
+        }
+        Returns: {
+          address: string
+          complement: string
+          created_at: string
+          first_order: string
+          id: string
+          last_order: string
+          name: string
+          neighborhood: string
+          number: string
+          phone: string
+          purchases: number
+          total_count: number
+          total_spent: number
+        }[]
       }
       generate_unique_slug: {
         Args: { restaurant_name: string }
@@ -1360,6 +1461,7 @@ export type Database = {
         }
         Returns: Json
       }
+      normalize_customer_phone: { Args: { value: string }; Returns: string }
       restaurant_accepts_orders: {
         Args: { _restaurant_id: string }
         Returns: boolean
