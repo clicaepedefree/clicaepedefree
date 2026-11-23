@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ManualOrderDialog } from "@/components/customers/ManualOrderDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Plus,
   ShoppingCart,
   User,
   Phone,
@@ -79,6 +81,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   const [refunding, setRefunding] = useState(false);
   const [filter, setFilter] = useState<string>("open");
   const [search, setSearch] = useState("");
+  const [manualOrderOpen, setManualOrderOpen] = useState(false);
 
   const playNewOrderSound = () => {
     try {
@@ -112,6 +115,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
     setOrders([]);
     setSelectedId(null);
     setCancelTarget(null);
+    setManualOrderOpen(false);
     setLoading(true);
     fetchOrders(restaurant.id);
     const channel = supabase
@@ -299,13 +303,17 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
         {/* LIST */}
         <div className="border-r border-border/50 flex flex-col bg-muted/10">
           <div className="p-4 border-b border-border/50 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <h2 className="text-lg font-semibold">Pedidos</h2>
                 <p className="text-xs text-muted-foreground">
                   Total: {filteredOrders.length} · Valor: R$ {totalValue.toFixed(2).replace(".", ",")}
                 </p>
               </div>
+              <Button size="sm" onClick={() => setManualOrderOpen(true)}>
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Lançar pedido
+              </Button>
             </div>
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -577,6 +585,18 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ManualOrderDialog
+        key={restaurant.id}
+        open={manualOrderOpen}
+        onOpenChange={setManualOrderOpen}
+        restaurantId={restaurant.id}
+        onCreated={() => {
+          setFilter("open");
+          setSearch("");
+          void fetchOrders();
+        }}
+      />
     </div>
   );
 }
