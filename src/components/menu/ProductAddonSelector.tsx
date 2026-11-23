@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DollarSign, Plus } from "lucide-react";
 import { numberToCurrency } from "@/components/ui/currency-input";
 
 interface AddonGroup {
@@ -28,6 +27,11 @@ interface AddonOption {
   price: number;
 }
 
+export interface AddonSelection {
+  option: AddonOption;
+  group: AddonGroup;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -40,118 +44,57 @@ interface ProductAddonSelectorProps {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddToCart: (product: Product, selectedAddons: any[], totalPrice: number, observations?: string) => void;
+  onAddToCart: (product: Product, selectedAddons: AddonSelection[], totalPrice: number, observations?: string) => void;
+  pointOfSale?: boolean;
 }
 
-export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart }: ProductAddonSelectorProps) {
-  const [addonGroups, setAddonGroups] = useState<AddonGroup[]>([]);
-  const [addonOptions, setAddonOptions] = useState<AddonOption[]>([]);
-  const [selectedAddons, setSelectedAddons] = useState<{ [groupId: string]: string[] }>({});
-  const [loading, setLoading] = useState(true);
+export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart, pointOfSale = false }: ProductAddonSelectorProps) {
+  const [selectedAddons, setSelectedAddons] = useState<Record<string, string[]>>({});
   const [quantity, setQuantity] = useState(1);
   const [observations, setObservations] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (open && product) {
-      fetchProductAddons();
+    if (open) {
+      setSelectedAddons({});
       setQuantity(1);
       setObservations("");
+      setSearch("");
     }
-  }, [open, product]);
+  }, [open, product.id]);
 
-  const fetchProductAddons = async () => {
-    try {
-      setLoading(true);
-      
-      // Buscar grupos de addon associados ao produto
-      const { data: productAddonGroups, error: groupsError } = await supabase
-        .from('product_addon_groups')
-        .select(`
-          addon_group_id,
-          addon_groups!inner(
-            id,
-            name,
-            selection_type,
-            is_required,
-            min_selections,
-            max_selections,
-            created_at
-          )
-        `)
+  const addons = useQuery({
+    queryKey: ['product-addon-selector', product.id],
+    enabled: open,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('product_addon_groups')
+        .select('addon_groups!inner(id,name,selection_type,is_required,min_selections,max_selections,created_at)')
         .eq('product_id', product.id);
-
-      if (groupsError) throw groupsError;
-
-      // Ordenar grupos por ordem de criação
-      const groups = (productAddonGroups?.map(pag => pag.addon_groups).flat() || [])
-        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-      setAddonGroups(groups);
-
-      if (groups.length > 0) {
-        // Buscar opções para esses grupos
-        const groupIds = groups.map(g => g.id);
-        const { data: options, error: optionsError } = await supabase
-          .from('addon_options')
-          .select('*')
-          .in('addon_group_id', groupIds)
-          .order('name', { ascending: true });
-
-        if (optionsError) throw optionsError;
-        setAddonOptions(options || []);
-      }
-
-      // Inicializar seleções
-      const initialSelections: { [groupId: string]: string[] } = {};
-      groups.forEach(group => {
-        initialSelections[group.id] = [];
-      });
-      setSelectedAddons(initialSelections);
-
-    } catch (error) {
-      console.error("Erro ao carregar addons:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getOptionsForGroup = (groupId: string) => {
-    return addonOptions.filter(option => option.addon_group_id === groupId);
-  };
+      if (error) throw error;
+      const groups = (data?.flatMap(row => row.addon_groups) ?? [])
+        .sort((a, b) => a.created_at.localeCompare(b.created_at));
+      if (groups.length === 0) return { groups, options: [] };
+      const { data: options, error: optionsError } = await supabase.from('addon_options')
+        .select('*').in('addon_group_id', groups.map(group => group.id)).order('name');
+      if (optionsError) throw optionsError;
+      return { groups, options: options ?? [] };
+    },
+  });
+  const addonGroups = addons.data?.groups ?? [];
+  const addonOptions = addons.data?.options ?? [];
+  const normalizeSearch = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('pt-BR');
+  const searchedText = normalizeSearch(search.trim());
+  const visibleOptions = addonOptions.filter(option => normalizeSearch(option.name).includes(searchedText));
 
   const handleOptionChange = (groupId: string, optionId: string, group: AddonGroup) => {
-    setSelectedAddons(prev => {
-      const newSelections = { ...prev };
-      
-      if (group.selection_type === 'single') {
-        // Seleção única - substitui a seleção anterior
-        newSelections[groupId] = [optionId];
-      } else if (group.selection_type === 'fractional_highest' || group.selection_type === 'fractional_average') {
-        // Fracionado - múltipla seleção com lógica de preço especial
-        const currentSelections = newSelections[groupId] || [];
-        if (currentSelections.includes(optionId)) {
-          newSelections[groupId] = currentSelections.filter(id => id !== optionId);
-        } else {
-          // Verificar se já atingiu o máximo
-          if (group.max_selections && currentSelections.length >= group.max_selections) {
-            return prev; // Não adiciona se já atingiu o máximo
-          }
-          newSelections[groupId] = [...currentSelections, optionId];
-        }
-      } else {
-        // Múltipla seleção - adiciona ou remove com validação de max
-        const currentSelections = newSelections[groupId] || [];
-        if (currentSelections.includes(optionId)) {
-          newSelections[groupId] = currentSelections.filter(id => id !== optionId);
-        } else {
-          // Verificar se já atingiu o máximo
-          if (group.max_selections && currentSelections.length >= group.max_selections) {
-            return prev; // Não adiciona se já atingiu o máximo
-          }
-          newSelections[groupId] = [...currentSelections, optionId];
-        }
+    setSelectedAddons(previous => {
+      if (group.selection_type === 'single') return { ...previous, [groupId]: [optionId] };
+      const selected = previous[groupId] ?? [];
+      if (selected.includes(optionId)) {
+        return { ...previous, [groupId]: selected.filter(id => id !== optionId) };
       }
-      
-      return newSelections;
+      if (group.max_selections && selected.length >= group.max_selections) return previous;
+      return { ...previous, [groupId]: [...selected, optionId] };
     });
   };
 
@@ -183,7 +126,7 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
       }
     });
     
-    return total;
+    return pointOfSale ? Math.round(total * 100) / 100 : total;
   };
 
   const isValidSelection = () => {
@@ -191,7 +134,8 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
     return addonGroups.every(group => {
       const selections = selectedAddons[group.id] || [];
       
-      if (group.is_required && selections.length < group.min_selections) {
+      const minimum = pointOfSale ? Math.max(1, group.min_selections) : group.min_selections;
+      if (group.is_required && selections.length < minimum) {
         return false;
       }
       
@@ -204,17 +148,16 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
   };
 
   const handleAddToCart = () => {
-    if (!isValidSelection()) return;
+    if (!addons.isSuccess || !isValidSelection()) return;
 
-    const selectedAddonItems = Object.entries(selectedAddons)
-      .flatMap(([groupId, optionIds]) => 
-        optionIds.map(optionId => {
-          const option = addonOptions.find(o => o.id === optionId);
-          const group = addonGroups.find(g => g.id === groupId);
-          return { option, group };
-        })
-      )
-      .filter(item => item.option && item.group);
+    const selectedAddonItems = Object.entries(selectedAddons).flatMap(([groupId, optionIds]) => {
+      const group = addonGroups.find(item => item.id === groupId);
+      if (!group) return [];
+      return optionIds.flatMap(optionId => {
+        const option = addonOptions.find(item => item.id === optionId);
+        return option ? [{ option, group }] : [];
+      });
+    });
 
     const unitPrice = calculateTotalPrice();
     
@@ -228,31 +171,26 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
     onOpenChange(false);
   };
 
-  const getSelectedOptionNames = (groupId: string) => {
-    const selectedIds = selectedAddons[groupId] || [];
-    return selectedIds.map(id => {
-      const option = addonOptions.find(o => o.id === id);
-      return option?.name;
-    }).filter(Boolean);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0 flex flex-col">
-        {loading ? (
+        <DialogHeader className="px-6 pt-5 pb-3 text-left pr-12">
+          <DialogTitle>{pointOfSale ? 'Adicionais do produto' : 'Detalhes do item'}</DialogTitle>
+          <DialogDescription>{product.name} · R$ {numberToCurrency(product.price)}</DialogDescription>
+        </DialogHeader>
+        {addons.isError ? (
+          <div className="space-y-3 px-6 pb-6">
+            <p role="alert" className="text-sm text-destructive">Não foi possível carregar os adicionais.</p>
+            <Button variant="outline" onClick={() => void addons.refetch()}>Tentar novamente</Button>
+          </div>
+        ) : addons.isPending ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
           <>
             <div className="overflow-y-auto flex-1 p-6">
-              <DialogHeader className="text-center mb-4">
-                <DialogTitle className="text-sm font-normal text-muted-foreground uppercase">
-                  DETALHES DO ITEM
-                </DialogTitle>
-              </DialogHeader>
-
-              {product.image_url && (
+              {!pointOfSale && product.image_url && (
                 <div className="w-full mb-4">
                   <img 
                     src={product.image_url} 
@@ -262,20 +200,25 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                 </div>
               )}
 
-              <h2 className="text-2xl font-bold mb-2">{product.name}</h2>
-              <p className="text-xl font-bold text-primary mb-4">
-                R$ {product.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-
-              {product.description && (
+              {!pointOfSale && product.description && (
                 <p className="text-sm text-muted-foreground mb-6">
                   {product.description}
                 </p>
               )}
 
+              {pointOfSale && addonOptions.length > 0 && (
+                <div className="mb-4 space-y-1">
+                  <Label htmlFor="addon-search">Buscar adicional</Label>
+                  <Input id="addon-search" placeholder="Nome do adicional" value={search}
+                    onChange={event => setSearch(event.target.value)} />
+                </div>
+              )}
+              {searchedText && visibleOptions.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum adicional encontrado.</p>
+              )}
               <div className="space-y-6">
                 {addonGroups.map((group) => {
-                  const options = getOptionsForGroup(group.id);
+                  const options = visibleOptions.filter(option => option.addon_group_id === group.id);
                   if (options.length === 0) return null;
 
                   return (
@@ -300,6 +243,12 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                         )}
                       </div>
 
+                      {pointOfSale && group.selection_type === 'single' && !group.is_required && selectedAddons[group.id]?.length > 0 && (
+                        <Button type="button" size="sm" variant="ghost"
+                          onClick={() => setSelectedAddons(previous => ({ ...previous, [group.id]: [] }))}>
+                          Limpar seleção de {group.name}
+                        </Button>
+                      )}
                       {group.selection_type === 'single' ? (
                         <RadioGroup
                           value={selectedAddons[group.id]?.[0] || ''}
@@ -376,6 +325,7 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                   id="observations"
                   placeholder="Adicione sua observação aqui"
                   value={observations}
+                  maxLength={500}
                   onChange={(e) => setObservations(e.target.value)}
                   className="min-h-[100px] resize-none"
                 />
@@ -387,6 +337,7 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Diminuir quantidade do produto"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="h-10 w-10"
                 >
@@ -396,6 +347,8 @@ export function ProductAddonSelector({ product, open, onOpenChange, onAddToCart 
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Aumentar quantidade do produto"
+                  disabled={pointOfSale && quantity >= 100}
                   onClick={() => setQuantity(quantity + 1)}
                   className="h-10 w-10"
                 >
