@@ -1,3 +1,4 @@
+// @ts-expect-error bun test runtime module
 import { describe, expect, test } from 'bun:test';
 import { customerSchema, normalizeCustomerPhone, purchaseMetrics } from './customers';
 
