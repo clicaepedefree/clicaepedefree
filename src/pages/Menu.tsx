@@ -49,13 +49,15 @@ export default function Menu() {
 
   const handleSendOrder = async (address: any, payment: any, deliveryFee?: number) => {
     const result = await sendWhatsAppOrder(restaurant, products, address, payment, deliveryFee);
-    if (result.isPixOnline && result.orderId) {
+    if (!result.orderId) return false;
+    if (result.isPixOnline) {
       setPixOrderId(result.orderId);
       setPixAmount(result.total);
       setPendingWhatsApp({ address, payment, deliveryFee });
       setPixModalOpen(true);
       setConfirmationModalOpen(false);
     }
+    return true;
   };
 
   const handlePixPaid = () => {
