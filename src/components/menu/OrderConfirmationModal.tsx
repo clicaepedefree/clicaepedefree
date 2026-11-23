@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { maskCustomerPhone, normalizeCustomerPhone, readSavedCustomer, saveCustomerLocally } from "@/lib/customers";
 import { Banknote, CreditCard, ExternalLink, MapPin, Minus, Phone, Plus, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { DeliveryDistanceQuote } from "@/lib/delivery-distance";
 
 interface Product {
   id: string;
@@ -40,6 +42,8 @@ interface DeliveryAddress {
   phone: string;
   name: string;
   deliveryZoneId?: string;
+  cep?: string;
+  distanceQuote?: DeliveryDistanceQuote;
 }
 
 interface DeliveryZone {
@@ -62,7 +66,7 @@ interface OrderConfirmationModalProps {
   restaurant: Restaurant | null;
   onUpdateQuantity: (cartKey: string, newQuantity: number) => void;
   onRemoveItem: (cartKey: string) => void;
-  onSendWhatsApp: (address?: DeliveryAddress, payment?: PaymentMethod, deliveryFee?: number) => void;
+  onSendWhatsApp: (address?: DeliveryAddress, payment?: PaymentMethod, deliveryFee?: number) => Promise<boolean>;
   getCartTotal: () => number;
 }
 
@@ -105,9 +109,50 @@ export function OrderConfirmationModal({
   const [changeAmount, setChangeAmount] = useState('');
   const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>(DEFAULT_PAYMENT_METHODS);
   const [restaurantPixKey, setRestaurantPixKey] = useState('');
+  const [quoteResult, setQuoteResult] = useState<{ key: string; quote?: DeliveryDistanceQuote; error?: string }>();
+  const [quoting, setQuoting] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState(false);
+
+  const deliveryMode = useQuery({
+    queryKey: ['delivery-distance-mode', restaurant?.id],
+    enabled: open && deliveryEnabled && Boolean(restaurant?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('delivery_uses_distance', { _restaurant_id: restaurant!.id });
+      // During a staged deployment, neighborhood delivery still works before the migration.
+      if (error?.code === 'PGRST202') return false;
+      if (error) throw error;
+      return data;
+    },
+  });
+  const usesDistance = deliveryMode.data === true;
+  const { street, number, complement, neighborhood, cep } = deliveryAddress;
+  const quoteKey = JSON.stringify([restaurant?.id, street, number, complement, neighborhood, cep]);
+  const currentQuote = quoteResult?.key === quoteKey && quoteResult.quote &&
+    Date.parse(quoteResult.quote.expiresAt) > Date.now() ? quoteResult.quote : undefined;
+  const canQuote = street.trim() && number.trim() && neighborhood.trim() && cep?.replace(/\D/g, '').length === 8;
+
+  const calculateDelivery = async () => {
+    setQuoting(true);
+    setSendError(false);
+    setQuoteResult(undefined);
+    try {
+      const { data, error } = await supabase.functions.invoke<DeliveryDistanceQuote & { error?: string }>('delivery-distance', {
+        body: { restaurantId: restaurant?.id, street, number, complement, neighborhood, cep },
+      });
+      if (error || !data) throw error ?? new Error('Cotação indisponível');
+      setQuoteResult({ key: quoteKey, quote: data.error ? undefined : data, error: data.error });
+    } catch {
+      setQuoteResult({ key: quoteKey, error: 'Não foi possível calcular a entrega agora. Tente novamente.' });
+    } finally {
+      setQuoting(false);
+    }
+  };
 
   useEffect(() => {
     if (restaurant?.id && open) {
+      setQuoteResult(undefined);
+      setSendError(false);
       const saved = readSavedCustomer(restaurant.id);
       if (saved) setDeliveryAddress(prev => ({
         ...prev,
@@ -177,15 +222,20 @@ export function OrderConfirmationModal({
     }));
   };
   
-  const handleSendOrder = () => {
-    if (!paymentMethod) return;
+  const handleSendOrder = async () => {
+    if (!paymentMethod || !isAddressValid || sending) return;
+    if (orderType === 'delivery' && usesDistance && (!currentQuote || Date.parse(currentQuote.expiresAt) <= Date.now())) {
+      setQuoteResult({ key: quoteKey, error: 'O cálculo expirou. Calcule a entrega novamente.' });
+      return;
+    }
     
     const payment: PaymentMethod = {
       type: paymentMethod.type,
       changeAmount: paymentMethod.type === 'cash' && changeAmount ? parseFloat(changeAmount) : undefined
     };
-    const deliveryFee = orderType === 'delivery' ? (selectedDeliveryZone?.delivery_fee || 0) : 0;
-    const address = orderType === 'delivery' ? deliveryAddress : { ...deliveryAddress, street: '', number: '', complement: '', neighborhood: '', deliveryZoneId: '' };
+    const address = orderType === 'delivery'
+      ? { ...deliveryAddress, distanceQuote: usesDistance ? currentQuote : undefined }
+      : { ...deliveryAddress, street: '', number: '', complement: '', neighborhood: '', deliveryZoneId: '' };
     if (restaurant?.id) {
       const previous = readSavedCustomer(restaurant.id);
       saveCustomerLocally(restaurant.id, {
@@ -196,17 +246,28 @@ export function OrderConfirmationModal({
         neighborhood: (deliveryAddress.neighborhood || previous?.neighborhood || '').slice(0, 100),
       });
     }
-    onSendWhatsApp(address, payment, deliveryFee);
-    onOpenChange(false);
+    setSending(true);
+    setSendError(false);
+    try {
+      if (await onSendWhatsApp(address, payment, deliveryFee)) {
+        setQuoteResult(undefined);
+        onOpenChange(false);
+      } else {
+        setSendError(true);
+      }
+    } finally {
+      setSending(false);
+    }
   };
 
-  const isAddressValid = orderType === 'pickup' 
-    ? deliveryAddress.name.trim() && normalizeCustomerPhone(deliveryAddress.phone)
-    : deliveryAddress.street && deliveryAddress.number && deliveryAddress.name.trim() && normalizeCustomerPhone(deliveryAddress.phone) && deliveryAddress.deliveryZoneId;
-  
+  const hasCustomer = deliveryAddress.name.trim() && normalizeCustomerPhone(deliveryAddress.phone);
+  const isAddressValid = hasCustomer && (orderType === 'pickup' ||
+    (deliveryMode.isSuccess && !deliveryMode.isFetching && street.trim() && number.trim() &&
+      (usesDistance ? currentQuote : deliveryAddress.deliveryZoneId)));
   const isPaymentValid = paymentMethod !== null;
-  
-  const deliveryFee = orderType === 'delivery' ? (selectedDeliveryZone?.delivery_fee || 0) : 0;
+  const deliveryFee = orderType === 'delivery'
+    ? (usesDistance ? currentQuote?.fee ?? 0 : selectedDeliveryZone?.delivery_fee ?? 0)
+    : 0;
   const totalWithDelivery = getCartTotal() + deliveryFee;
 
   const updateQuantity = (cartKey: string, delta: number) => {
@@ -431,6 +492,7 @@ export function OrderConfirmationModal({
                       <Input
                         id="street"
                         placeholder="Rua, Avenida..."
+                        maxLength={usesDistance ? 180 : 300}
                         value={deliveryAddress.street}
                         onChange={(e) => setDeliveryAddress(prev => ({ ...prev, street: e.target.value }))}
                         className="h-10"
@@ -442,6 +504,7 @@ export function OrderConfirmationModal({
                       <Input
                         id="number"
                         placeholder="123"
+                        maxLength={30}
                         value={deliveryAddress.number}
                         onChange={(e) => setDeliveryAddress(prev => ({ ...prev, number: e.target.value }))}
                         className="h-10"
@@ -453,13 +516,49 @@ export function OrderConfirmationModal({
                       <Input
                         id="complement"
                         placeholder="Apto, Bloco, Sala..."
+                        maxLength={100}
                         value={deliveryAddress.complement}
                         onChange={(e) => setDeliveryAddress(prev => ({ ...prev, complement: e.target.value }))}
                         className="h-10"
                       />
                     </div>
                     
-                    <div className="sm:col-span-2">
+                    {deliveryMode.isError && (
+                      <div className="sm:col-span-2 space-y-2">
+                        <p role="alert" className="text-sm text-destructive">Não foi possível carregar a área de entrega.</p>
+                        <Button type="button" variant="outline" onClick={() => void deliveryMode.refetch()}>Tentar novamente</Button>
+                      </div>
+                    )}
+                    {deliveryMode.isPending && <p className="text-sm" role="status">Carregando área de entrega...</p>}
+                    {usesDistance && (
+                      <>
+                        <div>
+                          <Label htmlFor="distance-neighborhood">Bairro *</Label>
+                          <Input id="distance-neighborhood" value={neighborhood} maxLength={80}
+                            onChange={(event) => setDeliveryAddress(prev => ({ ...prev, neighborhood: event.target.value }))} />
+                        </div>
+                        <div>
+                          <Label htmlFor="delivery-cep">CEP *</Label>
+                          <Input id="delivery-cep" inputMode="numeric" autoComplete="postal-code" placeholder="00000-000"
+                            value={cep ?? ''} maxLength={9}
+                            onChange={(event) => setDeliveryAddress(prev => ({ ...prev, cep: event.target.value }))} />
+                        </div>
+                        <div className="sm:col-span-2 space-y-2">
+                          <Button type="button" variant="outline" disabled={!canQuote || quoting || sending} onClick={calculateDelivery}>
+                            {quoting ? 'Calculando...' : 'Calcular entrega'}
+                          </Button>
+                          {quoteResult?.key === quoteKey && quoteResult.error && (
+                            <p className="text-sm text-destructive" role="alert">{quoteResult.error}</p>
+                          )}
+                          {currentQuote && (
+                            <p className="text-sm" role="status">
+                              {(currentQuote.meters / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km de trajeto · Entrega R$ {numberToCurrency(currentQuote.fee)}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                    {deliveryMode.isSuccess && !usesDistance && <div className="sm:col-span-2">
                       <Label htmlFor="deliveryZone" className="text-sm">Bairro / Zona de Entrega *</Label>
                       {deliveryZones.length > 0 ? (
                         <Select value={deliveryAddress.deliveryZoneId} onValueChange={handleDeliveryZoneChange}>
@@ -483,7 +582,7 @@ export function OrderConfirmationModal({
                           className="h-10"
                         />
                       )}
-                    </div>
+                    </div>}
                   </>
                 )}
               </div>
@@ -570,6 +669,11 @@ export function OrderConfirmationModal({
         </div>
 
         <div className="border-t px-4 sm:px-6 py-3 sm:py-4 bg-background mt-auto">
+          {sendError && <p role="alert" className="mb-2 text-sm text-destructive">
+            {usesDistance && orderType === 'delivery'
+              ? 'Não foi possível registrar o pedido. Calcule a entrega novamente e tente pagar.'
+              : 'Não foi possível registrar o pedido. Tente novamente.'}
+          </p>}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button 
               variant="outline" 
@@ -581,7 +685,7 @@ export function OrderConfirmationModal({
             <Button 
               onClick={handleSendOrder}
               className="flex-1 h-10 sm:h-11 flex items-center justify-center gap-2 bg-[#4BA3C3] hover:bg-[#3d8aa8] text-white text-sm sm:text-base"
-              disabled={cartEntries.length === 0 || !isAddressValid || !isPaymentValid}
+              disabled={sending || quoting || cartEntries.length === 0 || !isAddressValid || !isPaymentValid}
             >
               <Phone className="h-4 w-4" />
               <span className="hidden sm:inline">Finalizar e pagar com PIX</span>

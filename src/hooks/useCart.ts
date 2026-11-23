@@ -198,13 +198,16 @@ export function useCart() {
 
       const customerName = sanitizeString(address?.name, 100);
       const customerPhone = sanitizePhone(address?.phone);
-      const fullAddress = address && address.street && address.number && address.neighborhood
+      const fullAddress = address?.distanceQuote?.address ?? (address && address.street && address.number && address.neighborhood
         ? sanitizeString(`${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ''}, ${address.neighborhood}`, 500)
-        : null;
+        : null);
       const paymentMethod = sanitizeString(payment?.type, 50);
       const isPixOnline = payment?.type === 'pix_online';
 
-      const details = fullAddress ? {
+      const details = address?.distanceQuote ? {
+        ...address.distanceQuote.details,
+        delivery_quote_id: address.distanceQuote.id,
+      } : fullAddress ? {
         street: sanitizeString(address.street, 300), number: sanitizeString(address.number, 30),
         complement: sanitizeString(address.complement, 100) || '', neighborhood: sanitizeString(address.neighborhood, 100),
       } : null;
@@ -239,6 +242,8 @@ export function useCart() {
     // Salvar pedido no banco antes de enviar WhatsApp
     const orderId = await saveOrderToDatabase(restaurant, products, address, payment, deliveryFee);
     
+    if (!orderId) return { orderId: null, isPixOnline, total };
+
     // Para PIX online, NÃO envia WhatsApp ainda — só envia após pagamento confirmado
     if (isPixOnline) {
       return { orderId, isPixOnline: true, total };

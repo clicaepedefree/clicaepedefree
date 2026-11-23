@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
@@ -140,7 +141,9 @@ export function DeliveryZoneManager({ restaurant }: DeliveryZoneManagerProps) {
   }
 
   return (
-    <Card>
+    <div className="space-y-4">
+      <DeliveryDistanceSettings key={restaurant.id} restaurantId={restaurant.id} />
+      <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Zonas de Entrega</CardTitle>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -242,6 +245,102 @@ export function DeliveryZoneManager({ restaurant }: DeliveryZoneManagerProps) {
               </div>
             ))}
           </div>
+        )}
+      </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function DeliveryDistanceSettings({ restaurantId }: { restaurantId: string }) {
+  const { toast } = useToast();
+  const [enabled, setEnabled] = useState(false);
+  const [origin, setOrigin] = useState("");
+  const [maxKm, setMaxKm] = useState("");
+  const [fee, setFee] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const { data, error } = await supabase.from("delivery_distance_settings")
+        .select("enabled, origin_address, max_km, delivery_fee")
+        .eq("restaurant_id", restaurantId).maybeSingle();
+      if (!active) return;
+      setLoadFailed(Boolean(error));
+      if (data) {
+        setEnabled(data.enabled);
+        setOrigin(data.origin_address);
+        setMaxKm(String(data.max_km));
+        setFee(String(data.delivery_fee));
+      }
+      setLoading(false);
+    })();
+    return () => { active = false; };
+  }, [restaurantId]);
+
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!enabled && !origin && !maxKm && !fee) return;
+    const maxDistance = Number(maxKm);
+    const deliveryFee = Number(fee);
+    if (origin.trim().length < 8 || !Number.isFinite(maxDistance) || maxDistance <= 0 ||
+        maxDistance > 100 || !fee || !Number.isFinite(deliveryFee) || deliveryFee < 0 || deliveryFee > 1000) {
+      toast({ title: "Confira o endereço, a distância e a taxa.", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.from("delivery_distance_settings").upsert({
+      restaurant_id: restaurantId,
+      enabled,
+      origin_address: origin.trim(),
+      max_km: maxDistance,
+      delivery_fee: deliveryFee,
+    });
+    setSaving(false);
+    toast(error
+      ? { title: "Não foi possível salvar a configuração.", variant: "destructive" }
+      : { title: "Configuração de entrega salva." });
+  };
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Entrega por distância</CardTitle></CardHeader>
+      <CardContent>
+        {loading && <p>Carregando configuração...</p>}
+        {loadFailed && <p role="alert">Não foi possível carregar a configuração de distância.</p>}
+        {!loading && !loadFailed && (
+          <form onSubmit={save} className="space-y-4">
+            <fieldset disabled={saving} className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Switch id="distance-enabled" checked={enabled} onCheckedChange={setEnabled} disabled={saving} />
+                <Label htmlFor="distance-enabled">Usar distância no cardápio digital</Label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Quando ativada, a entrega é calculada pelo trajeto até o cliente. Desative para voltar à cobrança por bairro.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="distance-origin">Endereço completo da loja</Label>
+                <Input id="distance-origin" value={origin} onChange={(event) => setOrigin(event.target.value)}
+                  placeholder="Rua, número, bairro, cidade, UF e CEP" maxLength={300} required />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="distance-max">Distância máxima (km)</Label>
+                  <Input id="distance-max" type="number" min="0.01" max="100" step="0.01" required
+                    value={maxKm} onChange={(event) => setMaxKm(event.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="distance-fee">Taxa de entrega (R$)</Label>
+                  <Input id="distance-fee" type="number" min="0" max="1000" step="0.01" required
+                    value={fee} onChange={(event) => setFee(event.target.value)} />
+                </div>
+              </div>
+              <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar entrega por distância"}</Button>
+            </fieldset>
+          </form>
         )}
       </CardContent>
     </Card>

@@ -29,6 +29,13 @@
       "when": 1795453700837,
       "tag": "0003_manual_customer_orders",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795473934007,
+      "tag": "0004_delivery_distance",
+      "breakpoints": true
     }
   ]
 }
