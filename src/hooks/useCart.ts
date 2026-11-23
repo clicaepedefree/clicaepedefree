@@ -204,19 +204,21 @@ export function useCart() {
       const paymentMethod = sanitizeString(payment?.type, 50);
       const isPixOnline = payment?.type === 'pix_online';
 
-      const { data, error } = await supabase.rpc('create_public_order', {
-        _restaurant_id: restaurant.id,
-        _customer_name: customerName,
-        _customer_phone: customerPhone,
-        _items: orderItems as any,
-        _subtotal: subtotal,
-        _delivery_fee: deliveryFee || 0,
-        _total: total,
-        _address: fullAddress,
-        _payment_method: paymentMethod,
-        _status: isPixOnline ? 'pending_payment' : 'new',
-        _payment_status: isPixOnline ? 'aguardando_pagamento' : 'not_required',
-      });
+      const details = fullAddress ? {
+        street: sanitizeString(address.street, 300), number: sanitizeString(address.number, 30),
+        complement: sanitizeString(address.complement, 100) || '', neighborhood: sanitizeString(address.neighborhood, 100),
+      } : null;
+      const { data, error } = isPixOnline
+        ? await supabase.rpc('create_customer_order', {
+            _restaurant_id: restaurant.id, _name: customerName || '', _phone: customerPhone || '',
+            _details: details, _items: orderItems as any, _subtotal: subtotal,
+            _delivery_fee: deliveryFee || 0, _total: total, _address: fullAddress || '',
+          })
+        : await supabase.rpc('create_public_order', {
+            _restaurant_id: restaurant.id, _customer_name: customerName, _customer_phone: customerPhone,
+            _items: orderItems as any, _subtotal: subtotal, _delivery_fee: deliveryFee || 0, _total: total,
+            _address: fullAddress, _payment_method: paymentMethod, _status: 'new', _payment_status: 'not_required',
+          });
 
       if (error) throw error;
       return (data as unknown as string) || null;

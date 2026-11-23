@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
+import { maskCustomerPhone, normalizeCustomerPhone, readSavedCustomer, saveCustomerLocally } from "@/lib/customers";
 import { Banknote, CreditCard, ExternalLink, MapPin, Minus, Phone, Plus, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -107,6 +108,13 @@ export function OrderConfirmationModal({
 
   useEffect(() => {
     if (restaurant?.id && open) {
+      const saved = readSavedCustomer(restaurant.id);
+      if (saved) setDeliveryAddress(prev => ({
+        ...prev,
+        name: prev.name || saved.name, phone: prev.phone || maskCustomerPhone(saved.phone),
+        street: prev.street || saved.address, number: prev.number || saved.number,
+        complement: prev.complement || saved.complement,
+      }));
       fetchDeliveryZones();
       fetchPaymentMethods();
       // Reset order type based on enabled options
@@ -178,13 +186,23 @@ export function OrderConfirmationModal({
     };
     const deliveryFee = orderType === 'delivery' ? (selectedDeliveryZone?.delivery_fee || 0) : 0;
     const address = orderType === 'delivery' ? deliveryAddress : { ...deliveryAddress, street: '', number: '', complement: '', neighborhood: '', deliveryZoneId: '' };
+    if (restaurant?.id) {
+      const previous = readSavedCustomer(restaurant.id);
+      saveCustomerLocally(restaurant.id, {
+        name: deliveryAddress.name.trim().slice(0, 100), phone: deliveryAddress.phone,
+        address: (deliveryAddress.street || previous?.address || '').slice(0, 300),
+        number: (deliveryAddress.number || previous?.number || '').slice(0, 30),
+        complement: (deliveryAddress.complement || previous?.complement || '').slice(0, 100),
+        neighborhood: (deliveryAddress.neighborhood || previous?.neighborhood || '').slice(0, 100),
+      });
+    }
     onSendWhatsApp(address, payment, deliveryFee);
     onOpenChange(false);
   };
 
   const isAddressValid = orderType === 'pickup' 
-    ? deliveryAddress.name && deliveryAddress.phone
-    : deliveryAddress.street && deliveryAddress.number && deliveryAddress.name && deliveryAddress.phone && deliveryAddress.deliveryZoneId;
+    ? deliveryAddress.name.trim() && normalizeCustomerPhone(deliveryAddress.phone)
+    : deliveryAddress.street && deliveryAddress.number && deliveryAddress.name.trim() && normalizeCustomerPhone(deliveryAddress.phone) && deliveryAddress.deliveryZoneId;
   
   const isPaymentValid = paymentMethod !== null;
   
@@ -396,11 +414,14 @@ export function OrderConfirmationModal({
                   <Label htmlFor="phone" className="text-sm">Telefone *</Label>
                   <Input
                     id="phone"
+                    type="tel"
+                    maxLength={16}
                     placeholder="(11) 99999-9999"
                     value={deliveryAddress.phone}
-                    onChange={(e) => setDeliveryAddress(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) => setDeliveryAddress(prev => ({ ...prev, phone: maskCustomerPhone(e.target.value) }))}
                     className="h-10"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Seus dados ficam salvos neste aparelho para o próximo pedido.</p>
                 </div>
               
                 {orderType === 'delivery' && (

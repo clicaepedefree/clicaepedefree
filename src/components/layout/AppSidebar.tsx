@@ -32,6 +32,7 @@ import {
   Store,
   ChevronDown,
   LogOut,
+  Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -62,6 +63,7 @@ const items: Item[] = [
     ],
   },
   { title: "Pedidos", value: "orders", icon: ShoppingCart, path: "/admin/orders", badgeKey: "orders" },
+  { title: "Clientes", value: "customers", icon: Users, path: "/admin/clientes" },
   { title: "Relatórios", value: "reports", icon: FileText, path: "/admin/reports" },
   {
     title: "Ajustes da Loja",
@@ -100,6 +102,7 @@ export function AppSidebar({
     const p = location.pathname;
     if (p === "/admin/orders") return "orders";
     if (p === "/admin/carteira") return "wallet";
+    if (p === "/admin/clientes") return "customers";
     if (p === "/admin/reports") return "reports";
     if (p === "/admin/marketing") return "ai-marketing";
     if (p === "/admin/analytics") return "reports";

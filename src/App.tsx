@@ -19,6 +19,7 @@ const Analytics = lazy(() => import("./pages/Analytics"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Marketing = lazy(() => import("./pages/Marketing"));
 const Wallet = lazy(() => import("./pages/Wallet"));
+const Customers = lazy(() => import("./pages/Customers"));
 const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const SuperAdminAuth = lazy(() => import("./pages/SuperAdminAuth"));
 const SuperAdminGateway = lazy(() => import("./pages/SuperAdminGateway"));
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/admin/marketing" element={<Marketing />} />
             <Route path="/admin/carteira" element={<Wallet />} />
+            <Route path="/admin/clientes" element={<Customers />} />
             <Route path="/super-admin" element={<SuperAdmin />} />
             <Route path="/super-admin/auth" element={<SuperAdminAuth />} />
             <Route path="/super-admin/gateway" element={<SuperAdminGateway />} />
