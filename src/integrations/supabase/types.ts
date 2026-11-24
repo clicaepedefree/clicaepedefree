@@ -241,32 +241,6 @@ export type Database = {
           },
         ]
       }
-      delivery_distance_settings: {
-        Row: {
-          restaurant_id: string
-          enabled: boolean
-          origin_address: string
-          max_km: number
-          price_bands: Json | null
-          delivery_fee: number
-        }
-        Insert: {
-          restaurant_id: string
-          enabled?: boolean
-          origin_address: string
-          max_km: number
-          price_bands?: Json | null
-          delivery_fee: number
-        }
-        Update: {
-          enabled?: boolean
-          origin_address?: string
-          max_km?: number
-          price_bands?: Json | null
-          delivery_fee?: number
-        }
-        Relationships: []
-      }
       delivery_zones: {
         Row: {
           created_at: string
@@ -1445,10 +1419,6 @@ export type Database = {
       get_monthly_revenue: {
         Args: { restaurant_id_param: string; target_time?: string; tz?: string }
         Returns: number
-      }
-      delivery_uses_distance: {
-        Args: { _restaurant_id: string }
-        Returns: boolean
       }
       get_public_payment_methods: {
         Args: { _restaurant_id: string }
