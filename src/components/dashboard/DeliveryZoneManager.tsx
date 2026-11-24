@@ -338,7 +338,7 @@ function DeliveryDistanceSettings({ restaurantId }: { restaurantId: string }) {
         restaurant_id: restaurantId,
         enabled,
         origin_address: origin.trim(),
-        max_km: (bands.at(-1)?.upToMeters ?? 10) / 1000,
+        max_km: (bands[bands.length - 1]?.upToMeters ?? 10) / 1000,
         delivery_fee: (bands[0]?.feeCents ?? 0) / 100,
         price_bands: bands,
       });
@@ -380,7 +380,7 @@ function DeliveryDistanceSettings({ restaurantId }: { restaurantId: string }) {
               <div className="flex flex-wrap items-center gap-3">
                 <Button type="button" variant="outline" onClick={openBands}>Configurar faixas por KM</Button>
                 {bands.length > 0 && <span className="text-sm text-muted-foreground">
-                  {bands.length} {bands.length === 1 ? "faixa" : "faixas"} · Até {((bands.at(-1)?.upToMeters ?? 0) / 1000).toLocaleString("pt-BR")} km de trajeto
+                  {bands.length} {bands.length === 1 ? "faixa" : "faixas"} · Até {((bands[bands.length - 1]?.upToMeters ?? 0) / 1000).toLocaleString("pt-BR")} km de trajeto
                 </span>}
               </div>
               <Button type="submit">{saving ? "Salvando..." : "Salvar configuração"}</Button>
