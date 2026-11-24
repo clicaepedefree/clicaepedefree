@@ -43,6 +43,13 @@
       "when": 1795485298595,
       "tag": "0005_delivery_distance_bands",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795487090882,
+      "tag": "0006_document_delivery_distance",
+      "breakpoints": true
     }
   ]
 }

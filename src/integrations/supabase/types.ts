@@ -241,6 +241,105 @@ export type Database = {
           },
         ]
       }
+      delivery_distance_quotes: {
+        Row: {
+          delivery_fee: number
+          destination_hash: string
+          distance_meters: number
+          expires_at: string
+          id: string
+          origin_address: string
+          restaurant_id: string
+        }
+        Insert: {
+          delivery_fee: number
+          destination_hash: string
+          distance_meters: number
+          expires_at?: string
+          id?: string
+          origin_address: string
+          restaurant_id: string
+        }
+        Update: {
+          delivery_fee?: number
+          destination_hash?: string
+          distance_meters?: number
+          expires_at?: string
+          id?: string
+          origin_address?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_distance_quotes_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_distance_settings: {
+        Row: {
+          delivery_fee: number
+          enabled: boolean
+          max_km: number
+          origin_address: string
+          price_bands: Json | null
+          restaurant_id: string
+        }
+        Insert: {
+          delivery_fee: number
+          enabled?: boolean
+          max_km: number
+          origin_address: string
+          price_bands?: Json | null
+          restaurant_id: string
+        }
+        Update: {
+          delivery_fee?: number
+          enabled?: boolean
+          max_km?: number
+          origin_address?: string
+          price_bands?: Json | null
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_distance_settings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_route_request_limits: {
+        Row: {
+          minute_start: string
+          requests: number
+          restaurant_id: string
+        }
+        Insert: {
+          minute_start: string
+          requests: number
+          restaurant_id: string
+        }
+        Update: {
+          minute_start?: string
+          requests?: number
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_route_request_limits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_zones: {
         Row: {
           created_at: string
@@ -1408,6 +1507,25 @@ export type Database = {
           total_spent: number
         }[]
       }
+      delivery_fee_for_distance: {
+        Args: {
+          _meters: number
+          _origin_address: string
+          _restaurant_id: string
+        }
+        Returns: number
+      }
+      delivery_uses_distance: {
+        Args: { _restaurant_id: string }
+        Returns: boolean
+      }
+      distance_band_fee: {
+        Args: {
+          meters: number
+          settings: Database["public"]["Tables"]["delivery_distance_settings"]["Row"]
+        }
+        Returns: number
+      }
       generate_unique_slug: {
         Args: { restaurant_name: string }
         Returns: string
@@ -1476,6 +1594,10 @@ export type Database = {
         Returns: Json
       }
       normalize_customer_phone: { Args: { value: string }; Returns: string }
+      reserve_delivery_route_request: {
+        Args: { _restaurant_id: string }
+        Returns: boolean
+      }
       restaurant_accepts_orders: {
         Args: { _restaurant_id: string }
         Returns: boolean
@@ -1493,6 +1615,7 @@ export type Database = {
         Args: { order_id: string }
         Returns: boolean
       }
+      valid_delivery_price_bands: { Args: { bands: Json }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

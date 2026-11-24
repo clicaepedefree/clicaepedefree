@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.delivery_distance_settings IS 'Configuração de entrega por raio de KM e faixas de preço por loja.';
