@@ -31,10 +31,10 @@ const steps = [
 const faqs = [
   { q: "Preciso instalar alguma coisa?", a: "Não. Tudo funciona pelo navegador, no computador e no celular." },
   { q: "Como funciona o teste?", a: "Você tem 10 dias grátis para testar o sistema completo, com nossa equipe ajudando na configuração." },
-  { q: "Existe fidelidade ou multa?", a: "Não. O plano é mensal e você pode cancelar quando quiser." },
+  { q: "Quais são as opções de assinatura?", a: "Você pode escolher entre a assinatura mensal e a anual. As duas incluem os mesmos recursos." },
   { q: "Funciona com iFood e 99Food?", a: "Sim. Os pedidos dos marketplaces chegam junto com os pedidos do seu cardápio próprio." },
   { q: "Vocês ajudam a cadastrar meu cardápio?", a: "Sim. Nossa equipe cadastra seus produtos, fotos e preços para você começar pronto." },
-  { q: "Quanto custa depois do teste?", a: "Plano único de R$ 99,90 por mês, com todos os recursos incluídos." },
+  { q: "Quanto custa depois do teste?", a: "R$ 39,90 por mês ou R$ 199 por ano, com todos os recursos incluídos." },
 ];
 
 const included = [
@@ -89,7 +89,7 @@ export function LandingClose() {
           <div className="mx-auto max-w-3xl text-center">
             <span className="text-sm font-bold uppercase tracking-widest text-flame">A oferta</span>
             <h2 className="mt-4 text-3xl font-extrabold md:text-5xl">
-              Um plano único. Todos os recursos liberados.
+              Escolha entre mensal e anual. Todos os recursos liberados.
             </h2>
             <p className="mt-4 text-lg text-white/70">
               Teste por 10 dias grátis e veja o sistema funcionando no seu restaurante.
@@ -101,12 +101,21 @@ export function LandingClose() {
               <span className="inline-flex rounded-full bg-gradient-flame px-4 py-1.5 text-sm font-bold text-flame-foreground">
                 10 dias grátis para testar
               </span>
-              <div className="mt-6 flex items-end justify-center gap-2">
-                <span className="text-2xl font-semibold text-white/70">R$</span>
-                <span className="text-6xl font-extrabold leading-none md:text-7xl">99,90</span>
-                <span className="pb-2 text-lg text-white/70">/mês</span>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: "Mensal", price: "39,90", period: "mês" },
+                  { label: "Anual", price: "199", period: "ano" },
+                ].map(({ label, price, period }) => (
+                  <div key={label} className="rounded-2xl border border-white/15 bg-white/5 px-3 py-5">
+                    <p className="mb-2 text-sm font-semibold text-white/70">{label}</p>
+                    <p>
+                      <span className="text-lg text-white/70">R$ </span>
+                      <span className="text-4xl font-extrabold leading-none md:text-5xl">{price}</span>
+                      <span className="text-base text-white/70"> /{period}</span>
+                    </p>
+                  </div>
+                ))}
               </div>
-              <p className="mt-3 text-white/60">Sem fidelidade. Cancele quando quiser.</p>
             </div>
 
             <ul className="mt-9 grid gap-3 sm:grid-cols-2">
@@ -136,7 +145,7 @@ export function LandingClose() {
           {/* Ancoragem de valor */}
           <div className="mx-auto mt-14 grid max-w-4xl gap-4 sm:grid-cols-3">
             {[
-              { big: "R$ 3,33", small: "por dia — menos que um café" },
+              { big: "R$ 16,58", small: "por mês no equivalente da assinatura anual" },
               { big: "1 pedido", small: "por mês já paga o sistema" },
               { big: "Tudo em 1", small: "no lugar de vários sistemas" },
             ].map((c) => (
@@ -212,7 +221,7 @@ export function LandingClose() {
             COMEÇAR TESTE GRÁTIS
             <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
           </Button>
-          <p className="mt-4 text-sm text-white/60">10 dias grátis • Depois R$ 99,90/mês • Sem fidelidade</p>
+          <p className="mt-4 text-sm text-white/60">10 dias grátis • Depois R$ 39,90/mês ou R$ 199/ano</p>
         </div>
       </section>
     </>

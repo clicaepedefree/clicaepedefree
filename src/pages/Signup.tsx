@@ -283,7 +283,7 @@ export default function Signup() {
                     <SelectValue placeholder="Selecione o plano" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gratis">Plano único — R$ 99,90/mês — 7 dias grátis</SelectItem>
+                    <SelectItem value="gratis">Teste grátis · Depois R$ 39,90/mês ou R$ 199/ano</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">Todos os recursos liberados. Cancele quando quiser.</p>

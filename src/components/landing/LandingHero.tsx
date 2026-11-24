@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, PlayCircle, ShieldCheck, Clock3, Sparkles } from "lucide-react";
+import { ArrowRight, PlayCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { scrollToPlans } from "@/lib/signup-cta";
 import devices from "@/assets/mockup-devices.png";
 
@@ -26,7 +26,7 @@ export function LandingHero() {
           <div className="text-center lg:text-left">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm backdrop-blur">
               <Sparkles className="h-4 w-4 text-flame" />
-              <span className="font-medium">10 dias grátis • Plano único R$ 99,90/mês</span>
+              <span className="font-medium">10 dias grátis</span>
             </div>
 
             <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl lg:text-6xl">
@@ -62,10 +62,7 @@ export function LandingHero() {
 
             <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-white/60 lg:justify-start">
               <span className="inline-flex items-center gap-2">
-                <Clock3 className="h-4 w-4" /> Teste grátis por 10 dias
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4" /> Plano único: R$ 99,90/mês
+                <ShieldCheck className="h-4 w-4" /> R$ 39,90/mês ou R$ 199/ano
               </span>
             </div>
           </div>
