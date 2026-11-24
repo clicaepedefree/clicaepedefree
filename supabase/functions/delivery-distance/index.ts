@@ -43,7 +43,7 @@ Deno.serve(async (request) => {
 
     const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: settings, error } = await db.from("delivery_distance_settings")
-      .select("origin_address,max_km,delivery_fee").eq("restaurant_id", restaurantId).eq("enabled", true).maybeSingle();
+      .select("origin_address").eq("restaurant_id", restaurantId).eq("enabled", true).maybeSingle();
     if (error) throw error;
     if (!settings) return respond({ error: "Esta loja não oferece entrega por distância." });
 
@@ -84,7 +84,13 @@ Deno.serve(async (request) => {
         !exactAddress(result.geocodingResults?.origin) || !exactAddress(result.geocodingResults?.destination)) {
       return respond({ error: "Não foi possível confirmar a rota. Confira o endereço ou fale com a loja." });
     }
-    if (meters > Number(settings.max_km) * 1000) {
+    const { data: fee, error: feeError } = await db.rpc("delivery_fee_for_distance", {
+      _restaurant_id: restaurantId,
+      _meters: meters,
+      _origin_address: settings.origin_address,
+    });
+    if (feeError) throw feeError;
+    if (fee === null) {
       return respond({ error: "Este endereço está fora da área de entrega da loja." });
     }
 
@@ -103,10 +109,10 @@ Deno.serve(async (request) => {
       destination_hash: destinationHash,
       origin_address: settings.origin_address,
       distance_meters: meters,
-      delivery_fee: settings.delivery_fee,
+      delivery_fee: fee,
     }).select("id, expires_at").single();
     if (quoteError) throw quoteError;
-    return respond({ id: quote.id, expiresAt: quote.expires_at, address, details, meters, fee: Number(settings.delivery_fee) });
+    return respond({ id: quote.id, expiresAt: quote.expires_at, address, details, meters, fee: Number(fee) });
   } catch (error) {
     console.error("Falha na cotação de entrega:", error instanceof Error ? error.name : "database");
     return respond({ error: "Não foi possível calcular a entrega agora. Tente novamente." });

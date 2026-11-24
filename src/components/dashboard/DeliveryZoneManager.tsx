@@ -3,11 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface DeliveryZone {
   id: string;
@@ -252,96 +252,180 @@ export function DeliveryZoneManager({ restaurant }: DeliveryZoneManagerProps) {
   );
 }
 
+type PriceBand = { upToMeters: number; feeCents: number };
+type BandDraft = { id: string; limit: string; fee: string };
+
+function decimal(value: string) {
+  const number = value.trim().replace(",", ".");
+  return /^\d+(\.\d{1,2})?$/.test(number) ? Number(number) : NaN;
+}
+
 function DeliveryDistanceSettings({ restaurantId }: { restaurantId: string }) {
   const { toast } = useToast();
   const [enabled, setEnabled] = useState(false);
   const [origin, setOrigin] = useState("");
-  const [maxKm, setMaxKm] = useState("");
-  const [fee, setFee] = useState("");
+  const [bands, setBands] = useState<PriceBand[]>([]);
+  const [drafts, setDrafts] = useState<BandDraft[] | null>(null);
+  const [draftError, setDraftError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [exists, setExists] = useState(false);
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setLoadError("");
     void (async () => {
       const { data, error } = await supabase.from("delivery_distance_settings")
-        .select("enabled, origin_address, max_km, delivery_fee")
+        .select("enabled, origin_address, max_km, delivery_fee, price_bands")
         .eq("restaurant_id", restaurantId).maybeSingle();
       if (!active) return;
-      setLoadFailed(Boolean(error));
+      if (error) {
+        setLoadError(["PGRST204", "PGRST205", "42P01", "42703"].includes(error.code)
+          ? "A configuração por KM aguarda atualização no banco do Lovable Cloud."
+          : "Não foi possível carregar a configuração por KM.");
+      }
       if (data) {
+        setExists(true);
         setEnabled(data.enabled);
         setOrigin(data.origin_address);
-        setMaxKm(String(data.max_km));
-        setFee(String(data.delivery_fee));
+        setBands(Array.isArray(data.price_bands) ? data.price_bands as PriceBand[] : [{
+          upToMeters: Math.round(data.max_km * 1000),
+          feeCents: Math.round(data.delivery_fee * 100),
+        }]);
       }
       setLoading(false);
     })();
     return () => { active = false; };
-  }, [restaurantId]);
+  }, [restaurantId, loadAttempt]);
 
-  const save = async (event: React.FormEvent) => {
+  function openBands() {
+    setDraftError("");
+    setDrafts(bands.map(band => ({
+      id: crypto.randomUUID(), limit: String(band.upToMeters / 1000), fee: String(band.feeCents / 100),
+    })));
+  }
+
+  function applyBands() {
+    if (!drafts) return;
+    const next = drafts.map(draft => ({
+      upToMeters: Math.round(decimal(draft.limit) * 1000),
+      feeCents: Math.round(decimal(draft.fee) * 100),
+    })).sort((a, b) => a.upToMeters - b.upToMeters);
+    const invalid = next.some((band, index) => !Number.isInteger(band.upToMeters) || band.upToMeters <= 0 ||
+      band.upToMeters > 100000 || !Number.isInteger(band.feeCents) || band.feeCents < 0 ||
+      band.feeCents > 100000 || band.upToMeters === next[index - 1]?.upToMeters);
+    if (invalid) {
+      setDraftError("Defina limites diferentes entre 0,01 e 100 km e valores entre R$ 0,00 e R$ 1.000,00.");
+      return;
+    }
+    setBands(next);
+    setDrafts(null);
+  }
+
+  async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (!enabled && !origin && !maxKm && !fee) return;
-    const maxDistance = Number(maxKm);
-    const deliveryFee = Number(fee);
-    if (origin.trim().length < 8 || !Number.isFinite(maxDistance) || maxDistance <= 0 ||
-        maxDistance > 100 || !fee || !Number.isFinite(deliveryFee) || deliveryFee < 0 || deliveryFee > 1000) {
-      toast({ title: "Confira o endereço, a distância e a taxa.", variant: "destructive" });
+    if (!exists && !enabled && !origin.trim() && bands.length === 0) return;
+    if (origin.trim().length < 8 || (enabled && bands.length === 0)) {
+      toast({ title: "Informe o endereço da loja e adicione pelo menos uma faixa para usar o modo KM.", variant: "destructive" });
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("delivery_distance_settings").upsert({
-      restaurant_id: restaurantId,
-      enabled,
-      origin_address: origin.trim(),
-      max_km: maxDistance,
-      delivery_fee: deliveryFee,
-    });
-    setSaving(false);
-    toast(error
-      ? { title: "Não foi possível salvar a configuração.", variant: "destructive" }
-      : { title: "Configuração de entrega salva." });
-  };
+    try {
+      const { error } = await supabase.from("delivery_distance_settings").upsert({
+        restaurant_id: restaurantId,
+        enabled,
+        origin_address: origin.trim(),
+        max_km: (bands.at(-1)?.upToMeters ?? 10) / 1000,
+        delivery_fee: (bands[0]?.feeCents ?? 0) / 100,
+        price_bands: bands,
+      });
+      if (error) throw error;
+      setExists(true);
+      toast({ title: "Configuração de entrega salva." });
+    } catch {
+      toast({ title: "Não foi possível salvar a configuração.", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <Card>
-      <CardHeader><CardTitle>Entrega por distância</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Modo de entrega</CardTitle></CardHeader>
       <CardContent>
-        {loading && <p>Carregando configuração...</p>}
-        {loadFailed && <p role="alert">Não foi possível carregar a configuração de distância.</p>}
-        {!loading && !loadFailed && (
+        {loading && <p role="status">Carregando configuração...</p>}
+        {loadError && (
+          <div className="space-y-2">
+            <p role="alert">{loadError}</p>
+            <Button variant="outline" onClick={() => setLoadAttempt(attempt => attempt + 1)}>Tentar novamente</Button>
+          </div>
+        )}
+        {!loading && !loadError && (
           <form onSubmit={save} className="space-y-4">
             <fieldset disabled={saving} className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Switch id="distance-enabled" checked={enabled} onCheckedChange={setEnabled} disabled={saving} />
-                <Label htmlFor="distance-enabled">Usar distância no cardápio digital</Label>
+              <legend className="mb-2 text-sm font-medium">Como a loja cobra a entrega?</legend>
+              <RadioGroup value={enabled ? "distance" : "neighborhood"} onValueChange={value => setEnabled(value === "distance")}
+                className="flex flex-wrap gap-4">
+                <div className="flex items-center gap-2"><RadioGroupItem value="neighborhood" id="delivery-neighborhood" /><Label htmlFor="delivery-neighborhood">Por bairro</Label></div>
+                <div className="flex items-center gap-2"><RadioGroupItem value="distance" id="delivery-distance" /><Label htmlFor="delivery-distance">Por KM</Label></div>
+              </RadioGroup>
+              <div className="max-w-xl space-y-2">
+                <Label htmlFor="distance-origin">Endereço de saída para entregas por KM</Label>
+                <Input id="distance-origin" value={origin} onChange={event => setOrigin(event.target.value)}
+                  placeholder="Rua, número, bairro, cidade, UF e CEP" maxLength={300} required={enabled} />
               </div>
-              <p className="text-sm text-muted-foreground">
-                Quando ativada, a entrega é calculada pelo trajeto até o cliente. Desative para voltar à cobrança por bairro.
-              </p>
-              <div className="space-y-2">
-                <Label htmlFor="distance-origin">Endereço completo da loja</Label>
-                <Input id="distance-origin" value={origin} onChange={(event) => setOrigin(event.target.value)}
-                  placeholder="Rua, número, bairro, cidade, UF e CEP" maxLength={300} required />
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="button" variant="outline" onClick={openBands}>Configurar faixas por KM</Button>
+                {bands.length > 0 && <span className="text-sm text-muted-foreground">
+                  {bands.length} {bands.length === 1 ? "faixa" : "faixas"} · Até {((bands.at(-1)?.upToMeters ?? 0) / 1000).toLocaleString("pt-BR")} km de trajeto
+                </span>}
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="distance-max">Distância máxima (km)</Label>
-                  <Input id="distance-max" type="number" min="0.01" max="100" step="0.01" required
-                    value={maxKm} onChange={(event) => setMaxKm(event.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="distance-fee">Taxa de entrega (R$)</Label>
-                  <Input id="distance-fee" type="number" min="0" max="1000" step="0.01" required
-                    value={fee} onChange={(event) => setFee(event.target.value)} />
-                </div>
-              </div>
-              <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar entrega por distância"}</Button>
+              <Button type="submit">{saving ? "Salvando..." : "Salvar configuração"}</Button>
             </fieldset>
           </form>
         )}
+
+        <Dialog open={drafts !== null} onOpenChange={open => { if (!open) setDrafts(null); }}>
+          <DialogContent className="max-h-[90dvh] max-w-2xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Faixas de preço por KM</DialogTitle>
+              <DialogDescription>
+                As faixas começam em 0 km e são ordenadas pelo limite ao aplicar. Cada limite inclui a distância indicada.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <div className="grid grid-cols-[1fr_1fr_1fr_2.5rem] gap-2 text-sm font-medium">
+                <span>De (km)</span><span>Até (km)</span><span>Taxa (R$)</span>
+              </div>
+              {drafts?.map((draft, index) => (
+                <div className="grid grid-cols-[1fr_1fr_1fr_2.5rem] gap-2" key={draft.id}>
+                  <Input readOnly aria-label={`Início da faixa ${index + 1}`} value={index === 0 ? "0" : drafts[index - 1].limit} className="bg-muted" />
+                  <Input inputMode="decimal" aria-label={`Limite da faixa ${index + 1} em KM`} value={draft.limit}
+                    onChange={event => setDrafts(rows => rows?.map(row => row.id === draft.id ? { ...row, limit: event.target.value } : row) ?? null)} />
+                  <Input inputMode="decimal" aria-label={`Taxa da faixa ${index + 1} em reais`} value={draft.fee}
+                    onChange={event => setDrafts(rows => rows?.map(row => row.id === draft.id ? { ...row, fee: event.target.value } : row) ?? null)} />
+                  <Button type="button" variant="ghost" size="icon" aria-label={`Remover faixa ${index + 1}`}
+                    onClick={() => setDrafts(rows => rows?.filter(row => row.id !== draft.id) ?? null)}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+              ))}
+              {draftError && <p role="alert" className="text-sm text-destructive">{draftError}</p>}
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button type="button" variant="outline" disabled={(drafts?.length ?? 0) >= 50}
+                  onClick={() => setDrafts(rows => [...(rows ?? []), { id: crypto.randomUUID(), limit: "", fee: "" }])}>
+                  <Plus className="h-4 w-4" /> Adicionar faixa
+                </Button>
+                <Button type="button" variant="ghost" disabled={!drafts?.length} onClick={() => setDrafts([])}>Limpar faixas</Button>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDrafts(null)}>Cancelar</Button>
+              <Button onClick={applyBands}>Aplicar faixas</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

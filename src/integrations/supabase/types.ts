@@ -247,6 +247,7 @@ export type Database = {
           enabled: boolean
           origin_address: string
           max_km: number
+          price_bands: Json | null
           delivery_fee: number
         }
         Insert: {
@@ -254,12 +255,14 @@ export type Database = {
           enabled?: boolean
           origin_address: string
           max_km: number
+          price_bands?: Json | null
           delivery_fee: number
         }
         Update: {
           enabled?: boolean
           origin_address?: string
           max_km?: number
+          price_bands?: Json | null
           delivery_fee?: number
         }
         Relationships: []
