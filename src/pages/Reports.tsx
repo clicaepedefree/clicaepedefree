@@ -1,11 +1,10 @@
-import { useEffect, useState, useMemo } from "react";
-import { Navigate } from "react-router-dom";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download } from "lucide-react";
+import { ArrowLeft, ArrowRight, Banknote, Download, ReceiptText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +26,25 @@ interface OrderRow {
   repasse_confirmed_at: string | null;
 }
 
+const reports = [
+  {
+    id: "sales",
+    section: "Vendas e faturamento",
+    title: "Relatório de Vendas",
+    description: "Consulte os pedidos, a receita total e o ticket médio.",
+    icon: ReceiptText,
+    tone: "bg-primary/10 text-primary",
+  },
+  {
+    id: "pix",
+    section: "Financeiro",
+    title: "Relatório PIX Online",
+    description: "Acompanhe pagamentos confirmados, taxas e status dos repasses.",
+    icon: Banknote,
+    tone: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  },
+] as const;
+
 const formatBRL = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v || 0);
 
@@ -44,6 +62,13 @@ function downloadCSV(filename: string, rows: string[][]) {
 
 export default function Reports() {
   const { user, restaurant, loading, logout } = useAuth();
+  const [searchParams] = useSearchParams();
+  const activeReport = reports.find(report => report.id === searchParams.get("tipo"));
+  const heading = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (!loading && restaurant?.id) heading.current?.focus();
+  }, [activeReport, loading, restaurant?.id]);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [fetching, setFetching] = useState(true);
   const [reconciling, setReconciling] = useState(false);
@@ -152,20 +177,45 @@ export default function Reports() {
 
   return (
     <AppShell restaurant={restaurant} onLogout={logout} title="Relatórios" subtitle={restaurant.name}>
-      <main className="p-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 mb-6">
-          <FileText className="h-6 w-6 text-primary" />
-          <h2 className="text-xl font-semibold text-foreground">Relatórios</h2>
-        </div>
-        <Tabs defaultValue="sales" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="sales">Vendas</TabsTrigger>
-            <TabsTrigger value="pix">PIX</TabsTrigger>
-          </TabsList>
+      <div className="mx-auto max-w-[1600px] space-y-5 p-4 sm:p-6 lg:p-8">
+        {activeReport && (
+          <Button asChild variant="ghost" size="sm" className="-ml-2 gap-2">
+            <Link to="/admin/reports"><ArrowLeft className="size-4" aria-hidden="true" /> Todos os relatórios</Link>
+          </Button>
+        )}
+        <header className="space-y-1">
+          <h1 ref={heading} tabIndex={-1} className="text-2xl font-bold tracking-tight sm:text-3xl">
+            {activeReport?.title ?? "Relatórios"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {activeReport?.description ?? "Selecione o relatório que deseja consultar."}
+          </p>
+        </header>
 
-          {/* Sales Report */}
-          <TabsContent value="sales" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {!activeReport && (
+          <div className="space-y-5 rounded-2xl border bg-card p-4 shadow-sm sm:p-6">
+            {reports.map(({ id, section, title, description, icon: Icon, tone }) => (
+              <section key={id} aria-labelledby={`reports-section-${id}`} className="space-y-3">
+                <h2 id={`reports-section-${id}`} className="border-b pb-2 text-lg font-semibold tracking-tight">{section}</h2>
+                <Link to={`/admin/reports?tipo=${id}`}
+                  className="group flex max-w-2xl items-start gap-3 rounded-xl border bg-background p-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:p-5">
+                  <span className={`grid size-10 shrink-0 place-items-center rounded-lg ${tone}`}>
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold">{title}</span>
+                    <span className="mt-1 block text-sm text-muted-foreground">{description}</span>
+                  </span>
+                  <ArrowRight className="mt-2 size-4 shrink-0 text-muted-foreground group-hover:text-primary" aria-hidden="true" />
+                </Link>
+              </section>
+            ))}
+          </div>
+        )}
+
+        {activeReport?.id === "sales" && (
+          <section className="space-y-4" aria-label="Dados de vendas">
+            <div className="grid gap-3 sm:grid-cols-3">
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total de vendas</CardTitle></CardHeader>
                 <CardContent><div className="text-2xl font-bold">{sales.length}</div></CardContent></Card>
               <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Receita total</CardTitle></CardHeader>
@@ -175,8 +225,8 @@ export default function Reports() {
             </div>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Relatório de Vendas</CardTitle>
+              <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
+                <CardTitle>Pedidos</CardTitle>
                 <Button variant="outline" size="sm" onClick={exportSales} disabled={!sales.length}>
                   <Download className="h-4 w-4 mr-2" /> Exportar CSV
                 </Button>
@@ -214,11 +264,12 @@ export default function Reports() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          </section>
+        )}
 
-          {/* PIX Report */}
-          <TabsContent value="pix" className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {activeReport?.id === "pix" && (
+          <section className="space-y-4" aria-label="Dados de PIX Online">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
               <Card><CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">Pedidos PIX pagos</CardTitle></CardHeader>
                 <CardContent><div className="text-xl font-bold">{pixPaid.length}</div></CardContent></Card>
               <Card><CardHeader className="pb-2"><CardTitle className="text-xs text-muted-foreground">Valor bruto</CardTitle></CardHeader>
@@ -236,9 +287,9 @@ export default function Reports() {
             </div>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Relatório PIX Online</CardTitle>
-                <div className="flex gap-2">
+              <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
+                <CardTitle>Pagamentos confirmados</CardTitle>
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" onClick={reconcileRepasses} disabled={reconciling}>
                     {reconciling ? "Atualizando..." : "Atualizar status"}
                   </Button>
@@ -309,9 +360,9 @@ export default function Reports() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
+          </section>
+        )}
+      </div>
     </AppShell>
   );
 }
