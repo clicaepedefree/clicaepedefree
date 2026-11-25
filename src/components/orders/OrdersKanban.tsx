@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ManualOrderDialog } from "@/components/customers/ManualOrderDialog";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +32,10 @@ import {
   Search,
   Store,
   Bike,
+  Inbox,
+  CookingPot,
+  RefreshCw,
+  type LucideIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -60,6 +64,7 @@ const formatOrderNumber = (order: Order) =>
   order.order_number ? `#${String(order.order_number).padStart(2, "0")}` : `#${order.id.slice(-8)}`;
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
+  pending_payment: { label: "Aguardando pagamento", className: "bg-amber-100 text-amber-700 border-amber-200" },
   new: { label: "Novo", className: "bg-blue-100 text-blue-700 border-blue-200" },
   preparing: { label: "Preparando", className: "bg-amber-100 text-amber-700 border-amber-200" },
   delivered: { label: "Em entrega", className: "bg-indigo-100 text-indigo-700 border-indigo-200" },
@@ -69,6 +74,17 @@ const STATUS_META: Record<string, { label: string; className: string }> = {
 
 const OPEN_STATUSES = ["new", "preparing", "delivered"];
 
+const ORDER_COLUMNS: { status: string; title: string; icon: LucideIcon; tone: string; empty: string }[] = [
+  { status: "new", title: "Novos pedidos", icon: Inbox, tone: "border-t-blue-500", empty: "Nenhum pedido novo." },
+  { status: "preparing", title: "Em preparação", icon: CookingPot, tone: "border-t-amber-500", empty: "Nenhum pedido em preparação." },
+  { status: "delivered", title: "Em entrega", icon: Truck, tone: "border-t-indigo-500", empty: "Nenhum pedido saiu para entrega." },
+  { status: "pending_payment", title: "Aguardando pagamento", icon: CreditCard, tone: "border-t-orange-500", empty: "Nenhum pedido aguardando pagamento." },
+  { status: "completed", title: "Finalizados", icon: CheckCircle, tone: "border-t-emerald-500", empty: "Nenhum pedido finalizado." },
+  { status: "cancelled", title: "Cancelados", icon: AlertTriangle, tone: "border-t-rose-500", empty: "Nenhum pedido cancelado." },
+];
+const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const isDeliveryOrder = (order: Order) => Boolean(order.address?.trim()) || Number(order.delivery_fee) > 0;
+
 interface OrdersKanbanProps {
   restaurant: any;
 }
@@ -76,12 +92,16 @@ interface OrdersKanbanProps {
 export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
   const [refunding, setRefunding] = useState(false);
   const [filter, setFilter] = useState<string>("open");
   const [search, setSearch] = useState("");
   const [manualOrderOpen, setManualOrderOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const openedFrom = useRef<HTMLButtonElement>(null);
 
   const playNewOrderSound = () => {
     try {
@@ -117,6 +137,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
     setCancelTarget(null);
     setManualOrderOpen(false);
     setLoading(true);
+    setLoadFailed(false);
     fetchOrders(restaurant.id);
     const channel = supabase
       .channel("orders-changes")
@@ -158,8 +179,10 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
         .order("created_at", { ascending: false });
       if (error) throw error;
       setOrders(data || []);
+      setLoadFailed(false);
     } catch (error: any) {
       console.error("Erro ao buscar pedidos:", error);
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -226,20 +249,26 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
     return list;
   }, [orders, filter, search]);
 
-  useEffect(() => {
-    if (!selectedId && filteredOrders.length > 0) {
-      setSelectedId(filteredOrders[0].id);
-    } else if (selectedId && !filteredOrders.find((o) => o.id === selectedId) && filteredOrders.length > 0) {
-      setSelectedId(filteredOrders[0].id);
+  const selectedOrder = orders.find(order => order.id === selectedId);
+  const totalValue = filteredOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const otherOrders = filter === "all"
+    ? filteredOrders.filter(order => !ORDER_COLUMNS.some(column => column.status === order.status))
+    : [];
+  const columns = ORDER_COLUMNS.filter(column => filter === "all"
+    ? OPEN_STATUSES.includes(column.status) || filteredOrders.some(order => order.status === column.status)
+    : filter === "open" ? OPEN_STATUSES.includes(column.status) : filter === column.status);
+
+  const refreshBoard = async () => {
+    setRefreshing(true);
+    try {
+      await fetchOrders();
+    } finally {
+      setRefreshing(false);
     }
-  }, [filteredOrders, selectedId]);
-
-  const selectedOrder = orders.find((o) => o.id === selectedId) || null;
-
-  const totalValue = filteredOrders.reduce((s, o) => s + Number(o.total || 0), 0);
+  };
 
   const generateReceiptHTML = (order: Order) => {
-    const orderType = order.delivery_fee > 0 ? "ENTREGA" : "RETIRADA";
+    const orderType = isDeliveryOrder(order) ? "ENTREGA" : "RETIRADA";
     let itemsHTML = "";
     if (order.items && order.items.length > 0) {
       itemsHTML = order.items
@@ -278,7 +307,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   };
 
   const StatusBadge = ({ status }: { status: string }) => {
-    const meta = STATUS_META[status] || STATUS_META.new;
+    const meta = STATUS_META[status] ?? { label: "Outro status", className: "border-border text-muted-foreground" };
     return (
       <Badge variant="outline" className={cn("font-medium border", meta.className)}>
         {meta.label}
@@ -298,125 +327,121 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   }
 
   return (
-    <div className="bg-card rounded-xl border border-border/50 shadow-sm overflow-hidden">
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,400px)_1fr] min-h-[calc(100vh-14rem)]">
-        {/* LIST */}
-        <div className="border-r border-border/50 flex flex-col bg-muted/10">
-          <div className="p-4 border-b border-border/50 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-semibold">Pedidos</h2>
-                <p className="text-xs text-muted-foreground">
-                  Total: {filteredOrders.length} · Valor: R$ {totalValue.toFixed(2).replace(".", ",")}
-                </p>
-              </div>
-              <Button size="sm" onClick={() => setManualOrderOpen(true)}>
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                Lançar pedido
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar pedidos..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 h-9"
-                />
-              </div>
-              <Select value={filter} onValueChange={setFilter}>
-                <SelectTrigger className="w-[140px] h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="open">Abertos</SelectItem>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="new">Novo</SelectItem>
-                  <SelectItem value="preparing">Preparando</SelectItem>
-                  <SelectItem value="delivered">Em entrega</SelectItem>
-                  <SelectItem value="completed">Finalizado</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+    <div className="space-y-4">
+      <div className="space-y-4 rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Gestor de Pedidos</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {filteredOrders.length} {filteredOrders.length === 1 ? "pedido" : "pedidos"} · {money.format(totalValue)}
+            </p>
           </div>
-
-          <ScrollArea className="flex-1">
-            <div className="p-3 space-y-2">
-              {filteredOrders.length === 0 && (
-                <div className="text-center text-muted-foreground py-12">
-                  <ShoppingCart className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">Nenhum pedido encontrado</p>
-                </div>
-              )}
-              {filteredOrders.map((order) => {
-                const active = order.id === selectedId;
-                const isDelivery = Number(order.delivery_fee) > 0;
-                return (
-                  <button
-                    key={order.id}
-                    onClick={() => setSelectedId(order.id)}
-                    className={cn(
-                      "w-full text-left rounded-lg border p-3 transition-all hover:border-primary/50 hover:shadow-sm",
-                      active ? "border-primary bg-primary/5 shadow-sm" : "border-border/60 bg-card",
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        {isDelivery ? (
-                          <Bike className="h-4 w-4 text-primary flex-shrink-0" />
-                        ) : (
-                          <Store className="h-4 w-4 text-primary flex-shrink-0" />
-                        )}
-                        <span className="font-semibold text-sm truncate">{formatOrderNumber(order)}</span>
-                      </div>
-                      <StatusBadge status={order.status} />
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>Feito às {format(new Date(order.created_at), "HH:mm")}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium truncate">{order.customer_name || "Cliente"}</span>
-                      <span className="text-sm font-semibold">R$ {Number(order.total).toFixed(2).replace(".", ",")}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </ScrollArea>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => void refreshBoard()} disabled={refreshing} aria-label="Atualizar pedidos">
+              <RefreshCw className={cn("size-4", refreshing && "animate-spin")} aria-hidden="true" />
+            </Button>
+            <Button size="sm" className="gap-1.5" onClick={() => setManualOrderOpen(true)}>
+              <Plus className="size-4" aria-hidden="true" /> Lançar pedido
+            </Button>
+          </div>
         </div>
+        <div className="flex flex-wrap gap-2 border-t pt-4">
+          <div className="relative min-w-40 flex-1 sm:max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" aria-hidden="true" />
+            <Input ref={searchInput} aria-label="Buscar pedidos" placeholder="Número, nome ou telefone"
+              value={search} onChange={event => setSearch(event.target.value)} className="h-9 pl-9" />
+          </div>
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="h-9 w-auto max-w-full" aria-label="Filtrar por status">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="open">Abertos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
+              {ORDER_COLUMNS.map(column => (
+                <SelectItem key={column.status} value={column.status}>{column.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-        {/* DETAIL */}
-        <div className="flex flex-col min-h-0">
-          {!selectedOrder ? (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-40" />
-                <p>Selecione um pedido para ver os detalhes</p>
+      {loadFailed && (
+        <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          Não foi possível atualizar os pedidos. Use o botão Atualizar pedidos para tentar novamente.
+        </p>
+      )}
+
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
+        {[...columns, ...(otherOrders.length ? [{ status: "other", title: "Outros pedidos", icon: ShoppingCart, tone: "border-t-muted-foreground", empty: "" }] : [])].map(column => {
+          const entries = column.status === "other" ? otherOrders : filteredOrders.filter(order => order.status === column.status);
+          const Icon = column.icon;
+          return (
+            <section key={column.status} aria-labelledby={`order-column-${column.status}`}
+              className={cn("min-w-0 overflow-hidden rounded-xl border border-t-4 bg-muted/40 shadow-sm", column.tone)}>
+              <div className="flex items-center justify-between gap-2 border-b bg-card px-4 py-3">
+                <h2 id={`order-column-${column.status}`} className="flex items-center gap-2 text-sm font-semibold">
+                  <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" /> {column.title}
+                </h2>
+                <Badge variant="secondary" className="tabular-nums" aria-label={`${entries.length} pedidos`}>{entries.length}</Badge>
               </div>
-            </div>
-          ) : (
+              <div className="min-h-32 space-y-2 p-3 lg:min-h-64">
+                {!entries.length && (
+                  <div className="flex flex-col items-center justify-center gap-2 py-6 text-center text-sm text-muted-foreground lg:py-12">
+                    <Icon className="size-7 opacity-60" aria-hidden="true" />
+                    <p>{loadFailed ? "Atualização indisponível." : search.trim() ? "Nenhum resultado nesta etapa." : column.empty}</p>
+                  </div>
+                )}
+                {entries.map(order => {
+                  const ModalityIcon = isDeliveryOrder(order) ? Bike : Store;
+                  return (
+                    <button key={order.id} type="button" aria-haspopup="dialog" onClick={event => {
+                      openedFrom.current = event.currentTarget;
+                      setSelectedId(order.id);
+                    }} className="w-full rounded-lg border bg-card p-3 text-left shadow-sm transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <span className="flex flex-wrap items-center justify-between gap-2 text-sm font-semibold">
+                        <span className="flex items-center gap-2">
+                          <ModalityIcon className="size-4 text-primary" aria-hidden="true" />
+                          <span className="sr-only">Pedido </span>{formatOrderNumber(order)}
+                        </span>
+                        <span className="tabular-nums">{money.format(Number(order.total))}</span>
+                      </span>
+                      <span className="mt-1 block truncate text-sm">{order.customer_name || "Cliente"}</span>
+                      <span className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="size-3" aria-hidden="true" />
+                        {format(new Date(order.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                        <span aria-hidden="true">·</span> {isDeliveryOrder(order) ? "Entrega" : "Retirada"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      <Sheet open={Boolean(selectedOrder)} onOpenChange={open => { if (!open) setSelectedId(null); }}>
+        <SheetContent className="flex w-full max-w-none flex-col gap-0 p-0 sm:max-w-xl" onCloseAutoFocus={event => {
+          event.preventDefault();
+          (openedFrom.current?.isConnected ? openedFrom.current : searchInput.current)?.focus();
+        }}>
+          {selectedOrder && (
             <>
-              <div className="p-5 border-b border-border/50 flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4 pr-12">
                 <div>
-                  <h3 className="text-lg font-semibold">Pedido {formatOrderNumber(selectedOrder)}</h3>
-                  <p className="text-xs text-muted-foreground">
+                  <SheetTitle>Pedido {formatOrderNumber(selectedOrder)}</SheetTitle>
+                  <SheetDescription>
                     Feito {format(new Date(selectedOrder.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                  </p>
+                  </SheetDescription>
                 </div>
                 <StatusBadge status={selectedOrder.status} />
               </div>
-
-              <ScrollArea className="flex-1">
-                <div className="p-5 space-y-5">
+              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
                   {/* Tipo + Cliente */}
                   <div className="rounded-lg border border-border/50 p-4 space-y-3">
                     <div className="flex items-center gap-2 text-sm font-medium">
-                      {Number(selectedOrder.delivery_fee) > 0 ? (
+                      {isDeliveryOrder(selectedOrder) ? (
                         <>
                           <Truck className="h-4 w-4 text-primary" />
                           <span>Entrega (Delivery)</span>
@@ -438,7 +463,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                         <Phone className="h-4 w-4 text-muted-foreground" />
                         <span>{selectedOrder.customer_phone || "Não informado"}</span>
                       </div>
-                      {Number(selectedOrder.delivery_fee) > 0 && selectedOrder.address && (
+                      {isDeliveryOrder(selectedOrder) && selectedOrder.address && (
                         <div className="flex items-start gap-2">
                           <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                           <span>{selectedOrder.address}</span>
@@ -514,8 +539,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                       </div>
                     )}
                   </div>
-                </div>
-              </ScrollArea>
+              </div>
 
               {/* Actions */}
               <div className="border-t border-border/50 p-4 bg-muted/10 flex flex-wrap items-center gap-2">
@@ -523,10 +547,13 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                   value={selectedOrder.status}
                   onValueChange={(v) => updateOrderStatus(selectedOrder.id, v)}
                 >
-                  <SelectTrigger className="w-[170px] h-9">
-                    <SelectValue />
+                  <SelectTrigger className="h-9 w-auto" aria-label="Status do pedido">
+                    <SelectValue placeholder="Alterar status" />
                   </SelectTrigger>
                   <SelectContent>
+                    {selectedOrder.status === "pending_payment" && (
+                      <SelectItem value="pending_payment" disabled>Aguardando pagamento</SelectItem>
+                    )}
                     <SelectItem value="new">Novo</SelectItem>
                     <SelectItem value="preparing">Preparando</SelectItem>
                     <SelectItem value="delivered">Em entrega</SelectItem>
@@ -550,8 +577,8 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
               </div>
             </>
           )}
-        </div>
-      </div>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={!!cancelTarget} onOpenChange={(open) => !open && !refunding && setCancelTarget(null)}>
         <AlertDialogContent>

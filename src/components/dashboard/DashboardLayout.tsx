@@ -64,6 +64,12 @@ export function DashboardLayout({
 
         {activeSection === "dashboard" && <SalesDashboard restaurant={restaurant} />}
 
+        {activeSection === "orders" && (
+          <div className="animate-fade-in-up">
+            <OrdersKanban restaurant={restaurant} />
+          </div>
+        )}
+
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" className="h-9 bg-background hover:bg-muted text-xs" asChild>
             <a
@@ -101,12 +107,6 @@ export function DashboardLayout({
             <OnboardingChecklist restaurant={restaurant} />
             <MenuLinkCard restaurant={restaurant} />
             <RestaurantControls restaurant={restaurant} onRestaurantUpdate={onRestaurantUpdate} />
-          </div>
-        )}
-
-        {activeSection === "orders" && (
-          <div className="animate-fade-in-up">
-            <OrdersKanban restaurant={restaurant} />
           </div>
         )}
 
