@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { User, ArrowRight, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { scrollToPlans } from "@/lib/signup-cta";
 
 const links = [
   { label: "Benefícios", href: "#beneficios" },
@@ -44,10 +43,12 @@ export function Navbar() {
           <Button
             size="sm"
             className="group rounded-xl bg-gradient-flame px-5 font-bold text-flame-foreground shadow-[var(--shadow-flame)] transition-transform hover:scale-105"
-            onClick={scrollToPlans}
+            asChild
           >
-            COMEÇAR TESTE GRÁTIS
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <Link to="/criar-conta">
+              COMEÇAR TESTE GRÁTIS
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </Button>
         </div>
 
@@ -83,12 +84,10 @@ export function Navbar() {
 
             <Button
               className="w-full rounded-xl bg-gradient-flame font-bold text-flame-foreground"
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                scrollToPlans();
-              }}
+              asChild
+              onClick={() => setIsMobileMenuOpen(false)}
             >
-              COMEÇAR TESTE GRÁTIS
+              <Link to="/criar-conta">COMEÇAR TESTE GRÁTIS</Link>
             </Button>
           </div>
         </div>

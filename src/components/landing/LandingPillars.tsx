@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Bot, HeartHandshake, ShoppingBag, Workflow, Repeat2, Gift, Coins, Undo2 } from "lucide-react";
-import { scrollToPlans } from "@/lib/signup-cta";
+import { Link } from "react-router-dom";
 import disparo from "@/assets/mockup-disparo.png";
 import cardapio from "@/assets/mockup-cardapio.png";
 
@@ -152,11 +152,13 @@ export function LandingPillars() {
               </p>
               <Button
                 size="lg"
-                onClick={scrollToPlans}
+                asChild
                 className="mt-8 h-14 rounded-2xl bg-gradient-flame px-8 font-bold text-flame-foreground shadow-[var(--shadow-flame)]"
               >
-                QUERO TESTAR GRÁTIS
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <Link to="/criar-conta">
+                  QUERO TESTAR GRÁTIS
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
               </Button>
             </div>
             <div className="relative">

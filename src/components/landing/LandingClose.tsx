@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowRight, Check, Quote, Star, Calendar, Rocket, Headphones, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, Quote, Star, Calendar, Rocket, Headphones, MessageCircle, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import { scrollToPlans } from "@/lib/signup-cta";
+import { SPECIALIST_WHATSAPP_URL } from "@/lib/signup-cta";
 
 const testimonials = [
   {
@@ -137,6 +137,11 @@ export function LandingClose() {
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
+            <Button asChild variant="outline" size="lg" className="mt-3 h-12 w-full rounded-2xl border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white">
+              <a href={SPECIALIST_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="mr-2 h-5 w-5" aria-hidden="true" /> Falar com especialista
+              </a>
+            </Button>
             <p className="mt-4 text-center text-sm text-white/55">
               <ShieldCheck className="mr-1 inline h-4 w-4" /> Configuração feita pela nossa equipe
             </p>
@@ -213,14 +218,23 @@ export function LandingClose() {
           <p className="mx-auto mt-5 max-w-xl text-lg text-white/75">
             Comece o teste de 10 dias e deixe a nossa equipe configurar tudo para você.
           </p>
-          <Button
-            size="lg"
-            onClick={scrollToPlans}
-            className="group mt-9 h-14 rounded-2xl bg-gradient-flame px-10 text-base font-bold text-flame-foreground shadow-[var(--shadow-flame)] transition-transform hover:scale-[1.02]"
-          >
-            COMEÇAR TESTE GRÁTIS
-            <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-          </Button>
+          <div className="mt-9 flex flex-wrap justify-center gap-3">
+            <Button
+              size="lg"
+              asChild
+              className="group h-14 rounded-2xl bg-gradient-flame px-10 text-base font-bold text-flame-foreground shadow-[var(--shadow-flame)] transition-transform hover:scale-[1.02]"
+            >
+              <Link to="/criar-conta">
+                COMEÇAR TESTE GRÁTIS
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="h-14 rounded-2xl border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white">
+              <a href={SPECIALIST_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="mr-2 h-5 w-5" aria-hidden="true" /> Falar com especialista
+              </a>
+            </Button>
+          </div>
           <p className="mt-4 text-sm text-white/60">10 dias grátis • Depois R$ 39,90/mês ou R$ 199/ano</p>
         </div>
       </section>

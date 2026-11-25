@@ -9,7 +9,10 @@ export function openSignupWhatsApp() {
   window.open(SIGNUP_WHATSAPP_URL, "_blank", "noopener,noreferrer");
 }
 
-/** Rola a página até a área de planos (#planos). */
-export function scrollToPlans() {
-  document.getElementById("planos")?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
+export const SPECIALIST_WHATSAPP_URL = `https://wa.me/${SIGNUP_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  "Olá! Gostaria de falar com um especialista sobre o sistema."
+)}`;
+
+export const QUESTIONS_WHATSAPP_URL = `https://wa.me/${SIGNUP_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  "Olá! Tenho uma dúvida sobre o sistema."
+)}`;

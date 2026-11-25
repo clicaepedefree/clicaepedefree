@@ -1,10 +1,11 @@
 import { Mail, MessageSquare } from "lucide-react";
 import logo from "@/assets/logo.png";
-import { scrollToPlans } from "@/lib/signup-cta";
+import { Link } from "react-router-dom";
+import { SPECIALIST_WHATSAPP_URL } from "@/lib/signup-cta";
 
 export function LandingFooter() {
   return (
-    <footer className="bg-ink py-14 text-white">
+    <footer className="bg-ink pb-24 pt-14 text-white">
       <div className="container mx-auto px-4">
         <div className="grid gap-10 md:grid-cols-3">
           <div className="space-y-4">
@@ -26,9 +27,9 @@ export function LandingFooter() {
               <li><a href="#planos" className="hover:text-white">Preço</a></li>
               <li><a href="#como-funciona" className="hover:text-white">Como funciona</a></li>
               <li>
-                <button onClick={scrollToPlans} className="hover:text-white">
+                <Link to="/criar-conta" className="hover:text-white">
                   Começar teste grátis
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
@@ -38,7 +39,9 @@ export function LandingFooter() {
             <ul className="space-y-3 text-sm text-white/75">
               <li className="flex items-center gap-3">
                 <MessageSquare className="h-4 w-4 text-flame" />
-                WhatsApp: (11) 91665-1776
+                <a href={SPECIALIST_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white">
+                  Falar com especialista no WhatsApp
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-flame" />

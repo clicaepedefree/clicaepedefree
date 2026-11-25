@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, PlayCircle, ShieldCheck, Sparkles } from "lucide-react";
-import { scrollToPlans } from "@/lib/signup-cta";
+import { Link } from "react-router-dom";
 import devices from "@/assets/mockup-devices.png";
 
 const scrollTo = (id: string) => () => {
@@ -43,11 +43,13 @@ export function LandingHero() {
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
               <Button
                 size="lg"
-                onClick={scrollToPlans}
+                asChild
                 className="group h-14 rounded-2xl bg-gradient-flame px-8 text-base font-bold text-flame-foreground shadow-[var(--shadow-flame)] transition-transform hover:scale-[1.02]"
               >
-                COMEÇAR TESTE GRÁTIS
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                <Link to="/criar-conta">
+                  COMEÇAR TESTE GRÁTIS
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Link>
               </Button>
               <Button
                 size="lg"
