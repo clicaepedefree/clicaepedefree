@@ -10,3 +10,15 @@ export function useCustomers(restaurantId: string | undefined, filters: Customer
     return data || [];
   } });
 }
+export function useCustomerOverview(restaurantId: string | undefined) {
+  return useQuery({
+    queryKey: ['customer-overview', restaurantId],
+    enabled: Boolean(restaurantId),
+    refetchInterval: 15000,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.rpc('crm_overview', { _restaurant_id: restaurantId! }).abortSignal(signal);
+      if (error) throw error;
+      return data?.[0] ?? { customer_count: 0, purchase_count: 0, total_spent: 0 };
+    },
+  });
+}
