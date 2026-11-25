@@ -59,8 +59,10 @@ export function DashboardLayout({
       <UpsellPopup />
       <FloatingWhatsAppButton />
 
-      <div className="p-4 lg:p-8 xl:p-10 space-y-5 lg:space-y-6">
+      <div className="mx-auto max-w-[1600px] space-y-5 p-4 sm:p-6 lg:space-y-6 lg:p-8">
         <StoreStatusBanner restaurant={restaurant} onRestaurantUpdate={onRestaurantUpdate} />
+
+        {activeSection === "dashboard" && <SalesDashboard restaurant={restaurant} />}
 
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" className="h-9 bg-background hover:bg-muted text-xs" asChild>
@@ -99,7 +101,6 @@ export function DashboardLayout({
             <OnboardingChecklist restaurant={restaurant} />
             <MenuLinkCard restaurant={restaurant} />
             <RestaurantControls restaurant={restaurant} onRestaurantUpdate={onRestaurantUpdate} />
-            <SalesDashboard restaurant={restaurant} />
           </div>
         )}
 
