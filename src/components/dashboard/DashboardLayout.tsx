@@ -9,7 +9,6 @@ import {
 import { User } from "@supabase/supabase-js";
 import { AppShell } from "@/components/layout/AppShell";
 import { SalesDashboard } from "./SalesDashboard";
-import { CTABanner } from "./CTABanner";
 import { RestaurantControls } from "./RestaurantControls";
 import { OrdersKanban } from "../orders/OrdersKanban";
 import { OnboardingHelpDialog } from "./OnboardingHelpDialog";
@@ -100,7 +99,6 @@ export function DashboardLayout({
           </Button>
         </div>
 
-        <CTABanner />
 
         {activeSection === "dashboard" && (
           <div className="space-y-5 lg:space-y-6 animate-fade-in-up">
