@@ -1,271 +1,207 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { eachDayOfInterval, endOfDay, format, startOfDay, startOfMonth, startOfWeek, subDays } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { ChartNoAxesCombined, Package, Receipt, ShoppingBag, Wallet } from "lucide-react";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { 
-  DollarSign, 
-  TrendingUp, 
-  ShoppingCart, 
-  Calendar, 
-  ArrowUp, 
-  ArrowDown,
-  BarChart3,
-  Wallet
-} from "lucide-react";
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, subWeeks } from "date-fns";
+import type { Tables } from "@/integrations/supabase/types";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface SalesDashboardProps {
-  restaurant: any;
-}
+const periods = [
+  { id: "today", label: "Hoje", start: startOfDay },
+  { id: "week", label: "Semana", start: (date: Date) => startOfWeek(date, { weekStartsOn: 0 }) },
+  { id: "month", label: "Mês", start: startOfMonth },
+  { id: "60days", label: "60 dias", start: (date: Date) => startOfDay(subDays(date, 59)) },
+  { id: "all", label: "Histórico", start: () => undefined },
+] as const;
 
-interface SalesStats {
-  todayRevenue: number;
-  todayOrders: number;
-  weekRevenue: number;
-  weekOrders: number;
-  monthRevenue: number;
-  monthOrders: number;
-  totalRevenue: number;
-  totalOrders: number;
-  averageOrderValue: number;
-  previousWeekRevenue: number;
-  previousMonthRevenue: number;
-}
+const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const integer = new Intl.NumberFormat("pt-BR");
+const chartConfig = { revenue: { label: "Valor", color: "hsl(var(--primary))" } };
 
-export function SalesDashboard({ restaurant }: SalesDashboardProps) {
-  const [stats, setStats] = useState<SalesStats>({
-    todayRevenue: 0, todayOrders: 0,
-    weekRevenue: 0, weekOrders: 0,
-    monthRevenue: 0, monthOrders: 0,
-    totalRevenue: 0, totalOrders: 0,
-    averageOrderValue: 0,
-    previousWeekRevenue: 0, previousMonthRevenue: 0
-  });
-  const [loading, setLoading] = useState(true);
+type Order = Pick<Tables<"orders">, "id" | "total" | "created_at" | "items">;
 
-  useEffect(() => {
-    setStats({
-      todayRevenue: 0, todayOrders: 0,
-      weekRevenue: 0, weekOrders: 0,
-      monthRevenue: 0, monthOrders: 0,
-      totalRevenue: 0, totalOrders: 0,
-      averageOrderValue: 0,
-      previousWeekRevenue: 0, previousMonthRevenue: 0
-    });
-    setLoading(true);
-    fetchSalesData(restaurant.id);
-  }, [restaurant.id]);
+function summarizeOrders(orders: Order[], start: Date | undefined, end: Date) {
+  const products = new Map<string, { name: string; quantity: number }>();
+  const revenueByDate = new Map<string, number>();
+  const datePattern = start ? "yyyy-MM-dd" : "yyyy-MM";
+  const labelPattern = start ? "dd/MM" : "MMM/yy";
+  let revenue = 0;
+  let units = 0;
 
-  const fetchSalesData = async (restaurantId = restaurant.id) => {
-    try {
-      const now = new Date();
-      const previousMonthStart = startOfMonth(subMonths(now, 1));
-      
-      const { data, error } = await supabase
-        .from('orders')
-        .select('total, created_at, status')
-        .eq('restaurant_id', restaurantId)
-        .neq('status', 'cancelled')
-        .gte('created_at', previousMonthStart.toISOString());
-
-      if (error) throw error;
-
-      const recentOrders = data || [];
-
-      const { count: totalCount, error: countError } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('restaurant_id', restaurantId)
-        .neq('status', 'cancelled');
-
-      const { data: allTotals, error: totalError } = await supabase
-        .from('orders')
-        .select('total')
-        .eq('restaurant_id', restaurantId)
-        .neq('status', 'cancelled');
-
-      if (countError) throw countError;
-      if (totalError) throw totalError;
-
-      const allOrderTotals = allTotals || [];
-      const totalRevenue = allOrderTotals.reduce((sum, o) => sum + Number(o.total), 0);
-      const totalOrders = totalCount || allOrderTotals.length;
-
-      calculateStats(recentOrders, totalRevenue, totalOrders);
-    } catch (error: any) {
-      console.error('Erro ao buscar dados de vendas:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateStats = (orders: any[], totalRevenue: number, totalOrders: number) => {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekStart = startOfWeek(now, { weekStartsOn: 0 });
-    const weekEnd = endOfWeek(now, { weekStartsOn: 0 });
-    const monthStart = startOfMonth(now);
-    const monthEnd = endOfMonth(now);
-    
-    const previousWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 0 });
-    const previousWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 0 });
-    const previousMonthStart = startOfMonth(subMonths(now, 1));
-    const previousMonthEnd = endOfMonth(subMonths(now, 1));
-
-    const todayOrders = orders.filter(o => new Date(o.created_at) >= todayStart);
-    const todayRevenue = todayOrders.reduce((sum, o) => sum + Number(o.total), 0);
-
-    const weekOrders = orders.filter(o => {
-      const d = new Date(o.created_at);
-      return d >= weekStart && d <= weekEnd;
-    });
-    const weekRevenue = weekOrders.reduce((sum, o) => sum + Number(o.total), 0);
-
-    const monthOrders = orders.filter(o => {
-      const d = new Date(o.created_at);
-      return d >= monthStart && d <= monthEnd;
-    });
-    const monthRevenue = monthOrders.reduce((sum, o) => sum + Number(o.total), 0);
-
-    const previousWeekOrders = orders.filter(o => {
-      const d = new Date(o.created_at);
-      return d >= previousWeekStart && d <= previousWeekEnd;
-    });
-    const previousWeekRevenue = previousWeekOrders.reduce((sum, o) => sum + Number(o.total), 0);
-
-    const previousMonthOrders = orders.filter(o => {
-      const d = new Date(o.created_at);
-      return d >= previousMonthStart && d <= previousMonthEnd;
-    });
-    const previousMonthRev = previousMonthOrders.reduce((sum, o) => sum + Number(o.total), 0);
-
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-    setStats({
-      todayRevenue, todayOrders: todayOrders.length,
-      weekRevenue, weekOrders: weekOrders.length,
-      monthRevenue, monthOrders: monthOrders.length,
-      totalRevenue, totalOrders,
-      averageOrderValue,
-      previousWeekRevenue,
-      previousMonthRevenue: previousMonthRev
-    });
-  };
-
-  const calculatePercentageChange = (current: number, previous: number) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return ((current - previous) / previous) * 100;
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-  };
-
-  const renderChangeIndicator = (current: number, previous: number) => {
-    const change = calculatePercentageChange(current, previous);
-    const isPositive = change >= 0;
-    if (change === 0) return null;
-    return (
-      <div className={`flex items-center gap-1 text-[11px] lg:text-xs font-medium ${isPositive ? 'text-whatsapp' : 'text-destructive'}`}>
-        {isPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-        <span>{Math.abs(change).toFixed(0)}%</span>
-      </div>
-    );
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-7 w-7 border-2 border-primary border-t-transparent mx-auto mb-3"></div>
-          <p className="text-sm text-muted-foreground">Carregando vendas...</p>
-        </div>
-      </div>
-    );
+  if (start) {
+    for (const day of eachDayOfInterval({ start, end })) revenueByDate.set(format(day, datePattern), 0);
   }
+  for (const order of orders) {
+    const value = Number(order.total) || 0;
+    const day = format(new Date(order.created_at), datePattern);
+    revenue += value;
+    revenueByDate.set(day, (revenueByDate.get(day) ?? 0) + value);
+    if (!Array.isArray(order.items)) continue;
+    for (const item of order.items) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+      const name = [item.productName, item.product_name, item.name]
+        .find((value): value is string => typeof value === "string" && value.trim().length > 0)?.trim();
+      if (!name) continue;
+      const count = Number(item.quantity ?? 1);
+      if (!Number.isFinite(count) || count <= 0) continue;
+      const key = String(item.productId ?? item.product_id ?? name);
+      const previous = products.get(key);
+      products.set(key, { name, quantity: (previous?.quantity ?? 0) + count });
+      units += count;
+    }
+  }
+  return {
+    revenue,
+    orders: orders.length,
+    units,
+    products: [...products.entries()].sort(([, a], [, b]) => b.quantity - a.quantity).slice(0, 10),
+    chart: [...revenueByDate.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, revenue]) => ({
+      date,
+      label: format(new Date(`${date}${start ? "" : "-01"}T12:00:00`), labelPattern, { locale: ptBR }),
+      revenue,
+    })),
+  };
+}
 
-  const statCards = [
-    { title: "Hoje", value: stats.todayRevenue, subtitle: `${stats.todayOrders} pedido${stats.todayOrders !== 1 ? 's' : ''}`, icon: DollarSign, color: "primary" },
-    { title: "Esta Semana", value: stats.weekRevenue, subtitle: `${stats.weekOrders} pedido${stats.weekOrders !== 1 ? 's' : ''}`, icon: Calendar, color: "secondary", comparison: { current: stats.weekRevenue, previous: stats.previousWeekRevenue } },
-    { title: "Este Mês", value: stats.monthRevenue, subtitle: `${stats.monthOrders} pedido${stats.monthOrders !== 1 ? 's' : ''}`, icon: TrendingUp, color: "whatsapp", comparison: { current: stats.monthRevenue, previous: stats.previousMonthRevenue } },
-    { title: "Ticket Médio", value: stats.averageOrderValue, subtitle: "Por pedido", icon: ShoppingCart, color: "accent" }
+export function SalesDashboard({ restaurant }: { restaurant: { id: string; name: string } }) {
+  const [periodId, setPeriodId] = useState<(typeof periods)[number]["id"]>("week");
+  const period = periods.find(item => item.id === periodId) ?? periods[1];
+  const now = new Date();
+  const start = period.start(now);
+  const end = endOfDay(now);
+
+  const sales = useQuery({
+    queryKey: ["dashboard-sales", restaurant.id, periodId, start?.toISOString() ?? null, end.toISOString()],
+    queryFn: async ({ signal }) => {
+      const orders: Order[] = [];
+      const pageSize = 500;
+      for (let offset = 0; ; offset += pageSize) {
+        let query = supabase.from("orders").select("id,total,created_at,items")
+          .eq("restaurant_id", restaurant.id).neq("status", "cancelled")
+          .lte("created_at", now.toISOString()).order("created_at").order("id");
+        if (start) query = query.gte("created_at", start.toISOString());
+        const { data, error } = await query.range(offset, offset + pageSize - 1).abortSignal(signal);
+        if (error) throw error;
+        orders.push(...data);
+        if (data.length < pageSize) break;
+      }
+      return summarizeOrders(orders, start, end);
+    },
+  });
+
+  const stats = sales.data;
+  const cards = [
+    { title: "Valor em pedidos", value: currency.format(stats?.revenue ?? 0), icon: Wallet, tone: "bg-primary/10 text-primary" },
+    { title: "Pedidos", value: integer.format(stats?.orders ?? 0), icon: ShoppingBag, tone: "bg-orange-500/10 text-orange-700 dark:text-orange-300" },
+    { title: "Ticket médio", value: currency.format(stats?.orders ? stats.revenue / stats.orders : 0), icon: Receipt, tone: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
+    { title: "Itens em pedidos", value: integer.format(stats?.units ?? 0), icon: Package, tone: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" },
   ];
 
-  const getColorClasses = (color: string) => {
-    const colors: Record<string, { bg: string; text: string; gradient: string }> = {
-      primary: { bg: "bg-primary/10", text: "text-primary", gradient: "from-primary/50 to-primary" },
-      secondary: { bg: "bg-secondary/10", text: "text-secondary", gradient: "from-secondary/50 to-secondary" },
-      whatsapp: { bg: "bg-whatsapp/10", text: "text-whatsapp", gradient: "from-whatsapp/50 to-whatsapp" },
-      accent: { bg: "bg-accent/10", text: "text-accent-foreground", gradient: "from-accent/50 to-accent" }
-    };
-    return colors[color] || colors.primary;
-  };
-
   return (
-    <div className="space-y-5 lg:space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 lg:h-10 lg:w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-          <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
-        </div>
+    <section aria-labelledby="sales-dashboard-title" className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-lg lg:text-xl font-semibold text-foreground">Dashboard de Vendas</h2>
-          <p className="text-xs lg:text-sm text-muted-foreground">Acompanhe o desempenho do seu restaurante</p>
+          <h1 id="sales-dashboard-title" className="text-2xl font-bold tracking-tight sm:text-3xl">Visão geral</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{restaurant.name}</p>
+        </div>
+        <div role="group" aria-label="Período das vendas" className="flex max-w-full flex-wrap gap-1 rounded-xl border bg-card p-1 shadow-sm">
+          {periods.map(item => (
+            <Button key={item.id} type="button" size="sm" variant={item.id === periodId ? "default" : "ghost"}
+              aria-pressed={item.id === periodId} onClick={() => setPeriodId(item.id)} className="h-8 px-2.5">
+              {item.label}
+            </Button>
+          ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        {statCards.map((stat) => {
-          const colors = getColorClasses(stat.color);
-          return (
-            <Card key={stat.title} className="group relative overflow-hidden border-border/40 bg-card hover:shadow-md transition-all duration-200">
-              <CardContent className="p-3.5 lg:p-5">
-                <div className="flex items-start justify-between mb-2.5 lg:mb-3">
-                  <div className={`h-8 w-8 lg:h-9 lg:w-9 rounded-lg ${colors.bg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                    <stat.icon className={`h-3.5 w-3.5 lg:h-4 lg:w-4 ${colors.text}`} />
+      {sales.isPending ? (
+        <div role="status" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <span className="sr-only">Carregando vendas</span>
+          {cards.map(card => <Skeleton key={card.title} className="h-24 rounded-xl bg-muted" />)}
+        </div>
+      ) : sales.isError ? (
+        <Card className="p-5">
+          <p role="alert" className="mb-3 text-sm">Não foi possível carregar os dados de vendas.</p>
+          <Button type="button" variant="outline" onClick={() => void sales.refetch()}>Tentar novamente</Button>
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {cards.map(({ title, value, icon: Icon, tone }) => (
+              <Card key={title} className="min-w-0 shadow-sm">
+                <CardContent className="flex flex-col-reverse items-start justify-between gap-2 p-3 sm:flex-row sm:p-4">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground sm:text-sm">{title}</p>
+                    <p className="mt-1 break-words text-lg font-bold tracking-tight tabular-nums xl:text-2xl">{value}</p>
                   </div>
-                  {stat.comparison && renderChangeIndicator(stat.comparison.current, stat.comparison.previous)}
-                </div>
-                <div className="space-y-0.5 lg:space-y-1">
-                  <p className="text-[11px] lg:text-xs font-medium text-muted-foreground uppercase tracking-wide">{stat.title}</p>
-                  <p className={`text-lg lg:text-2xl font-bold ${colors.text} tracking-tight`}>{formatCurrency(stat.value)}</p>
-                  <p className="text-[11px] lg:text-xs text-muted-foreground">{stat.subtitle}</p>
-                </div>
-              </CardContent>
-              <div className={`absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r ${colors.gradient} opacity-0 group-hover:opacity-100 transition-opacity`} />
-            </Card>
-          );
-        })}
-      </div>
+                  <span className={`grid size-8 shrink-0 place-items-center rounded-lg sm:size-9 ${tone}`}>
+                    <Icon className="size-4" aria-hidden="true" />
+                  </span>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-      <Card className="border-border/40 bg-card overflow-hidden">
-        <CardContent className="p-0">
-          <div className="px-5 py-4 lg:px-6 lg:py-5 border-b border-border/40 bg-gradient-to-r from-primary/5 to-transparent">
-            <h3 className="text-base lg:text-lg font-semibold text-foreground">Resumo Total</h3>
+          <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+            <Card className="min-w-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Valor dos pedidos</CardTitle>
+                <p className="text-sm text-muted-foreground">{start ? "Por dia no período selecionado" : "Por mês no histórico"}</p>
+              </CardHeader>
+              <CardContent>
+                {stats?.orders ? (
+                  <ChartContainer config={chartConfig} className="aspect-auto h-64 w-full">
+                    <LineChart accessibilityLayer data={stats.chart} margin={{ right: 12 }}>
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                      <XAxis dataKey="label" tickLine={false} axisLine={false} minTickGap={22} />
+                      <YAxis tickFormatter={value => currency.format(value)} tickLine={false} axisLine={false} width={82} />
+                      <ChartTooltip content={<ChartTooltipContent formatter={value => currency.format(Number(value))} />} />
+                      <Line type="linear" dataKey="revenue" stroke="var(--color-revenue)" strokeWidth={2.5}
+                        dot={stats.chart.length === 1} isAnimationActive={false} />
+                    </LineChart>
+                  </ChartContainer>
+                ) : (
+                  <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+                    <ChartNoAxesCombined className="size-7" aria-hidden="true" /> Nenhum pedido neste período.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Produtos mais pedidos</CardTitle>
+                <p className="text-sm text-muted-foreground">Até 10 produtos por quantidade no período</p>
+              </CardHeader>
+              <CardContent>
+                {stats?.products.length ? (
+                  <ol className="space-y-2">
+                    {stats.products.map(([id, product]) => (
+                      <li key={id} className="grid grid-cols-[minmax(0,1fr)_minmax(3rem,1fr)_auto] items-center gap-2 text-sm">
+                        <span title={product.name} className="truncate">{product.name}</span>
+                        <span className="h-2 rounded-full bg-muted" aria-hidden="true">
+                          <span className="block h-full rounded-full bg-primary/75"
+                            style={{ width: `${product.quantity / stats.products[0][1].quantity * 100}%` }} />
+                        </span>
+                        <span className="min-w-6 text-right tabular-nums">{integer.format(product.quantity)}</span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+                    <Package className="size-7" aria-hidden="true" /> Nenhum produto nos pedidos deste período.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40">
-            <div className="p-4 lg:p-5 text-center group hover:bg-muted/20 transition-colors">
-              <div className="inline-flex h-10 w-10 lg:h-12 lg:w-12 rounded-xl bg-whatsapp/10 items-center justify-center mb-2.5 lg:mb-3 group-hover:scale-110 transition-transform">
-                <Wallet className="h-5 w-5 lg:h-6 lg:w-6 text-whatsapp" />
-              </div>
-              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-whatsapp tracking-tight">{formatCurrency(stats.totalRevenue)}</p>
-              <p className="text-xs lg:text-sm text-muted-foreground mt-1">Faturamento Total</p>
-            </div>
-            <div className="p-4 lg:p-5 text-center group hover:bg-muted/20 transition-colors">
-              <div className="inline-flex h-10 w-10 lg:h-12 lg:w-12 rounded-xl bg-primary/10 items-center justify-center mb-2.5 lg:mb-3 group-hover:scale-110 transition-transform">
-                <ShoppingCart className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
-              </div>
-              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-primary tracking-tight">{stats.totalOrders}</p>
-              <p className="text-xs lg:text-sm text-muted-foreground mt-1">Total de Pedidos</p>
-            </div>
-            <div className="p-4 lg:p-5 text-center group hover:bg-muted/20 transition-colors">
-              <div className="inline-flex h-10 w-10 lg:h-12 lg:w-12 rounded-xl bg-secondary/10 items-center justify-center mb-2.5 lg:mb-3 group-hover:scale-110 transition-transform">
-                <TrendingUp className="h-5 w-5 lg:h-6 lg:w-6 text-secondary" />
-              </div>
-              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-secondary tracking-tight">{formatCurrency(stats.averageOrderValue)}</p>
-              <p className="text-xs lg:text-sm text-muted-foreground mt-1">Ticket Médio Geral</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </>
+      )}
+    </section>
   );
 }
