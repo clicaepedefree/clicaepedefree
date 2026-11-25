@@ -1509,6 +1509,10 @@ export type Database = {
         }
         Returns: string
       }
+      crm_overview: {
+        Args: { _restaurant_id: string }
+        Returns: { customer_count: number; purchase_count: number; total_spent: number }[]
+      }
       crm_customers: {
         Args: {
           _last_from?: string
