@@ -241,6 +241,35 @@ export type Database = {
           },
         ]
       }
+      delivery_checkout_sessions: {
+        Row: {
+          expires_at: string
+          requests: number
+          restaurant_id: string
+          token_hash: string
+        }
+        Insert: {
+          expires_at?: string
+          requests?: number
+          restaurant_id: string
+          token_hash: string
+        }
+        Update: {
+          expires_at?: string
+          requests?: number
+          restaurant_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_checkout_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_distance_quotes: {
         Row: {
           delivery_fee: number
@@ -1594,6 +1623,10 @@ export type Database = {
         Returns: Json
       }
       normalize_customer_phone: { Args: { value: string }; Returns: string }
+      reserve_delivery_checkout_request: {
+        Args: { _restaurant_id: string; _token_hash: string }
+        Returns: boolean
+      }
       reserve_delivery_route_request: {
         Args: { _restaurant_id: string }
         Returns: boolean

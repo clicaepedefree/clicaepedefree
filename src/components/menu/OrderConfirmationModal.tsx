@@ -1,700 +1,254 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { numberToCurrency } from "@/components/ui/currency-input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
-import { maskCustomerPhone, normalizeCustomerPhone, readSavedCustomer, saveCustomerLocally } from "@/lib/customers";
-import { Banknote, CreditCard, ExternalLink, MapPin, Minus, Phone, Plus, ShoppingBag, Trash2, Truck } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import type { DeliveryDistanceQuote } from "@/lib/delivery-distance";
+import { useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft, ArrowRight, Check, Loader2, Minus, Plus, Trash2, Truck, ShoppingBag, CreditCard } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { numberToCurrency } from '@/components/ui/currency-input';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { maskCustomerPhone, normalizeCustomerPhone, readSavedCustomer, savedCustomerForPhone, saveCustomerLocally } from '@/lib/customers';
+import { canCalculateDelivery, isCurrentDeliveryQuote, type DeliveryDistanceQuote } from '@/lib/delivery-distance';
+import { queryDelivery } from '@/lib/delivery-api';
+import { DistanceAddressFields } from './DistanceAddressFields';
 
 interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category_id: string;
-  image_url?: string;
-  is_active: boolean;
-  display_order: number;
+  id: string; name: string; description: string; price: number; category_id: string;
+  image_url?: string; is_active: boolean; display_order: number;
 }
-
 interface Restaurant {
-  id: string;
-  name: string;
-  whatsapp: string;
-  slug: string;
-  delivery_enabled?: boolean;
-  pickup_enabled?: boolean;
+  id: string; name: string; whatsapp: string; slug: string; delivery_enabled?: boolean; pickup_enabled?: boolean;
 }
-
 interface DeliveryAddress {
-  street: string;
-  number: string;
-  complement: string;
-  neighborhood: string;
-  phone: string;
-  name: string;
-  deliveryZoneId?: string;
-  cep?: string;
-  distanceQuote?: DeliveryDistanceQuote;
+  street: string; number: string; complement: string; neighborhood: string; phone: string; name: string;
+  deliveryZoneId?: string; cep?: string; city?: string; state?: string; distanceQuote?: DeliveryDistanceQuote;
 }
-
-interface DeliveryZone {
-  id: string;
-  neighborhood: string;
-  delivery_fee: number;
-  is_active: boolean;
-}
-
-interface PaymentMethod {
-  type: 'debit_card' | 'credit_card' | 'food_voucher' | 'meal_voucher' | 'pix' | 'pix_online' | 'cash';
-  changeAmount?: number;
-}
-
+interface DeliveryZone { id: string; neighborhood: string; delivery_fee: number; is_active: boolean }
+interface PaymentMethod { type: 'debit_card' | 'credit_card' | 'food_voucher' | 'meal_voucher' | 'pix' | 'pix_online' | 'cash'; changeAmount?: number }
 interface OrderConfirmationModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean; onOpenChange: (open: boolean) => void;
   cart: { [key: string]: { quantity: number; addons: any[]; unitPrice: number; observations?: string } };
-  products: Product[];
-  restaurant: Restaurant | null;
+  products: Product[]; restaurant: Restaurant | null;
   onUpdateQuantity: (cartKey: string, newQuantity: number) => void;
   onRemoveItem: (cartKey: string) => void;
   onSendWhatsApp: (address?: DeliveryAddress, payment?: PaymentMethod, deliveryFee?: number) => Promise<boolean>;
   getCartTotal: () => number;
 }
+const emptyAddress: DeliveryAddress = { street: '', number: '', complement: '', neighborhood: '', phone: '', name: '', cep: '', city: '', state: '', deliveryZoneId: '' };
 
-const DEFAULT_PAYMENT_METHODS = [{ method_type: 'pix_online', is_active: true }];
-
-export function OrderConfirmationModal({
-  open,
-  onOpenChange,
-  cart,
-  products,
-  restaurant,
-  onUpdateQuantity,
-  onRemoveItem,
-  onSendWhatsApp,
-  getCartTotal
-}: OrderConfirmationModalProps) {
-  const cartEntries = Object.entries(cart);
-  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
-  const [selectedDeliveryZone, setSelectedDeliveryZone] = useState<DeliveryZone | null>(null);
-  
-  // Determine default order type based on enabled options
-  const deliveryEnabled = restaurant?.delivery_enabled ?? true;
-  const pickupEnabled = restaurant?.pickup_enabled ?? true;
-  const defaultOrderType = deliveryEnabled ? 'delivery' : (pickupEnabled ? 'pickup' : 'delivery');
-  
-  const [orderType, setOrderType] = useState<'delivery' | 'pickup'>(defaultOrderType);
-  
-  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
-    street: '',
-    number: '',
-    complement: '',
-    neighborhood: '',
-    phone: '',
-    name: '',
-    deliveryZoneId: ''
-  });
-  
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
-  
-  const [changeAmount, setChangeAmount] = useState('');
-  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>(DEFAULT_PAYMENT_METHODS);
-  const [restaurantPixKey, setRestaurantPixKey] = useState('');
-  const [quoteResult, setQuoteResult] = useState<{ key: string; quote?: DeliveryDistanceQuote; error?: string }>();
+export function OrderConfirmationModal({ open, onOpenChange, cart, products, restaurant,
+  onUpdateQuantity, onRemoveItem, onSendWhatsApp, getCartTotal }: OrderConfirmationModalProps) {
+  const [step, setStep] = useState(1);
+  const [orderType, setOrderType] = useState<'delivery' | 'pickup'>('delivery');
+  const [address, setAddress] = useState<DeliveryAddress>(emptyAddress);
+  const [quoteResult, setQuoteResult] = useState<{ key: string; quote: DeliveryDistanceQuote }>();
   const [quoting, setQuoting] = useState(false);
   const [sending, setSending] = useState(false);
-  const [sendError, setSendError] = useState(false);
-
+  const [error, setError] = useState('');
+  const [clock, setClock] = useState(Date.now());
+  const deliveryEnabled = restaurant?.delivery_enabled ?? true;
+  const pickupEnabled = restaurant?.pickup_enabled ?? true;
+  const restaurantId = restaurant?.id;
+  const entries = Object.entries(cart);
   const deliveryMode = useQuery({
-    queryKey: ['delivery-distance-mode', restaurant?.id],
-    enabled: open && deliveryEnabled && Boolean(restaurant?.id),
+    queryKey: ['delivery-distance-mode', restaurantId], enabled: open && deliveryEnabled && Boolean(restaurantId), staleTime: 0,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('delivery_uses_distance', { _restaurant_id: restaurant!.id });
-      // During a staged deployment, neighborhood delivery still works before the migration.
-      if (error?.code === 'PGRST202') return false;
+      if (!restaurantId) throw new Error('Loja não encontrada.');
+      const { data, error } = await supabase.rpc('delivery_uses_distance', { _restaurant_id: restaurantId });
       if (error) throw error;
       return data;
     },
   });
+  const zones = useQuery({
+    queryKey: ['checkout-delivery-zones', restaurantId], enabled: open && deliveryMode.data === false && Boolean(restaurantId),
+    queryFn: async () => {
+      if (!restaurantId) return [];
+      const { data, error } = await supabase.from('delivery_zones').select('id,neighborhood,delivery_fee,is_active')
+        .eq('restaurant_id', restaurantId).eq('is_active', true).order('neighborhood');
+      if (error) throw error;
+      return data as DeliveryZone[];
+    },
+  });
   const usesDistance = deliveryMode.data === true;
-  const { street, number, complement, neighborhood, cep } = deliveryAddress;
-  const quoteKey = JSON.stringify([restaurant?.id, street, number, complement, neighborhood, cep]);
-  const currentQuote = quoteResult?.key === quoteKey && quoteResult.quote &&
-    Date.parse(quoteResult.quote.expiresAt) > Date.now() ? quoteResult.quote : undefined;
-  const canQuote = street.trim() && number.trim() && neighborhood.trim() && cep?.replace(/\D/g, '').length === 8;
-
-  const calculateDelivery = async () => {
-    setQuoting(true);
-    setSendError(false);
-    setQuoteResult(undefined);
-    try {
-      const { data, error } = await supabase.functions.invoke<DeliveryDistanceQuote & { error?: string }>('delivery-distance', {
-        body: { restaurantId: restaurant?.id, street, number, complement, neighborhood, cep },
-      });
-      if (error || !data) throw error ?? new Error('Cotação indisponível');
-      setQuoteResult({ key: quoteKey, quote: data.error ? undefined : data, error: data.error });
-    } catch {
-      setQuoteResult({ key: quoteKey, error: 'Não foi possível calcular a entrega agora. Tente novamente.' });
-    } finally {
-      setQuoting(false);
-    }
-  };
+  const quoteKey = JSON.stringify([restaurantId, address.street, address.number, address.complement, address.neighborhood, address.cep, address.city, address.state]);
+  const latest = useRef({ quoteKey, open });
+  latest.current = { quoteKey, open };
+  const currentQuote = quoteResult?.key === quoteKey && isCurrentDeliveryQuote(quoteResult.quote, clock) ? quoteResult.quote : undefined;
+  const selectedZone = zones.data?.find(zone => zone.id === address.deliveryZoneId);
+  const deliveryFee = orderType === 'pickup' ? 0 : usesDistance ? currentQuote?.fee ?? 0 : selectedZone?.delivery_fee ?? 0;
+  const contactValid = Boolean(address.name.trim() && normalizeCustomerPhone(address.phone));
+  const addressValid = orderType === 'pickup' || (deliveryMode.isSuccess && !deliveryMode.isFetching &&
+    (usesDistance ? canCalculateDelivery(address) : Boolean(address.street.trim() && address.number.trim() && selectedZone)));
+  const ready = contactValid && addressValid && (orderType === 'pickup' || !usesDistance || Boolean(currentQuote));
 
   useEffect(() => {
-    if (restaurant?.id && open) {
-      setQuoteResult(undefined);
-      setSendError(false);
-      const saved = readSavedCustomer(restaurant.id);
-      if (saved) setDeliveryAddress(prev => ({
-        ...prev,
-        name: prev.name || saved.name, phone: prev.phone || maskCustomerPhone(saved.phone),
-        street: prev.street || saved.address, number: prev.number || saved.number,
-        complement: prev.complement || saved.complement,
-      }));
-      fetchDeliveryZones();
-      fetchPaymentMethods();
-      // Reset order type based on enabled options
-      if (deliveryEnabled) {
-        setOrderType('delivery');
-      } else if (pickupEnabled) {
-        setOrderType('pickup');
-      }
-    }
-  }, [restaurant?.id, open, deliveryEnabled, pickupEnabled]);
+    if (!open || !restaurantId) return;
+    const saved = readSavedCustomer(restaurantId);
+    setAddress({ ...emptyAddress, phone: saved ? maskCustomerPhone(saved.phone) : '' });
+    setStep(1); setQuoteResult(undefined); setError(''); setQuoting(false); setSending(false);
+    setOrderType(deliveryEnabled ? 'delivery' : 'pickup');
+  }, [open, restaurantId, deliveryEnabled]);
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [open]);
 
-  const fetchDeliveryZones = async () => {
+  function patchAddress(patch: Partial<DeliveryAddress>) {
+    setAddress(previous => ({ ...previous, ...patch }));
+    setError('');
+  }
+  function continuePhone() {
+    if (!restaurantId || !normalizeCustomerPhone(address.phone)) return;
+    const saved = savedCustomerForPhone(readSavedCustomer(restaurantId), address.phone);
+    setAddress(previous => ({ ...emptyAddress, phone: previous.phone, ...(saved ? {
+      name: saved.name, street: saved.address, number: saved.number, complement: saved.complement,
+      neighborhood: saved.neighborhood, city: saved.city ?? '', state: saved.state ?? '', cep: saved.cep ?? '',
+      deliveryZoneId: zones.data?.find(zone => zone.neighborhood === saved.neighborhood)?.id ?? '',
+    } : {}) }));
+    setQuoteResult(undefined); setError(''); setStep(2);
+  }
+  async function continueAddress() {
+    if (!contactValid || !addressValid || quoting) return;
+    if (orderType === 'pickup' || !usesDistance) { setStep(3); return; }
+    if (!restaurantId) return;
+    setQuoting(true); setQuoteResult(undefined); setError('');
+    const key = quoteKey;
     try {
-      const { data, error } = await supabase
-        .from('delivery_zones')
-        .select('*')
-        .eq('restaurant_id', restaurant!.id)
-        .eq('is_active', true)
-        .order('neighborhood');
-
-      if (error) throw error;
-      setDeliveryZones(data || []);
-    } catch (error) {
-      console.error('Erro ao buscar zonas de entrega:', error);
-    }
-  };
-
-  const fetchPaymentMethods = async () => {
-    try {
-      const { error } = await (supabase as any).rpc('get_public_payment_methods', {
-        _restaurant_id: restaurant!.id,
+      const quote = await queryDelivery<DeliveryDistanceQuote>(restaurantId, { action: 'quote',
+        street: address.street.trim(), number: address.number.trim(), complement: address.complement.trim(),
+        neighborhood: address.neighborhood.trim(), city: address.city?.trim(), state: address.state, cep: address.cep ?? '',
       });
-
-      if (error) throw error;
-
-      // PIX Online é a única forma de pagamento do sistema e deve aparecer
-      // por padrão, mesmo quando o restaurante ainda não possui registro em
-      // payment_methods. A cobrança é gerada na conta master ValidaPay.
-      const list = DEFAULT_PAYMENT_METHODS;
-      setAvailablePaymentMethods(list);
-
-      if (!paymentMethod || paymentMethod.type !== 'pix_online') {
-        setPaymentMethod({ type: 'pix_online' });
-      }
+      if (latest.current.quoteKey !== key || !latest.current.open) return;
+      if (!isCurrentDeliveryQuote(quote)) throw new Error('O cálculo não retornou uma entrega válida. Tente novamente.');
+      setClock(Date.now()); setQuoteResult({ key, quote }); setStep(3);
     } catch (error) {
-      console.error('Erro ao buscar formas de pagamento:', error);
-      setAvailablePaymentMethods(DEFAULT_PAYMENT_METHODS);
-      setPaymentMethod({ type: 'pix_online' });
+      if (latest.current.quoteKey === key && latest.current.open) setError(error instanceof Error ? error.message : 'Não foi possível calcular a entrega.');
+    } finally { setQuoting(false); }
+  }
+  async function sendOrder() {
+    if (!ready || sending || !restaurantId || !entries.length) return;
+    if (orderType === 'delivery' && usesDistance && !isCurrentDeliveryQuote(currentQuote)) {
+      setQuoteResult(undefined); setStep(2); setError('O cálculo expirou. Confirme o endereço novamente.'); return;
     }
-  };
-
-
-  const handleDeliveryZoneChange = (zoneId: string) => {
-    const zone = deliveryZones.find(z => z.id === zoneId);
-    setSelectedDeliveryZone(zone || null);
-    setDeliveryAddress(prev => ({ 
-      ...prev, 
-      deliveryZoneId: zoneId,
-      neighborhood: zone?.neighborhood || ''
-    }));
-  };
-  
-  const handleSendOrder = async () => {
-    if (!paymentMethod || !isAddressValid || sending) return;
-    if (orderType === 'delivery' && usesDistance && (!currentQuote || Date.parse(currentQuote.expiresAt) <= Date.now())) {
-      setQuoteResult({ key: quoteKey, error: 'O cálculo expirou. Calcule a entrega novamente.' });
-      return;
-    }
-    
-    const payment: PaymentMethod = {
-      type: paymentMethod.type,
-      changeAmount: paymentMethod.type === 'cash' && changeAmount ? parseFloat(changeAmount) : undefined
-    };
-    const address = orderType === 'delivery'
-      ? { ...deliveryAddress, distanceQuote: usesDistance ? currentQuote : undefined }
-      : { ...deliveryAddress, street: '', number: '', complement: '', neighborhood: '', deliveryZoneId: '' };
-    if (restaurant?.id) {
-      const previous = readSavedCustomer(restaurant.id);
-      saveCustomerLocally(restaurant.id, {
-        name: deliveryAddress.name.trim().slice(0, 100), phone: deliveryAddress.phone,
-        address: (deliveryAddress.street || previous?.address || '').slice(0, 300),
-        number: (deliveryAddress.number || previous?.number || '').slice(0, 30),
-        complement: (deliveryAddress.complement || previous?.complement || '').slice(0, 100),
-        neighborhood: (deliveryAddress.neighborhood || previous?.neighborhood || '').slice(0, 100),
-      });
-    }
-    setSending(true);
-    setSendError(false);
+    const deliveryAddress = orderType === 'delivery' ? { ...address, distanceQuote: usesDistance ? currentQuote : undefined }
+      : { ...address, street: '', number: '', complement: '', neighborhood: '', deliveryZoneId: '', cep: '', city: '', state: '' };
+    setSending(true); setError('');
     try {
-      if (await onSendWhatsApp(address, payment, deliveryFee)) {
-        setQuoteResult(undefined);
-        onOpenChange(false);
-      } else {
-        setSendError(true);
+      const success = await onSendWhatsApp(deliveryAddress, { type: 'pix_online' }, deliveryFee);
+      if (!success) {
+        if (usesDistance && orderType === 'delivery') { setQuoteResult(undefined); setStep(2); }
+        setError('Não foi possível registrar o pedido. Confira a entrega e tente novamente.'); return;
       }
-    } finally {
-      setSending(false);
-    }
-  };
+      const previous = savedCustomerForPhone(readSavedCustomer(restaurantId), address.phone);
+      const savedAddress = orderType === 'delivery' ? address : {
+        ...address, street: previous?.address ?? '', number: previous?.number ?? '', complement: previous?.complement ?? '',
+        neighborhood: previous?.neighborhood ?? '', city: previous?.city ?? '', state: previous?.state ?? '', cep: previous?.cep ?? '',
+      };
+      saveCustomerLocally(restaurantId, { name: address.name.trim(), phone: address.phone, address: savedAddress.street,
+        number: savedAddress.number, complement: savedAddress.complement, neighborhood: savedAddress.neighborhood,
+        city: savedAddress.city, state: savedAddress.state, cep: savedAddress.cep });
+      onOpenChange(false);
+    } catch { setError('Não foi possível finalizar o pedido. Tente novamente.'); }
+    finally { setSending(false); }
+  }
 
-  const hasCustomer = deliveryAddress.name.trim() && normalizeCustomerPhone(deliveryAddress.phone);
-  const isAddressValid = hasCustomer && (orderType === 'pickup' ||
-    (deliveryMode.isSuccess && !deliveryMode.isFetching && street.trim() && number.trim() &&
-      (usesDistance ? currentQuote : deliveryAddress.deliveryZoneId)));
-  const isPaymentValid = paymentMethod !== null;
-  const deliveryFee = orderType === 'delivery'
-    ? (usesDistance ? currentQuote?.fee ?? 0 : selectedDeliveryZone?.delivery_fee ?? 0)
-    : 0;
-  const totalWithDelivery = getCartTotal() + deliveryFee;
-
-  const updateQuantity = (cartKey: string, delta: number) => {
-    const currentQuantity = cart[cartKey]?.quantity || 0;
-    const newQuantity = currentQuantity + delta;
-    
-    if (newQuantity <= 0) {
-      onRemoveItem(cartKey);
-    } else {
-      onUpdateQuantity(cartKey, newQuantity);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-2xl h-[90vh] sm:h-auto sm:max-h-[85vh] p-0 gap-0 flex flex-col">
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 border-b sticky top-0 bg-background z-10">
-          <DialogTitle className="text-base sm:text-xl font-bold">
-            Confirmar Pedido - {restaurant?.name}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
-          <div className="space-y-4">
-        {cartEntries.map(([cartKey, item]) => {
-          // Extract product ID - format is: productId-[addons]-observations
-          const parts = cartKey.split('-');
-          const productId = parts.slice(0, 5).join('-');
-          const product = products.find(p => p.id === productId);
-            
-            if (!product) return null;
-
-            return (
-              <div key={cartKey} className="border rounded-lg p-4 space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{product.name}</h3>
-                    {product.description && (
-                      <p className="text-muted-foreground text-sm">{product.description}</p>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onRemoveItem(cartKey)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {item.addons && item.addons.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Adicionais:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {item.addons.map((addon, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {addon.option?.name}
-                          {addon.option?.price && addon.option.price > 0 && 
-                            ` (+R$ ${numberToCurrency(addon.option.price)})`
-                          }
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {item.observations && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">📝 Observações:</p>
-                    <p className="text-sm italic text-muted-foreground bg-muted/50 p-2 rounded">
-                      {item.observations}
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => updateQuantity(cartKey, -1)}
-                      className="h-8 w-8"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="font-semibold min-w-[2rem] text-center">
-                      {item.quantity}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => updateQuantity(cartKey, 1)}
-                      className="h-8 w-8"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">
-                      R$ {numberToCurrency(item.unitPrice)} cada
-                    </p>
-                    <p className="font-bold text-lg">
-                      R$ {numberToCurrency(item.unitPrice * item.quantity)}
-                    </p>
-                  </div>
-                </div>
+  return <Dialog open={open} onOpenChange={value => { if (!sending) onOpenChange(value); }}>
+    <DialogContent className="max-w-[95vw] sm:max-w-2xl h-[90dvh] p-0 gap-0 flex flex-col" aria-describedby="checkout-description">
+      <DialogHeader className="px-4 sm:px-6 pt-5 pb-4 border-b shrink-0">
+        <DialogTitle className="text-lg break-words">Seu pedido · {restaurant?.name}</DialogTitle>
+        <DialogDescription id="checkout-description">{step === 1 ? 'Qual é o seu telefone?' : step === 2 ? 'Confirme seus dados' : 'Revise seu pedido'}</DialogDescription>
+        <ol className="flex items-center gap-2 pt-3 text-xs sm:text-sm" aria-label="Etapas do pedido">
+          {['Telefone', 'Entrega', 'Pagamento'].map((label, index) => <li key={label} aria-current={step === index + 1 ? 'step' : undefined}
+            className={`flex-1 flex items-center gap-2 ${step === index + 1 ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
+            <span className={`h-6 w-6 shrink-0 rounded-full flex items-center justify-center border ${step > index + 1 ? 'bg-primary text-primary-foreground border-primary' : 'border-border'}`}>
+              {step > index + 1 ? <Check className="h-3 w-3" /> : index + 1}</span><span>{label}</span>
+          </li>)}
+        </ol>
+      </DialogHeader>
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-5 space-y-5">
+        {step === 1 && <div className="space-y-3">
+          <Label htmlFor="checkout-phone">Telefone com DDD *</Label>
+          <Input id="checkout-phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999" maxLength={16}
+            value={address.phone} onChange={e => patchAddress({ phone: maskCustomerPhone(e.target.value) })}
+            onKeyDown={e => { if (e.key === 'Enter') continuePhone(); }} />
+        </div>}
+        {step === 2 && <>
+          {deliveryEnabled && pickupEnabled && <RadioGroup value={orderType} onValueChange={value => {
+            setOrderType(value === 'delivery' ? 'delivery' : 'pickup'); setQuoteResult(undefined); setError('');
+          }} className="flex flex-wrap gap-5">
+            <div className="flex items-center gap-2"><RadioGroupItem id="checkout-delivery" value="delivery" /><Label htmlFor="checkout-delivery" className="flex items-center gap-2"><Truck className="h-4 w-4" />Entrega</Label></div>
+            <div className="flex items-center gap-2"><RadioGroupItem id="checkout-pickup" value="pickup" /><Label htmlFor="checkout-pickup" className="flex items-center gap-2"><ShoppingBag className="h-4 w-4" />Retirada</Label></div>
+          </RadioGroup>}
+          <div className="space-y-2"><Label htmlFor="checkout-name">Nome *</Label><Input id="checkout-name" autoComplete="name" maxLength={100} value={address.name} onChange={e => patchAddress({ name: e.target.value })} /></div>
+          {orderType === 'delivery' && <>
+            {deliveryMode.isPending && <p role="status">Carregando área de entrega...</p>}
+            {deliveryMode.isError && <div className="space-y-2"><p role="alert" className="text-destructive">Não foi possível carregar a área de entrega.</p><Button variant="outline" onClick={() => void deliveryMode.refetch()}>Tentar novamente</Button></div>}
+            {usesDistance && restaurantId && <DistanceAddressFields restaurantId={restaurantId} value={address} onChange={patchAddress} disabled={quoting} />}
+            {deliveryMode.isSuccess && !usesDistance && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2 space-y-2"><Label htmlFor="checkout-street">Rua *</Label><Input id="checkout-street" maxLength={300} value={address.street} onChange={e => patchAddress({ street: e.target.value })} /></div>
+              <div className="space-y-2"><Label htmlFor="checkout-number">Número *</Label><Input id="checkout-number" maxLength={30} value={address.number} onChange={e => patchAddress({ number: e.target.value })} /></div>
+              <div className="space-y-2"><Label htmlFor="checkout-complement">Complemento</Label><Input id="checkout-complement" maxLength={100} value={address.complement} onChange={e => patchAddress({ complement: e.target.value })} /></div>
+              <div className="sm:col-span-2 space-y-2"><Label htmlFor="checkout-zone">Bairro *</Label>
+                <Select value={address.deliveryZoneId} onValueChange={id => patchAddress({ deliveryZoneId: id, neighborhood: zones.data?.find(zone => zone.id === id)?.neighborhood ?? '' })}>
+                  <SelectTrigger id="checkout-zone"><SelectValue placeholder="Selecione seu bairro" /></SelectTrigger>
+                  <SelectContent>{zones.data?.map(zone => <SelectItem key={zone.id} value={zone.id}>{zone.neighborhood} · R$ {numberToCurrency(zone.delivery_fee)}</SelectItem>)}</SelectContent>
+                </Select>
+                {zones.isPending && <p role="status">Carregando bairros...</p>}
+                {zones.isError && <Button variant="outline" onClick={() => void zones.refetch()}>Carregar bairros novamente</Button>}
+                {zones.isSuccess && !zones.data?.length && <p role="alert" className="text-destructive">A loja ainda não cadastrou bairros para entrega.</p>}
               </div>
-            );
-          })}
+            </div>}
+          </>}
+          {orderType === 'pickup' && <p className="text-sm text-muted-foreground">Retirada na loja · Sem taxa de entrega</p>}
+        </>}
+        {step === 3 && <>
+          <div className="space-y-1 text-sm border-b pb-4">
+            <p className="font-semibold">{address.name} · {maskCustomerPhone(address.phone)}</p>
+            <p className="text-muted-foreground break-words">{orderType === 'pickup' ? 'Retirada na loja' : currentQuote?.address ?? `${address.street}, ${address.number}${address.complement ? ` - ${address.complement}` : ''}, ${address.neighborhood}`}</p>
           </div>
-
-          <Separator className="my-4" />
-
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-sm sm:text-base">
-                <span>Subtotal:</span>
-                <span>R$ {numberToCurrency(getCartTotal())}</span>
-              </div>
-              {orderType === 'delivery' && selectedDeliveryZone && (
-                <div className="flex justify-between items-center text-sm sm:text-base">
-                  <span className="text-xs sm:text-sm">Taxa de entrega ({selectedDeliveryZone.neighborhood}):</span>
-                  <span>R$ {numberToCurrency(deliveryFee)}</span>
-                </div>
-              )}
-              <div className="flex justify-between items-center text-lg sm:text-xl font-bold border-t pt-2">
-                <span>Total:</span>
-                <span>R$ {numberToCurrency(totalWithDelivery)}</span>
-              </div>
-            </div>
-
-            <Separator className="my-4" />
-
-            {(deliveryEnabled || pickupEnabled) && (
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                  <h3 className="text-base sm:text-lg font-semibold">Tipo de Pedido</h3>
-                </div>
-                
-                {deliveryEnabled && pickupEnabled ? (
-                  <RadioGroup 
-                    value={orderType} 
-                    onValueChange={(value) => setOrderType(value as 'delivery' | 'pickup')}
-                    className="flex flex-col space-y-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="delivery" id="delivery" />
-                      <Label htmlFor="delivery" className="flex items-center space-x-2 text-sm sm:text-base">
-                        <Truck className="h-4 w-4" />
-                        <span>Entrega</span>
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="pickup" id="pickup" />
-                      <Label htmlFor="pickup" className="flex items-center space-x-2 text-sm sm:text-base">
-                        <ShoppingBag className="h-4 w-4" />
-                        <span>Retirada</span>
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                ) : (
-                  <div className="flex items-center space-x-2 p-2 bg-muted rounded-md">
-                    {deliveryEnabled ? (
-                      <>
-                        <Truck className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium">Apenas Entrega disponível</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingBag className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium">Apenas Retirada disponível</span>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <Separator className="my-4" />
-
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <h3 className="text-base sm:text-lg font-semibold">
-                  {orderType === 'delivery' ? 'Endereço de Entrega' : 'Dados para Contato'}
-                </h3>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="name" className="text-sm">Nome *</Label>
-                  <Input
-                    id="name"
-                    placeholder="Seu nome"
-                    value={deliveryAddress.name}
-                    onChange={(e) => setDeliveryAddress(prev => ({ ...prev, name: e.target.value }))}
-                    className="h-10"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="phone" className="text-sm">Telefone *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    maxLength={16}
-                    placeholder="(11) 99999-9999"
-                    value={deliveryAddress.phone}
-                    onChange={(e) => setDeliveryAddress(prev => ({ ...prev, phone: maskCustomerPhone(e.target.value) }))}
-                    className="h-10"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Seus dados ficam salvos neste aparelho para o próximo pedido.</p>
-                </div>
-              
-                {orderType === 'delivery' && (
-                  <>
-                    <div className="sm:col-span-2">
-                      <Label htmlFor="street" className="text-sm">Endereço *</Label>
-                      <Input
-                        id="street"
-                        placeholder="Rua, Avenida..."
-                        maxLength={usesDistance ? 180 : 300}
-                        value={deliveryAddress.street}
-                        onChange={(e) => setDeliveryAddress(prev => ({ ...prev, street: e.target.value }))}
-                        className="h-10"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="number" className="text-sm">Número *</Label>
-                      <Input
-                        id="number"
-                        placeholder="123"
-                        maxLength={30}
-                        value={deliveryAddress.number}
-                        onChange={(e) => setDeliveryAddress(prev => ({ ...prev, number: e.target.value }))}
-                        className="h-10"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="complement" className="text-sm">Complemento</Label>
-                      <Input
-                        id="complement"
-                        placeholder="Apto, Bloco, Sala..."
-                        maxLength={100}
-                        value={deliveryAddress.complement}
-                        onChange={(e) => setDeliveryAddress(prev => ({ ...prev, complement: e.target.value }))}
-                        className="h-10"
-                      />
-                    </div>
-                    
-                    {deliveryMode.isError && (
-                      <div className="sm:col-span-2 space-y-2">
-                        <p role="alert" className="text-sm text-destructive">Não foi possível carregar a área de entrega.</p>
-                        <Button type="button" variant="outline" onClick={() => void deliveryMode.refetch()}>Tentar novamente</Button>
-                      </div>
-                    )}
-                    {deliveryMode.isPending && <p className="text-sm" role="status">Carregando área de entrega...</p>}
-                    {usesDistance && (
-                      <>
-                        <div>
-                          <Label htmlFor="distance-neighborhood">Bairro *</Label>
-                          <Input id="distance-neighborhood" value={neighborhood} maxLength={80}
-                            onChange={(event) => setDeliveryAddress(prev => ({ ...prev, neighborhood: event.target.value }))} />
-                        </div>
-                        <div>
-                          <Label htmlFor="delivery-cep">CEP *</Label>
-                          <Input id="delivery-cep" inputMode="numeric" autoComplete="postal-code" placeholder="00000-000"
-                            value={cep ?? ''} maxLength={9}
-                            onChange={(event) => setDeliveryAddress(prev => ({ ...prev, cep: event.target.value }))} />
-                        </div>
-                        <div className="sm:col-span-2 space-y-2">
-                          <Button type="button" variant="outline" disabled={!canQuote || quoting || sending} onClick={calculateDelivery}>
-                            {quoting ? 'Calculando...' : 'Calcular entrega'}
-                          </Button>
-                          {quoteResult?.key === quoteKey && quoteResult.error && (
-                            <p className="text-sm text-destructive" role="alert">{quoteResult.error}</p>
-                          )}
-                          {currentQuote && (
-                            <p className="text-sm" role="status">
-                              {(currentQuote.meters / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km de trajeto · Entrega R$ {numberToCurrency(currentQuote.fee)}
-                            </p>
-                          )}
-                        </div>
-                      </>
-                    )}
-                    {deliveryMode.isSuccess && !usesDistance && <div className="sm:col-span-2">
-                      <Label htmlFor="deliveryZone" className="text-sm">Bairro / Zona de Entrega *</Label>
-                      {deliveryZones.length > 0 ? (
-                        <Select value={deliveryAddress.deliveryZoneId} onValueChange={handleDeliveryZoneChange}>
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Selecione seu bairro" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {deliveryZones.map((zone) => (
-                              <SelectItem key={zone.id} value={zone.id}>
-                                {zone.neighborhood} - R$ {numberToCurrency(zone.delivery_fee)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Input
-                          id="neighborhood"
-                          placeholder="Nome do bairro"
-                          value={deliveryAddress.neighborhood}
-                          onChange={(e) => setDeliveryAddress(prev => ({ ...prev, neighborhood: e.target.value }))}
-                          className="h-10"
-                        />
-                      )}
-                    </div>}
-                  </>
-                )}
-              </div>
-            </div>
-
-            <Separator className="my-4" />
-
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <h3 className="text-base sm:text-lg font-semibold">Forma de Pagamento</h3>
-              </div>
-              
-              <RadioGroup 
-                value={paymentMethod?.type || ''} 
-                onValueChange={(value) => setPaymentMethod({ type: value as PaymentMethod['type'] })}
-                className="space-y-2"
-              >
-                {availablePaymentMethods.map((method) => {
-                  const labels: Record<string, string> = {
-                    cash: 'Dinheiro',
-                    debit_card: 'Cartão de Débito',
-                    credit_card: 'Cartão de Crédito',
-                    food_voucher: 'Vale Alimentação',
-                    meal_voucher: 'Vale Refeição',
-                    pix: 'PIX (manual)',
-                    pix_online: '⚡ PIX Online (pague agora)',
-                    card: 'Cartão'
-                  };
-                  return (
-                    <div key={method.method_type} className="flex items-center space-x-2">
-                      <RadioGroupItem value={method.method_type} id={method.method_type} />
-                      <Label htmlFor={method.method_type} className="text-sm sm:text-base">
-                        {labels[method.method_type] || method.method_type}
-                      </Label>
-                    </div>
-                  );
-                })}
-              </RadioGroup>
-              
-              {availablePaymentMethods.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  PIX Online está disponível como forma de pagamento padrão.
-                </p>
-              )}
-              
-              {paymentMethod?.type === 'cash' && (
-                <div className="ml-6">
-                  <Label htmlFor="change" className="text-sm">Troco para (opcional)</Label>
-                  <Input
-                    id="change"
-                    type="number"
-                    placeholder="50.00"
-                    value={changeAmount}
-                    onChange={(e) => setChangeAmount(e.target.value)}
-                    className="w-full sm:w-32 h-10"
-                  />
-                </div>
-              )}
-
-              {paymentMethod?.type === 'pix' && restaurantPixKey && (
-                <div className="mt-3 p-3 sm:p-4 bg-muted rounded-lg">
-                  <Label className="text-xs sm:text-sm font-medium">Chave PIX para pagamento:</Label>
-                  <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-background p-2 sm:p-3 rounded border">
-                    <span className="text-xs sm:text-sm font-mono break-all">{restaurantPixKey}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(restaurantPixKey);
-                      }}
-                      className="shrink-0"
-                    >
-                      Copiar
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Copie a chave PIX acima e faça o pagamento no seu aplicativo bancário.
-                  </p>
-                </div>
-              )}
-            </div>
+          <div className="divide-y">
+            {entries.map(([key, item]) => {
+              const product = products.find(product => product.id === key.slice(0, 36));
+              if (!product) return null;
+              return <div key={key} className="py-4 space-y-2">
+                <div className="flex justify-between gap-3"><h3 className="font-semibold min-w-0 break-words">{product.name}</h3>
+                  <Button variant="ghost" size="icon" aria-label={`Remover ${product.name}`} className="shrink-0 text-destructive" disabled={sending} onClick={() => onRemoveItem(key)}><Trash2 className="h-4 w-4" /></Button></div>
+                {item.addons?.length > 0 && <div className="flex flex-wrap gap-1">{item.addons.map((addon, index) => <Badge key={index} variant="secondary">{addon.option?.name}</Badge>)}</div>}
+                {item.observations && <p className="text-sm text-muted-foreground break-words">{item.observations}</p>}
+                <div className="flex justify-between items-center gap-2"><div className="flex items-center gap-2">
+                  <Button variant="outline" size="icon" aria-label={`Diminuir ${product.name}`} disabled={sending} className="h-8 w-8" onClick={() => item.quantity > 1 ? onUpdateQuantity(key, item.quantity - 1) : onRemoveItem(key)}><Minus className="h-4 w-4" /></Button>
+                  <span className="w-8 text-center">{item.quantity}</span>
+                  <Button variant="outline" size="icon" aria-label={`Aumentar ${product.name}`} disabled={sending} className="h-8 w-8" onClick={() => onUpdateQuantity(key, item.quantity + 1)}><Plus className="h-4 w-4" /></Button>
+                </div><span className="font-semibold">R$ {numberToCurrency(item.unitPrice * item.quantity)}</span></div>
+              </div>;
+            })}
           </div>
+          <div className="border-t pt-4 space-y-2">
+            <div className="flex justify-between"><span>Subtotal</span><span>R$ {numberToCurrency(getCartTotal())}</span></div>
+            <div className="flex justify-between gap-3"><span>Entrega{currentQuote ? ` · ${(currentQuote.meters / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km` : ''}</span><span>{orderType === 'pickup' ? 'Retirada' : usesDistance && !currentQuote ? 'Recalcular' : `R$ ${numberToCurrency(deliveryFee)}`}</span></div>
+            <div className="flex justify-between text-lg font-bold border-t pt-3"><span>Total</span><span>{usesDistance && orderType === 'delivery' && !currentQuote ? '—' : `R$ ${numberToCurrency(getCartTotal() + deliveryFee)}`}</span></div>
+          </div>
+          {usesDistance && orderType === 'delivery' && !currentQuote && <div className="space-y-2"><p role="alert" className="text-destructive text-sm">O cálculo da entrega expirou.</p><Button variant="outline" onClick={() => setStep(2)}>Recalcular entrega</Button></div>}
+          <div className="flex items-center gap-2 text-sm font-semibold"><CreditCard className="h-5 w-5 text-primary" />PIX Online</div>
+        </>}
+        {!deliveryEnabled && !pickupEnabled && <p role="alert" className="text-destructive">Esta loja não oferece entrega nem retirada no momento.</p>}
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        <div className="flex flex-col sm:flex-row gap-2 border-t pt-4">
+          <Button variant="outline" disabled={sending || quoting} className="sm:flex-1" onClick={() => {
+            if (step === 1) onOpenChange(false); else { setStep(step - 1); setError(''); }
+          }}>{step === 1 ? 'Continuar comprando' : <><ArrowLeft className="h-4 w-4 mr-2" />Voltar</>}</Button>
+          <Button className="sm:flex-1" disabled={sending || quoting || !entries.length || (!deliveryEnabled && !pickupEnabled) ||
+            (step === 1 ? !normalizeCustomerPhone(address.phone) : step === 2 ? !contactValid || !addressValid : !ready)}
+            onClick={() => step === 1 ? continuePhone() : step === 2 ? void continueAddress() : void sendOrder()}>
+            {sending || quoting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ArrowRight className="h-4 w-4 mr-2" />}
+            {sending ? 'Registrando...' : quoting ? 'Calculando entrega...' : step === 3 ? 'Finalizar e pagar com PIX' : step === 2 && orderType === 'delivery' && usesDistance ? 'Confirmar e calcular entrega' : 'Continuar'}
+          </Button>
         </div>
-
-        <div className="border-t px-4 sm:px-6 py-3 sm:py-4 bg-background mt-auto">
-          {sendError && <p role="alert" className="mb-2 text-sm text-destructive">
-            {usesDistance && orderType === 'delivery'
-              ? 'Não foi possível registrar o pedido. Calcule a entrega novamente e tente pagar.'
-              : 'Não foi possível registrar o pedido. Tente novamente.'}
-          </p>}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              className="flex-1 h-10 sm:h-11 text-sm sm:text-base"
-            >
-              Continuar Comprando
-            </Button>
-            <Button 
-              onClick={handleSendOrder}
-              className="flex-1 h-10 sm:h-11 flex items-center justify-center gap-2 bg-[#4BA3C3] hover:bg-[#3d8aa8] text-white text-sm sm:text-base"
-              disabled={sending || quoting || cartEntries.length === 0 || !isAddressValid || !isPaymentValid}
-            >
-              <Phone className="h-4 w-4" />
-              <span className="hidden sm:inline">Finalizar e pagar com PIX</span>
-              <span className="sm:hidden">Pagar com PIX</span>
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+      </div>
+    </DialogContent>
+  </Dialog>;
 }

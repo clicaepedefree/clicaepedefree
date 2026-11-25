@@ -317,7 +317,7 @@ function DeliveryDistanceSettings({ restaurantId }: { restaurantId: string }) {
     const invalid = next.some((band, index) => !Number.isInteger(band.upToMeters) || band.upToMeters <= 0 ||
       band.upToMeters > 100000 || !Number.isInteger(band.feeCents) || band.feeCents < 0 ||
       band.feeCents > 100000 || band.upToMeters === next[index - 1]?.upToMeters);
-    if (invalid) {
+    if (invalid || next.length > 50) {
       setDraftError("Defina limites diferentes entre 0,01 e 100 km e valores entre R$ 0,00 e R$ 1.000,00.");
       return;
     }
@@ -328,8 +328,8 @@ function DeliveryDistanceSettings({ restaurantId }: { restaurantId: string }) {
   async function save(event: React.FormEvent) {
     event.preventDefault();
     if (!exists && !enabled && !origin.trim() && bands.length === 0) return;
-    if (origin.trim().length < 8 || (enabled && bands.length === 0)) {
-      toast({ title: "Informe o endereço da loja e adicione pelo menos uma faixa para usar o modo KM.", variant: "destructive" });
+    if (origin.trim().length < 8 || (enabled && (bands.length === 0 || origin.split(',').length < 3))) {
+      toast({ title: "Informe rua, número, cidade e estado separados por vírgulas e adicione pelo menos uma faixa por KM.", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -375,7 +375,8 @@ function DeliveryDistanceSettings({ restaurantId }: { restaurantId: string }) {
               <div className="max-w-xl space-y-2">
                 <Label htmlFor="distance-origin">Endereço de saída para entregas por KM</Label>
                 <Input id="distance-origin" value={origin} onChange={event => setOrigin(event.target.value)}
-                  placeholder="Rua, número, bairro, cidade, UF e CEP" maxLength={300} required={enabled} />
+                  placeholder="Rua, número, bairro, cidade - UF, CEP" maxLength={300} required={enabled} />
+                {enabled && origin.split(',').length < 3 && <p role="alert" className="text-sm text-destructive">Inclua cidade e estado no endereço de saída para o cálculo funcionar.</p>}
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <Button type="button" variant="outline" onClick={openBands}>Configurar faixas por KM</Button>

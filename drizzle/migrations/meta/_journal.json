@@ -50,6 +50,13 @@
       "when": 1795487090882,
       "tag": "0006_document_delivery_distance",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795571070410,
+      "tag": "0007_delivery_checkout_sessions",
+      "breakpoints": true
     }
   ]
 }

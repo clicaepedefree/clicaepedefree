@@ -21,6 +21,9 @@ export const customerSchema = z.object({
   number: z.string().trim().min(1, 'Informe o número.').max(30),
   complement: z.string().trim().max(100),
   neighborhood: z.string().trim().max(100),
+  city: z.string().trim().max(80).optional(),
+  state: z.string().trim().max(2).optional(),
+  cep: z.string().trim().max(9).optional(),
 });
 
 export type CustomerInput = z.infer<typeof customerSchema>;
@@ -61,4 +64,9 @@ export function readSavedCustomer(restaurantId: string): CustomerInput | null {
 
 export function saveCustomerLocally(restaurantId: string, customer: CustomerInput) {
   try { localStorage.setItem(`customer-checkout:${restaurantId}`, JSON.stringify({ savedAt: Date.now(), customer })); } catch { /* Storage may be unavailable in private browsing. */ }
+}
+
+export function savedCustomerForPhone(saved: CustomerInput | null, phone: string): CustomerInput | null {
+  const normalized = normalizeCustomerPhone(phone);
+  return saved && normalized && normalizeCustomerPhone(saved.phone) === normalized ? saved : null;
 }
