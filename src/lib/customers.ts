@@ -21,10 +21,13 @@ export const customerSchema = z.object({
   number: z.string().trim().min(1, 'Informe o número.').max(30),
   complement: z.string().trim().max(100),
   neighborhood: z.string().trim().max(100),
+});
+const savedCustomerSchema = customerSchema.extend({
   city: z.string().trim().max(80).optional(),
   state: z.string().trim().max(2).optional(),
   cep: z.string().trim().max(9).optional(),
 });
+export type SavedCustomer = z.infer<typeof savedCustomerSchema>;
 
 export type CustomerInput = z.infer<typeof customerSchema>;
 export interface Customer extends CustomerInput {
@@ -51,22 +54,22 @@ export function purchaseMetrics(orders: { id: string; total: number; status: str
 export const money = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 export const dateLabel = (value?: string | null, time = false) => value ? new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', ...(time ? { timeStyle: 'short' as const } : {}) }).format(new Date(value)) : '—';
 
-export function readSavedCustomer(restaurantId: string): CustomerInput | null {
+export function readSavedCustomer(restaurantId: string): SavedCustomer | null {
   try {
     const raw = localStorage.getItem(`customer-checkout:${restaurantId}`);
     if (!raw) return null;
     const data = JSON.parse(raw);
     if (Date.now() - data.savedAt > 180 * 24 * 60 * 60 * 1000) return null;
-    const result = customerSchema.partial().safeParse(data.customer);
+    const result = savedCustomerSchema.partial().safeParse(data.customer);
     return result.success ? { name: '', phone: '', address: '', number: '', complement: '', neighborhood: '', ...result.data } : null;
   } catch { return null; }
 }
 
-export function saveCustomerLocally(restaurantId: string, customer: CustomerInput) {
+export function saveCustomerLocally(restaurantId: string, customer: SavedCustomer) {
   try { localStorage.setItem(`customer-checkout:${restaurantId}`, JSON.stringify({ savedAt: Date.now(), customer })); } catch { /* Storage may be unavailable in private browsing. */ }
 }
 
-export function savedCustomerForPhone(saved: CustomerInput | null, phone: string): CustomerInput | null {
+export function savedCustomerForPhone(saved: SavedCustomer | null, phone: string): SavedCustomer | null {
   const normalized = normalizeCustomerPhone(phone);
   return saved && normalized && normalizeCustomerPhone(saved.phone) === normalized ? saved : null;
 }
