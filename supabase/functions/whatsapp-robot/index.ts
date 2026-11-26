@@ -60,10 +60,11 @@ async function manage(request: Request, body: Record<string, unknown>) {
   if (typeof id !== "string" || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(id)) {
     return reply({ error: "Loja inválida." }, 400);
   }
-  const { data: restaurant, error: storeError } = await client.from("restaurants").select("id")
+  const { data: restaurant, error: storeError } = await client.from("restaurants").select("id,is_blocked")
     .eq("id", id).eq("user_id", user.id).maybeSingle();
   if (storeError) throw storeError;
   if (!restaurant) return reply({ error: "Você não tem acesso a esta loja." }, 403);
+  if (restaurant.is_blocked && body.action !== "disconnect") return reply({ error: "Loja bloqueada." }, 403);
 
   const { error: initError } = await client.from("whatsapp_robot_settings")
     .upsert({ restaurant_id: id }, { onConflict: "restaurant_id", ignoreDuplicates: true });
@@ -179,10 +180,11 @@ async function receive(request: Request, body: Record<string, any>) {
       client.from("whatsapp_robot_contacts").select("profile_name").eq("restaurant_id", config.restaurant_id).eq("phone", phone).maybeSingle(),
     ]);
     if (shop.error || schedule.error || contact.error) throw Error("Falha ao carregar dados do atendimento");
+    if (shop.data.is_blocked) return reply({ ok: true });
     const profile = name || contact.data?.profile_name || "";
     const link = `${httpsBase(env("WHATSAPP_PUBLIC_SITE_URL"))}/cardapio/${encodeURIComponent(shop.data.slug)}`;
     const prefix = `${greeting(profile)} ${introduction(config.bot_name, shop.data.name)}`;
-    if (shop.data.is_blocked || !shop.data.is_open || !withinHours(schedule.data)) {
+    if (!shop.data.is_open || !withinHours(schedule.data)) {
       message = `${prefix}\nA loja está fechada no momento. Você pode consultar o cardápio aqui: ${link}`;
       cooldown = true;
     } else if (config.reply_mode === "welcome") {
@@ -192,9 +194,12 @@ async function receive(request: Request, body: Record<string, any>) {
       const text = cleanText(incoming.message?.conversation ?? incoming.message?.extendedTextMessage?.text ??
         incoming.message?.imageMessage?.caption ?? incoming.message?.videoMessage?.caption, 2000);
       const rule = matchRule(text, config.keyword_rules as Rule[]);
-      if (rule) message = `${prefix}\n${expandResponse(rule.response, {
-        nome: profile, loja: shop.data.name, robo: config.bot_name, cardapio: link,
-      })}`;
+      if (rule) {
+        cooldown = true;
+        message = `${prefix}\n${expandResponse(rule.response, {
+          nome: profile, loja: shop.data.name, robo: config.bot_name, cardapio: link,
+        })}`;
+      }
     }
   }
   const queued = await client.rpc("enqueue_whatsapp_reply", {
@@ -219,7 +224,10 @@ async function dispatch(request: Request) {
       const config = await client.from("whatsapp_robot_settings").select("connected,notify_orders,reply_mode")
         .eq("restaurant_id", task.restaurant_id).single();
       if (config.error) throw config.error;
-      if (task.created_at < new Date(Date.now() - 24 * 60 * 60_000).toISOString() ||
+      const restaurant = await client.from("restaurants").select("is_blocked")
+        .eq("id", task.restaurant_id).single();
+      if (restaurant.error) throw restaurant.error;
+      if (restaurant.data.is_blocked || task.created_at < new Date(Date.now() - 24 * 60 * 60_000).toISOString() ||
         (task.order_status ? !config.data.notify_orders : config.data.reply_mode === "off")) {
         const removed = await client.from("whatsapp_robot_outbox").delete().eq("id", task.id);
         if (removed.error) throw removed.error;
