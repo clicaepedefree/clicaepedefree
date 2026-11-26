@@ -22,6 +22,7 @@ const items: (Page | Group)[] = [
     { title: "Categorias", value: "categories", icon: List, path: "/admin/settings?tab=categories" },
     { title: "Complementos", value: "addons", icon: Plus, path: "/admin/settings?tab=addons" },
   ] },
+  { title: "Robô de WhatsApp", value: "whatsapp-robot", icon: MessageCircle, path: "/admin/robo-whatsapp" },
   { title: "Marketing", value: "marketing-group", icon: Megaphone, pages: [
     { title: "Cupons e promoções", value: "marketing", icon: Megaphone, path: "/admin?section=marketing" },
     { title: "Marketing com IA", value: "ai-marketing", icon: Sparkles, path: "/admin/marketing" },
@@ -42,7 +43,6 @@ const items: (Page | Group)[] = [
 ];
 
 const supportUrl = "https://wa.me/5511916651776?text=Preciso%20de%20suporte%20no%20painel%20do%20Clica%20e%20Pede";
-const robotUrl = "https://wa.me/5511916651776?text=quero%20o%20robo%20de%20WhatsApp";
 
 export function AppSidebar({ restaurantId }: { restaurantId?: string }) {
   const { pathname } = useLocation();
@@ -151,7 +151,6 @@ export function AppSidebar({ restaurantId }: { restaurantId?: string }) {
       <SidebarFooter className="border-t">
         <SidebarMenu>
           {[
-            { title: "Robô de WhatsApp", icon: Sparkles, url: robotUrl },
             { title: "Suporte no WhatsApp", icon: MessageCircle, url: supportUrl },
           ].map(action => (
             <SidebarMenuItem key={action.title}>
