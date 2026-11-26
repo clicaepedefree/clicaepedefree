@@ -71,6 +71,13 @@
       "when": 1795658239563,
       "tag": "0009_ensure_crm_overview",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795658827175,
+      "tag": "0010_checkout_payment_methods",
+      "breakpoints": true
     }
   ]
 }

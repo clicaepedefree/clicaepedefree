@@ -1479,6 +1479,21 @@ export type Database = {
         }
         Returns: string
       }
+      create_customer_offline_order: {
+        Args: {
+          _restaurant_id: string
+          _name: string
+          _phone: string
+          _details: Json
+          _items: Json
+          _subtotal: number
+          _delivery_fee: number
+          _total: number
+          _address: string
+          _payment_method: string
+        }
+        Returns: string
+      }
       create_manual_order: {
         Args: {
           _address: string

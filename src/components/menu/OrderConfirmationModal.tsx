@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { maskCustomerPhone, normalizeCustomerPhone, readSavedCustomer, savedCustomerForPhone, saveCustomerLocally } from '@/lib/customers';
 import { canCalculateDelivery, isCurrentDeliveryQuote, type DeliveryDistanceQuote } from '@/lib/delivery-distance';
 import { queryDelivery } from '@/lib/delivery-api';
+import { isOfflineCheckoutMethod, OFFLINE_CHECKOUT_METHODS, type OfflineCheckoutMethod } from '@/lib/payment-labels';
 import { DistanceAddressFields } from './DistanceAddressFields';
 
 interface Product {
@@ -27,7 +28,8 @@ interface DeliveryAddress {
   deliveryZoneId?: string; cep?: string; city?: string; state?: string; distanceQuote?: DeliveryDistanceQuote;
 }
 interface DeliveryZone { id: string; neighborhood: string; delivery_fee: number; is_active: boolean }
-interface PaymentMethod { type: 'debit_card' | 'credit_card' | 'food_voucher' | 'meal_voucher' | 'pix' | 'pix_online' | 'cash'; changeAmount?: number }
+type CheckoutPayment = 'pix_online' | OfflineCheckoutMethod;
+interface PaymentMethod { type: CheckoutPayment }
 interface OrderConfirmationModalProps {
   open: boolean; onOpenChange: (open: boolean) => void;
   cart: { [key: string]: { quantity: number; addons: any[]; unitPrice: number; observations?: string } };
@@ -48,6 +50,7 @@ export function OrderConfirmationModal({ open, onOpenChange, cart, products, res
   const [quoting, setQuoting] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [payment, setPayment] = useState<CheckoutPayment>('pix_online');
   const [clock, setClock] = useState(Date.now());
   const deliveryEnabled = restaurant?.delivery_enabled ?? true;
   const pickupEnabled = restaurant?.pickup_enabled ?? true;
@@ -72,6 +75,19 @@ export function OrderConfirmationModal({ open, onOpenChange, cart, products, res
       return data as DeliveryZone[];
     },
   });
+  const paymentMethods = useQuery({
+    queryKey: ['public-checkout-payments', restaurantId],
+    enabled: open && Boolean(restaurantId),
+    queryFn: async ({ signal }) => {
+      if (!restaurantId) return [];
+      const { data, error } = await supabase.rpc('get_public_payment_methods', { _restaurant_id: restaurantId }).abortSignal(signal);
+      if (error) throw error;
+      return (data ?? []).filter(method => method.is_active).map(method => method.method_type);
+    },
+  });
+  const offlineOptions = OFFLINE_CHECKOUT_METHODS.filter(option => paymentMethods.data?.includes(option.type));
+  const paymentAvailable = payment === 'pix_online' ||
+    (paymentMethods.isSuccess && !paymentMethods.isFetching && offlineOptions.some(option => option.type === payment));
   const usesDistance = deliveryMode.data === true;
   const quoteKey = JSON.stringify([restaurantId, address.street, address.number, address.complement, address.neighborhood, address.cep, address.city, address.state]);
   const latest = useRef({ quoteKey, open });
@@ -89,6 +105,7 @@ export function OrderConfirmationModal({ open, onOpenChange, cart, products, res
     const saved = readSavedCustomer(restaurantId);
     setAddress({ ...emptyAddress, phone: saved ? maskCustomerPhone(saved.phone) : '' });
     setStep(1); setQuoteResult(undefined); setError(''); setQuoting(false); setSending(false);
+    setPayment('pix_online');
     setOrderType(deliveryEnabled ? 'delivery' : 'pickup');
   }, [open, restaurantId, deliveryEnabled]);
   useEffect(() => {
@@ -130,7 +147,7 @@ export function OrderConfirmationModal({ open, onOpenChange, cart, products, res
     } finally { setQuoting(false); }
   }
   async function sendOrder() {
-    if (!ready || sending || !restaurantId || !entries.length) return;
+    if (!ready || !paymentAvailable || sending || !restaurantId || !entries.length) return;
     if (orderType === 'delivery' && usesDistance && !isCurrentDeliveryQuote(currentQuote)) {
       setQuoteResult(undefined); setStep(2); setError('O cálculo expirou. Confirme o endereço novamente.'); return;
     }
@@ -138,10 +155,11 @@ export function OrderConfirmationModal({ open, onOpenChange, cart, products, res
       : { ...address, street: '', number: '', complement: '', neighborhood: '', deliveryZoneId: '', cep: '', city: '', state: '' };
     setSending(true); setError('');
     try {
-      const success = await onSendWhatsApp(deliveryAddress, { type: 'pix_online' }, deliveryFee);
+      const success = await onSendWhatsApp(deliveryAddress, { type: payment }, deliveryFee);
       if (!success) {
         if (usesDistance && orderType === 'delivery') { setQuoteResult(undefined); setStep(2); }
-        setError('Não foi possível registrar o pedido. Confira a entrega e tente novamente.'); return;
+        if (payment !== 'pix_online') void paymentMethods.refetch();
+        setError('Não foi possível registrar o pedido. Confira a entrega e a forma de pagamento.'); return;
       }
       const previous = savedCustomerForPhone(readSavedCustomer(restaurantId), address.phone);
       const savedAddress = orderType === 'delivery' ? address : {
@@ -233,7 +251,40 @@ export function OrderConfirmationModal({ open, onOpenChange, cart, products, res
             <div className="flex justify-between text-lg font-bold border-t pt-3"><span>Total</span><span>{usesDistance && orderType === 'delivery' && !currentQuote ? '—' : `R$ ${numberToCurrency(getCartTotal() + deliveryFee)}`}</span></div>
           </div>
           {usesDistance && orderType === 'delivery' && !currentQuote && <div className="space-y-2"><p role="alert" className="text-destructive text-sm">O cálculo da entrega expirou.</p><Button variant="outline" onClick={() => setStep(2)}>Recalcular entrega</Button></div>}
-          <div className="flex items-center gap-2 text-sm font-semibold"><CreditCard className="h-5 w-5 text-primary" />PIX Online</div>
+          <fieldset disabled={sending} className="space-y-2">
+            <legend className="mb-2 flex items-center gap-2 text-sm font-semibold">
+              <CreditCard className="size-5 text-primary" aria-hidden="true" /> Forma de pagamento
+            </legend>
+            <RadioGroup value={payment} onValueChange={value => {
+              if (value === 'pix_online' || isOfflineCheckoutMethod(value)) {
+                setPayment(value);
+                setError('');
+              }
+            }}>
+              <Label htmlFor="checkout-payment-pix" className="flex items-center gap-3 rounded-lg border p-3">
+                <RadioGroupItem id="checkout-payment-pix" value="pix_online" /> Pix Online · QR Code
+              </Label>
+              {offlineOptions.map(option => (
+                <Label htmlFor={`checkout-payment-${option.type}`} key={option.type} className="flex items-center gap-3 rounded-lg border p-3">
+                  <RadioGroupItem id={`checkout-payment-${option.type}`} value={option.type}
+                    disabled={paymentMethods.isFetching || paymentMethods.isError} /> {option.label}
+                </Label>
+              ))}
+            </RadioGroup>
+            {offlineOptions.length > 0 && (
+              <p className="text-xs text-muted-foreground">Cartões e vales são cobrados pela loja na entrega ou retirada.</p>
+            )}
+            {paymentMethods.isPending && <p role="status" className="text-sm text-muted-foreground">Carregando outras opções...</p>}
+            {paymentMethods.isError && (
+              <div className="flex flex-wrap items-center gap-2">
+                <p role="alert" className="text-sm text-muted-foreground">Não foi possível carregar as outras opções.</p>
+                <Button type="button" size="sm" variant="outline" onClick={() => void paymentMethods.refetch()}>Tentar novamente</Button>
+              </div>
+            )}
+            {!paymentAvailable && !paymentMethods.isFetching && !paymentMethods.isError && (
+              <p role="alert" className="text-sm text-destructive">Essa opção foi desativada. Selecione outra forma de pagamento.</p>
+            )}
+          </fieldset>
         </>}
         {!deliveryEnabled && !pickupEnabled && <p role="alert" className="text-destructive">Esta loja não oferece entrega nem retirada no momento.</p>}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
@@ -242,10 +293,10 @@ export function OrderConfirmationModal({ open, onOpenChange, cart, products, res
             if (step === 1) onOpenChange(false); else { setStep(step - 1); setError(''); }
           }}>{step === 1 ? 'Continuar comprando' : <><ArrowLeft className="h-4 w-4 mr-2" />Voltar</>}</Button>
           <Button className="sm:flex-1" disabled={sending || quoting || !entries.length || (!deliveryEnabled && !pickupEnabled) ||
-            (step === 1 ? !normalizeCustomerPhone(address.phone) : step === 2 ? !contactValid || !addressValid : !ready)}
+            (step === 1 ? !normalizeCustomerPhone(address.phone) : step === 2 ? !contactValid || !addressValid : !ready || !paymentAvailable)}
             onClick={() => step === 1 ? continuePhone() : step === 2 ? void continueAddress() : void sendOrder()}>
             {sending || quoting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ArrowRight className="h-4 w-4 mr-2" />}
-            {sending ? 'Registrando...' : quoting ? 'Calculando entrega...' : step === 3 ? 'Finalizar e pagar com PIX' : step === 2 && orderType === 'delivery' && usesDistance ? 'Confirmar e calcular entrega' : 'Continuar'}
+            {sending ? 'Registrando...' : quoting ? 'Calculando entrega...' : step === 3 ? (payment === 'pix_online' ? 'Finalizar e pagar com Pix' : 'Finalizar pedido') : step === 2 && orderType === 'delivery' && usesDistance ? 'Confirmar e calcular entrega' : 'Continuar'}
           </Button>
         </div>
       </div>

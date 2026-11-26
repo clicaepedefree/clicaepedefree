@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, DollarSign, Smartphone } from "lucide-react";
+import { CreditCard } from "lucide-react";
+import { OFFLINE_CHECKOUT_METHODS, type OfflineCheckoutMethod } from "@/lib/payment-labels";
 
 interface PaymentMethod {
   id: string;
@@ -24,16 +25,14 @@ interface PaymentMethodsManagerProps {
 
 export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps) {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [pixKey, setPixKey] = useState("");
+  const [savingMethod, setSavingMethod] = useState<OfflineCheckoutMethod | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [pixOnlineEnabled, setPixOnlineEnabled] = useState(false);
   const [restaurantPixKey, setRestaurantPixKey] = useState("");
   const [restaurantPixKeyType, setRestaurantPixKeyType] = useState<string>("aleatoria");
   const [savingOnline, setSavingOnline] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-
-  const methodLabels: Record<string, { label: string; icon: any }> = {};
-
 
   useEffect(() => {
     fetchPaymentMethods();
@@ -50,14 +49,15 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
 
       const methods = (data || []) as PaymentMethod[];
       setPaymentMethods(methods);
+      setLoadFailed(false);
       
       const pixMethod = methods.find(m => m.method_type === 'pix');
-      if (pixMethod?.pix_key) setPixKey(pixMethod.pix_key);
-      if (pixMethod?.pix_online_enabled) setPixOnlineEnabled(true);
-      if (pixMethod?.restaurant_pix_key) setRestaurantPixKey(pixMethod.restaurant_pix_key);
-      if (pixMethod?.restaurant_pix_key_type) setRestaurantPixKeyType(pixMethod.restaurant_pix_key_type);
+      setPixOnlineEnabled(Boolean(pixMethod?.pix_online_enabled));
+      setRestaurantPixKey(pixMethod?.restaurant_pix_key ?? "");
+      setRestaurantPixKeyType(pixMethod?.restaurant_pix_key_type ?? "aleatoria");
     } catch (error) {
       console.error('Erro ao buscar formas de pagamento:', error);
+      setLoadFailed(true);
       toast({
         title: "Erro",
         description: "Erro ao carregar formas de pagamento",
@@ -68,81 +68,23 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
     }
   };
 
-  const togglePaymentMethod = async (methodType: 'cash' | 'card' | 'pix', isActive: boolean) => {
+  const togglePaymentMethod = async (methodType: OfflineCheckoutMethod, isActive: boolean) => {
+    if (savingMethod) return;
+    setSavingMethod(methodType);
     try {
-      const existingMethod = paymentMethods.find(m => m.method_type === methodType);
-
-      if (existingMethod) {
-        const { error } = await supabase
-          .from('payment_methods')
-          .update({ is_active: isActive })
-          .eq('id', existingMethod.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('payment_methods')
-          .insert({
-            restaurant_id: restaurant.id,
-            method_type: methodType,
-            is_active: isActive,
-            pix_key: methodType === 'pix' ? pixKey : null
-          });
-
-        if (error) throw error;
-      }
-
-      await fetchPaymentMethods();
-      toast({
-        title: "Sucesso",
-        description: `Forma de pagamento ${isActive ? 'ativada' : 'desativada'}`,
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar forma de pagamento:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar forma de pagamento",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updatePixKey = async () => {
-    try {
-      const existingMethod = paymentMethods.find(m => m.method_type === 'pix');
-
-      if (existingMethod) {
-        const { error } = await supabase
-          .from('payment_methods')
-          .update({ pix_key: pixKey })
-          .eq('id', existingMethod.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('payment_methods')
-          .insert({
-            restaurant_id: restaurant.id,
-            method_type: 'pix',
-            is_active: false,
-            pix_key: pixKey
-          });
-
-        if (error) throw error;
-      }
-
-      await fetchPaymentMethods();
-      toast({
-        title: "Sucesso",
-        description: "Chave PIX atualizada com sucesso",
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar chave PIX:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar chave PIX",
-        variant: "destructive",
-      });
+      const { data, error } = await supabase.from("payment_methods").upsert({
+        restaurant_id: restaurant.id,
+        method_type: methodType,
+        is_active: isActive,
+      }, { onConflict: "restaurant_id,method_type" }).select("id,method_type,is_active").single();
+      if (error) throw error;
+      setPaymentMethods(previous => [...previous.filter(method => method.method_type !== methodType),
+        { id: data.id, method_type: methodType, is_active: data.is_active }]);
+      toast({ title: isActive ? "Forma de pagamento ativada" : "Forma de pagamento desativada" });
+    } catch {
+      toast({ title: "Não foi possível atualizar a forma de pagamento", variant: "destructive" });
+    } finally {
+      setSavingMethod(null);
     }
   };
 
@@ -156,25 +98,25 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
         <CardTitle>Formas de Pagamento</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {Object.entries(methodLabels).map(([type, { label, icon: Icon }]) => {
-          const method = paymentMethods.find(m => m.method_type === type);
-          const isActive = method?.is_active || false;
-
-          return (
-            <div key={type} className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Icon className="h-5 w-5 text-muted-foreground" />
-                <Label>{label}</Label>
-              </div>
-              <Switch
-                checked={isActive}
-                onCheckedChange={(checked) => togglePaymentMethod(type as any, checked)}
-              />
+        {loadFailed && (
+          <div className="space-y-2">
+            <p role="alert" className="text-sm text-destructive">Não foi possível carregar as formas de pagamento.</p>
+            <Button variant="outline" onClick={() => void fetchPaymentMethods()}>Tentar novamente</Button>
+          </div>
+        )}
+        <div className="space-y-3">
+          <h2 className="font-semibold">Na entrega ou retirada</h2>
+          <p className="text-sm text-muted-foreground">Ative as opções que a loja aceita cobrar pessoalmente.</p>
+          {OFFLINE_CHECKOUT_METHODS.map(({ type, label }) => (
+            <div key={type} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-3">
+              <Label htmlFor={`payment-${type}`} className="flex items-center gap-2">
+                <CreditCard className="size-4 text-muted-foreground" aria-hidden="true" /> {label}
+              </Label>
+              <Switch id={`payment-${type}`} checked={paymentMethods.some(method => method.method_type === type && method.is_active)}
+                disabled={loadFailed || savingMethod !== null || savingOnline} onCheckedChange={checked => void togglePaymentMethod(type, checked)} />
             </div>
-          );
-        })}
-
-
+          ))}
+        </div>
 
         <div className="space-y-4 pt-6 border-t bg-muted/30 -mx-6 px-6 py-6">
           <div className="flex items-center justify-between">
@@ -255,7 +197,7 @@ export function PaymentMethodsManager({ restaurant }: PaymentMethodsManagerProps
                 setSavingOnline(false);
               }
             }}
-            disabled={savingOnline || (pixOnlineEnabled && !restaurantPixKey)}
+            disabled={loadFailed || savingOnline || savingMethod !== null || (pixOnlineEnabled && !restaurantPixKey)}
           >
             {savingOnline ? "Salvando..." : "Salvar PIX Online"}
           </Button>
