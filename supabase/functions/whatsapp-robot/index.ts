@@ -3,7 +3,7 @@ import { cleanText, expandResponse, greeting, incomingPhone, introduction, match
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-region",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const reply = (data: Record<string, unknown>, status = 200) => Response.json(data, { status, headers: cors });
