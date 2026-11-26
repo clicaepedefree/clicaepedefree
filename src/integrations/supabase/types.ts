@@ -1536,6 +1536,14 @@ export type Database = {
           total_spent: number
         }[]
       }
+      crm_overview: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          customer_count: number
+          purchase_count: number
+          total_spent: number
+        }[]
+      }
       delivery_fee_for_distance: {
         Args: {
           _meters: number

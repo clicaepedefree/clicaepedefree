@@ -64,6 +64,13 @@
       "when": 1795635471629,
       "tag": "0008_crm_overview",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795658239563,
+      "tag": "0009_ensure_crm_overview",
+      "breakpoints": true
     }
   ]
 }
