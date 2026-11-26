@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Store, AlertTriangle } from "lucide-react";
+import { Store, AlertTriangle, LoaderCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -8,31 +9,53 @@ import { cn } from "@/lib/utils";
 interface StoreStatusBannerProps {
   restaurant: any;
   onRestaurantUpdate: (r: any) => void;
+  compact?: boolean;
 }
 
-export function StoreStatusBanner({ restaurant, onRestaurantUpdate }: StoreStatusBannerProps) {
-  const [isOpen, setIsOpen] = useState(restaurant.is_open ?? true);
+export function StoreStatusBanner({ restaurant, onRestaurantUpdate, compact = false }: StoreStatusBannerProps) {
+  const isOpen = restaurant.is_open ?? true;
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const blocked = restaurant.is_blocked;
 
   const toggle = async () => {
-    if (blocked) return;
+    if (blocked || loading) return;
     setLoading(true);
     const next = !isOpen;
-    const { error } = await supabase.from("restaurants").update({ is_open: next }).eq("id", restaurant.id);
-    setLoading(false);
-    if (error) {
-      toast({ variant: "destructive", title: "Erro", description: error.message });
-      return;
+
+    try {
+      const { data, error } = await supabase.from("restaurants").update({ is_open: next })
+        .eq("id", restaurant.id).or("is_blocked.eq.false,is_blocked.is.null").select("is_open").single();
+      if (error) throw error;
+      onRestaurantUpdate({ ...restaurant, is_open: data.is_open });
+      toast({
+        title: data.is_open ? "Loja aberta" : "Loja fechada",
+        description: data.is_open ? "Você está recebendo pedidos." : "Clientes podem ver o cardápio, mas não podem pedir.",
+      });
+    } catch {
+      toast({ variant: "destructive", title: "Não foi possível alterar o status da loja" });
+    } finally {
+      setLoading(false);
     }
-    setIsOpen(next);
-    onRestaurantUpdate({ ...restaurant, is_open: next });
-    toast({
-      title: next ? "✓ Loja aberta" : "Loja fechada",
-      description: next ? "Você está recebendo pedidos." : "Clientes verão o cardápio mas não poderão pedir.",
-    });
   };
+
+  if (compact) {
+    const Icon = loading ? LoaderCircle : blocked ? AlertTriangle : Store;
+    return (
+      <Button
+        type="button"
+        size="sm"
+        className={cn("gap-1.5 text-white", isOpen && !blocked ? "bg-emerald-700 hover:bg-emerald-800" : "bg-red-700 hover:bg-red-800")}
+        onClick={() => void toggle()}
+        disabled={loading || blocked}
+        aria-busy={loading}
+        title={blocked ? "Loja bloqueada" : isOpen ? "Loja aberta" : "Loja fechada"}
+      >
+        <Icon className={cn("size-4", loading && "animate-spin")} aria-hidden="true" />
+        {blocked ? "Loja bloqueada" : loading ? "Atualizando…" : isOpen ? "Fechar loja" : "Abrir loja"}
+      </Button>
+    );
+  }
 
   if (blocked) {
     return (
@@ -70,6 +93,7 @@ export function StoreStatusBanner({ restaurant, onRestaurantUpdate }: StoreStatu
           {isOpen ? "Aberta" : "Fechada"}
         </span>
         <Switch
+          aria-label={isOpen ? "Fechar loja" : "Abrir loja"}
           checked={isOpen}
           onCheckedChange={toggle}
           disabled={loading}

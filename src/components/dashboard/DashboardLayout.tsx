@@ -59,46 +59,52 @@ export function DashboardLayout({
       <FloatingWhatsAppButton />
 
       <div className="mx-auto max-w-[1600px] space-y-5 p-4 sm:p-6 lg:space-y-6 lg:p-8">
-        <StoreStatusBanner restaurant={restaurant} onRestaurantUpdate={onRestaurantUpdate} />
+        {activeSection !== "orders" && (
+          <StoreStatusBanner restaurant={restaurant} onRestaurantUpdate={onRestaurantUpdate} />
+        )}
 
         {activeSection === "dashboard" && <SalesDashboard restaurant={restaurant} />}
 
         {activeSection === "orders" && (
           <div className="animate-fade-in-up">
-            <OrdersKanban restaurant={restaurant} />
+            <OrdersKanban
+              restaurant={restaurant}
+              storeControl={<StoreStatusBanner key={restaurant.id} restaurant={restaurant} onRestaurantUpdate={onRestaurantUpdate} compact />}
+            />
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" className="h-9 bg-background hover:bg-muted text-xs" asChild>
-            <a
-              href="https://www.youtube.com/watch?v=XHJScS_YEMo"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5"
+        {activeSection !== "orders" && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" className="h-9 bg-background hover:bg-muted text-xs" asChild>
+              <a
+                href="https://www.youtube.com/watch?v=XHJScS_YEMo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5"
+              >
+                <span className="text-base">📺</span>
+                <span>Ver vídeo de como usar</span>
+              </a>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 bg-background hover:bg-whatsapp/5 border-whatsapp/30 text-whatsapp hover:text-whatsapp text-xs"
+              asChild
             >
-              <span className="text-base">📺</span>
-              <span>Ver vídeo de como usar</span>
-            </a>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 bg-background hover:bg-whatsapp/5 border-whatsapp/30 text-whatsapp hover:text-whatsapp text-xs"
-            asChild
-          >
-            <a
-              href="https://wa.me/5511916651776?text=Preciso%20de%20ajuda%20no%20cardápio%20grátis"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5"
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span>Falar com o suporte</span>
-            </a>
-          </Button>
-        </div>
-
+              <a
+                href="https://wa.me/5511916651776?text=Preciso%20de%20ajuda%20no%20cardápio%20grátis"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>Falar com o suporte</span>
+              </a>
+            </Button>
+          </div>
+        )}
 
         {activeSection === "dashboard" && (
           <div className="space-y-5 lg:space-y-6 animate-fade-in-up">

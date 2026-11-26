@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ManualOrderDialog } from "@/components/customers/ManualOrderDialog";
 import { Badge } from "@/components/ui/badge";
@@ -91,9 +91,10 @@ const isCounterOrder = (order: Order) =>
 
 interface OrdersKanbanProps {
   restaurant: any;
+  storeControl?: ReactNode;
 }
 
-export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
+export function OrdersKanban({ restaurant, storeControl }: OrdersKanbanProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -344,6 +345,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
             <Button type="button" variant="outline" size="sm" onClick={() => void refreshBoard()} disabled={refreshing} aria-label="Atualizar pedidos">
               <RefreshCw className={cn("size-4", refreshing && "animate-spin")} aria-hidden="true" />
             </Button>
+            {storeControl}
             <Button size="sm" className="gap-1.5" onClick={() => setManualOrderOpen(true)}>
               <Plus className="size-4" aria-hidden="true" /> Lançar pedido
             </Button>
