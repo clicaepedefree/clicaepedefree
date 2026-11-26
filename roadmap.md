@@ -11,3 +11,8 @@
 - [ ] Checkout por etapas com dados lembrados apenas no mesmo aparelho.
 - [ ] Validar faixas, endereço completo da loja, expiração e testes.
 - [ ] Verificação do Google Maps na origem publicada (não suportada no ambiente de testes).
+## Robô WhatsApp
+- [x] Boas-vindas com link do cardápio, nome do contato e nome do robô
+- [x] Aviso de loja fechada fora do horário
+- [x] Envio automático da fila (notificações de status) disparado na hora
+- [ ] Teste real com WhatsApp conectado (aguarda conectar o QR Code)

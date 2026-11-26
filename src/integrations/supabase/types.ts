@@ -1390,6 +1390,21 @@ export type Database = {
           },
         ]
       }
+      whatsapp_robot_worker: {
+        Row: {
+          id: boolean
+          token: string
+        }
+        Insert: {
+          id?: boolean
+          token?: string
+        }
+        Update: {
+          id?: boolean
+          token?: string
+        }
+        Relationships: []
+      }
       withdrawal_requests: {
         Row: {
           created_at: string
@@ -1577,6 +1592,7 @@ export type Database = {
         Returns: boolean
       }
       anonymize_old_orders: { Args: never; Returns: number }
+      call_whatsapp_dispatch: { Args: never; Returns: undefined }
       check_restaurant_open_status: {
         Args: { check_time?: string; restaurant_id_param: string }
         Returns: boolean
@@ -1830,6 +1846,10 @@ export type Database = {
         Returns: boolean
       }
       valid_delivery_price_bands: { Args: { bands: Json }; Returns: boolean }
+      whatsapp_dispatch_token_valid: {
+        Args: { _token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

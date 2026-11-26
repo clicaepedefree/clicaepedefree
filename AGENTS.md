@@ -4,3 +4,4 @@
 - Customer recovery requires a verified phone claim; public checkout must never look up personal data by a phone alone.
 - Distance delivery uses short-lived restaurant-scoped checkout capabilities with server-side request budgets before Google calls; this bounds public checkout costs without anonymous accounts.
 - Delivery quotes bind the complete address and current server-side price bands and are consumed atomically on order creation; this prevents client fee tampering and replay.- The WhatsApp robot screen invokes whatsapp-robot pinned to us-east-1, near the Evolution server; the São Paulo edge region kept a stale DNS failure for the Evolution host.
+- WhatsApp outbox sends are woken by an insert trigger calling whatsapp-robot/dispatch with a DB-held worker token; no polling cron (retries go out on the next enqueue).

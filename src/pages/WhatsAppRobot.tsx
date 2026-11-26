@@ -183,7 +183,7 @@ function RobotSettings({ restaurantId }: { restaurantId: string }) {
                 <legend className="mb-2 text-sm font-medium">Respostas a mensagens recebidas</legend>
                 <RadioGroup value={draft.mode} onValueChange={value => update({ mode: value as Mode })}>
                   {[
-                    { id: "off", label: "Sem respostas automáticas" },
+                    { id: "off", label: "Só notificações de pedidos (sem respostas automáticas)" },
                     { id: "welcome", label: "Boas-vindas com link do cardápio" },
                     { id: "keywords", label: "Respostas por palavras-chave" },
                   ].map(mode => (

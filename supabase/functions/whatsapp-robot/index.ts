@@ -211,9 +211,16 @@ async function receive(request: Request, body: Record<string, any>) {
 }
 
 async function dispatch(request: Request) {
-  const secret = env("WHATSAPP_WORKER_TOKEN");
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) return reply({ ok: false }, 401);
   const client = db();
+  const header = request.headers.get("authorization") ?? "";
+  const bearer = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const secret = Deno.env.get("WHATSAPP_WORKER_TOKEN");
+  let allowed = Boolean(secret) && bearer === secret;
+  if (!allowed && bearer) {
+    const { data } = await client.rpc("whatsapp_dispatch_token_valid", { _token: bearer });
+    allowed = data === true;
+  }
+  if (!allowed) return reply({ ok: false }, 401);
   const { data: tasks, error } = await client.rpc("claim_whatsapp_outbox");
   if (error) throw error;
 
