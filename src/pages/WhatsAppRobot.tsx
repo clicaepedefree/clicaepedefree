@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { FunctionRegion } from "@supabase/supabase-js";
 import { toast } from "sonner";
 
 type Mode = "off" | "welcome" | "keywords";
@@ -22,6 +23,8 @@ type Draft = Omit<Config, "rules" | "connected"> & { rules: (Rule & { id: number
 async function robot<T>(restaurantId: string, action: string, config?: object): Promise<T> {
   const { data, error } = await supabase.functions.invoke<T>("whatsapp-robot", {
     body: { ...config, restaurantId, action },
+    // Run near the Evolution server (us-east-2) instead of the nearest edge region.
+    region: FunctionRegion.UsEast1,
   });
   if (error) {
     const context = "context" in error ? error.context : null;
