@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   BarChart3, ChevronDown, Clock, CreditCard, FileText, FolderOpen, House, List, MapPin,
-  Megaphone, MessageCircle, Package, Plus, Settings, ShoppingBag, Sparkles, Store, Users, Wallet, X,
+  Megaphone, MessageCircle, Package, Plus, ReceiptText, Settings, ShoppingBag, Sparkles, Store, Users, Wallet, X,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ const items: (Page | Group)[] = [
     { title: "Marketing com IA", value: "ai-marketing", icon: Sparkles, path: "/admin/marketing" },
   ] },
   { title: "Financeiro", value: "finance", icon: Wallet, pages: [
+    { title: "Gestão de Caixa", value: "cash", icon: ReceiptText, path: "/admin/caixa" },
     { title: "Carteira", value: "wallet", icon: Wallet, path: "/admin/carteira" },
     { title: "Relatórios", value: "reports", icon: FileText, path: "/admin/reports" },
     { title: "Métricas", value: "analytics", icon: BarChart3, path: "/admin/analytics" },
