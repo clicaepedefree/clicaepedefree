@@ -58,7 +58,7 @@ export function DashboardLayout({
       <UpsellPopup />
       <FloatingWhatsAppButton />
 
-      <div className="mx-auto max-w-[1600px] space-y-5 p-4 sm:p-6 lg:space-y-6 lg:p-8">
+      <div className={`mx-auto w-full max-w-[1600px] space-y-5 p-4 sm:p-6 lg:space-y-6 lg:p-8 ${activeSection === "orders" ? "lg:flex lg:flex-1 lg:flex-col" : ""}`}>
         {activeSection !== "orders" && (
           <StoreStatusBanner restaurant={restaurant} onRestaurantUpdate={onRestaurantUpdate} />
         )}
@@ -66,7 +66,7 @@ export function DashboardLayout({
         {activeSection === "dashboard" && <SalesDashboard restaurant={restaurant} />}
 
         {activeSection === "orders" && (
-          <div className="animate-fade-in-up">
+          <div className="animate-fade-in-up lg:flex lg:flex-1 lg:flex-col">
             <OrdersKanban
               restaurant={restaurant}
               storeControl={<StoreStatusBanner key={restaurant.id} restaurant={restaurant} onRestaurantUpdate={onRestaurantUpdate} compact />}

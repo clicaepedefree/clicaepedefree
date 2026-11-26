@@ -35,7 +35,7 @@ export function AppShell({ restaurant, onLogout, title, subtitle, children }: Ap
   return (
     <SidebarProvider>
       <AppSidebar restaurantId={restaurant?.id} />
-      <div className="min-w-0 flex-1 bg-muted/40">
+      <div className="flex min-w-0 flex-1 flex-col bg-muted/40">
         <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-2 border-b bg-background/95 px-3 backdrop-blur md:px-5">
           <div className="flex min-w-0 items-center gap-2">
             <SidebarTrigger aria-label="Alternar menu lateral" className="size-10 shrink-0" />
@@ -94,7 +94,7 @@ export function AppShell({ restaurant, onLogout, title, subtitle, children }: Ap
             )}
           </div>
         </header>
-        <main className="min-w-0">{children}</main>
+        <main className="flex min-w-0 flex-1 flex-col">{children}</main>
       </div>
     </SidebarProvider>
   );

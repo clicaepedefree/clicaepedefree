@@ -332,7 +332,7 @@ export function OrdersKanban({ restaurant, storeControl }: OrdersKanbanProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4 lg:flex-1">
       <div className="space-y-4 rounded-xl border bg-card p-4 shadow-sm sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -378,7 +378,7 @@ export function OrdersKanban({ restaurant, storeControl }: OrdersKanbanProps) {
         </p>
       )}
 
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
+      <div className="grid min-w-0 gap-4 lg:flex-1 lg:grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
         {[...columns, ...(otherOrders.length ? [{ status: "other", title: "Outros pedidos", icon: ShoppingCart, tone: "border-t-muted-foreground", empty: "" }] : [])].map(column => {
           const entries = column.status === "other" ? otherOrders : filteredOrders.filter(order => order.status === column.status);
           const Icon = column.icon;
