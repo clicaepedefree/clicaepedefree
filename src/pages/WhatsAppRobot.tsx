@@ -63,6 +63,7 @@ function RobotSettings({ restaurantId }: { restaurantId: string }) {
 
   useEffect(() => {
     let live = true;
+    setError("");
     robot<Config>(restaurantId, "load").then(config => {
       if (!live) return;
       setDraft({ botName: config.botName, mode: config.mode, notifyOrders: config.notifyOrders,
@@ -84,6 +85,7 @@ function RobotSettings({ restaurantId }: { restaurantId: string }) {
       inProgress = true;
       try {
         const state = await robot<{ connected: boolean }>(restaurantId, "status");
+        if (live) setConnectionError("");
         if (live && state.connected) {
           setConnected(true);
           setPairing(false);
