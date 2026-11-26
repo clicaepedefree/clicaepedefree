@@ -117,7 +117,7 @@ export function CategoryManager({ restaurant }: CategoryManagerProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Categorias</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Categorias</h2>
           <p className="text-muted-foreground">Organize seus produtos em categorias</p>
         </div>
         
@@ -175,6 +175,7 @@ export function CategoryManager({ restaurant }: CategoryManagerProps) {
                 <Button
                   variant="outline"
                   size="sm"
+                  aria-label={`Editar categoria ${category.name}`}
                   onClick={() => {
                     setEditingCategory(category);
                     setDialogOpen(true);
@@ -185,6 +186,7 @@ export function CategoryManager({ restaurant }: CategoryManagerProps) {
                 <Button
                   variant="outline"
                   size="sm"
+                  aria-label={`Excluir categoria ${category.name}`}
                   onClick={() => handleDelete(category.id)}
                 >
                   <Trash2 className="h-4 w-4" />

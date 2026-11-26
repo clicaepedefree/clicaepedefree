@@ -387,7 +387,7 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold">Grupos de Opções</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Complementos</h2>
           <p className="text-muted-foreground">Carregando grupos de opções...</p>
         </div>
       </div>
@@ -396,9 +396,9 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Grupos de Opções</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Complementos</h2>
           <p className="text-muted-foreground">Configure grupos de opções para seus produtos</p>
         </div>
         <Button onClick={() => { resetGroupForm(); setDialogOpen(true); }}>
@@ -569,11 +569,11 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                 onOpenChange={(isOpen) => setOpenGroups({ ...openGroups, [group.id]: isOpen })}
               >
                 <div className="p-4">
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
                         <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm" className="p-0 h-auto">
+                          <Button variant="ghost" size="sm" aria-label={`Opções de ${group.name}`} className="p-0 h-auto">
                             {openGroups[group.id] ? (
                               <ChevronUp className="h-5 w-5" />
                             ) : (
@@ -583,7 +583,7 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                         </CollapsibleTrigger>
                         <div>
                           <h3 className="font-semibold text-lg">{group.name}</h3>
-                          <div className="flex gap-2 mt-1">
+                          <div className="mt-1 flex flex-wrap gap-2">
                             <Badge variant={group.selection_type === 'single' ? 'default' : 'secondary'} className="text-xs">
                               {group.selection_type === 'single' ? 'Única' : 'Múltipla'}
                             </Badge>
@@ -608,7 +608,7 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                           setOptionFormData({ ...optionFormData, addon_group_id: group.id });
                           setOptionDialogOpen(true);
                         }}
-                        title="Adicionar opção"
+                        title="Adicionar opção" aria-label={`Adicionar opção: ${group.name}`}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -616,7 +616,7 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                         variant="outline"
                         size="sm"
                         onClick={() => duplicateGroup(group.id)}
-                        title="Duplicar grupo"
+                        title="Duplicar grupo" aria-label={`Duplicar grupo: ${group.name}`}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
@@ -624,7 +624,7 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                         variant="outline"
                         size="sm"
                         onClick={() => openEditGroupDialog(group)}
-                        title="Editar grupo"
+                        title="Editar grupo" aria-label={`Editar grupo: ${group.name}`}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -632,7 +632,7 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                         variant="outline"
                         size="sm"
                         onClick={() => deleteGroup(group.id)}
-                        title="Excluir grupo"
+                        title="Excluir grupo" aria-label={`Excluir grupo: ${group.name}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -670,14 +670,14 @@ export function AddonManager({ restaurant }: AddonManagerProps) {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => openEditOptionDialog(option)}
+                                aria-label={`Editar opção ${option.name}`} onClick={() => openEditOptionDialog(option)}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => deleteOption(option.id)}
+                                aria-label={`Excluir opção ${option.name}`} onClick={() => deleteOption(option.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

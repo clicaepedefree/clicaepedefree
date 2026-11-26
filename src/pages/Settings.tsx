@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
@@ -84,9 +84,12 @@ export default function Settings() {
 
   const getPageTitle = () => settingsCards.find((c) => c.value === activeTab)?.title || "Configurações";
 
+  const catalogTabs = [{ key: "products", label: "Produtos" }, { key: "categories", label: "Categorias" }, { key: "addons", label: "Complementos" }];
+  const inCatalog = catalogTabs.some(item => item.key === activeTab);
+
   return (
     <AppShell restaurant={restaurant} onLogout={logout} title={getPageTitle()} subtitle={restaurant.name}>
-      <div className="p-4 md:p-6 max-w-7xl mx-auto">
+      <div className={`p-4 md:p-6 mx-auto ${inCatalog ? "max-w-[1600px]" : "max-w-7xl"}`}>
         <div className="flex items-center gap-3 mb-6">
           {activeTab && (
             <Button
@@ -110,8 +113,17 @@ export default function Settings() {
           )}
         </div>
 
+        {inCatalog && (
+          <nav aria-label="Áreas do catálogo" className="mb-5 flex flex-wrap gap-1 rounded-lg border bg-card p-1">
+            {catalogTabs.map(item => (
+              <Button key={item.key} asChild size="sm" variant={activeTab === item.key ? "default" : "ghost"}>
+                <Link to={`/admin/settings?tab=${item.key}`} aria-current={activeTab === item.key ? "page" : undefined}>{item.label}</Link>
+              </Button>
+            ))}
+          </nav>
+        )}
         {activeTab ? (
-          <div className="animate-fade-in-up">{renderContent()}</div>
+          <div key={`${restaurant.id}-${activeTab}`} className="animate-fade-in-up">{renderContent()}</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {settingsCards.map((card) => {
