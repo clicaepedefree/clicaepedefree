@@ -1,1 +1,4 @@
 project_id = "defowjmlqmheecydnyrj"
+
+[functions.whatsapp-robot]
+verify_jwt = false

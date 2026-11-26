@@ -18,6 +18,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Marketing = lazy(() => import("./pages/Marketing"));
+const WhatsAppRobot = lazy(() => import("./pages/WhatsAppRobot"));
 const CashOverview = lazy(() => import("./pages/CashOverview"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const Customers = lazy(() => import("./pages/Customers"));
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/admin/marketing" element={<Marketing />} />
             <Route path="/admin/caixa" element={<CashOverview />} />
+            <Route path="/admin/robo-whatsapp" element={<WhatsAppRobot />} />
             <Route path="/admin/carteira" element={<Wallet />} />
             <Route path="/admin/clientes" element={<Customers />} />
             <Route path="/super-admin" element={<SuperAdmin />} />

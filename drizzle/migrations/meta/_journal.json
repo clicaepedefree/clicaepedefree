@@ -85,6 +85,13 @@
       "when": 1795704915523,
       "tag": "0011_manual_counter_orders",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795722422275,
+      "tag": "0012_whatsapp_robot",
+      "breakpoints": true
     }
   ]
 }
