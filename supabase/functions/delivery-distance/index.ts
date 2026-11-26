@@ -7,13 +7,17 @@ const headers = { ...corsHeaders, 'Content-Type': 'application/json' };
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_maps';
 const text = (max: number) => z.string().trim().max(max).refine(value => !/[<>\u0000-\u001f]/.test(value));
 const common = { restaurantId: z.string().uuid(), sessionToken: z.string().uuid() };
+const streetNumber = text(30).regex(/^\d+[a-z]?(?:[-/]\d+[a-z]?)?$/i);
 const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('session'), restaurantId: z.string().uuid() }),
   z.object({ action: z.literal('search'), ...common, query: text(120).min(3) }),
   z.object({ action: z.literal('cep'), ...common, cep: z.string().regex(/^\d{5}-?\d{3}$/) }),
-  z.object({ action: z.literal('quote'), ...common, street: text(180).min(1), number: text(30).regex(/^\d+[a-z]?(?:[-/]\d+[a-z]?)?$/i),
+  z.object({ action: z.literal('quote'), ...common, street: text(180).min(1), number: streetNumber,
     complement: text(100).default(''), neighborhood: text(80).min(1), city: text(80).min(1), state: z.string().regex(/^[A-Z]{2}$/),
     cep: z.string().regex(/^(?:\d{5}-?\d{3})?$/).default('') }),
+  z.object({ action: z.literal('manual_quote'), ...common, street: text(300).min(1), number: streetNumber,
+    complement: text(100).default(''), neighborhood: text(100).default(''), city: text(80).default(''),
+    state: z.string().regex(/^(?:[A-Z]{2})?$/).default('') }),
 ]);
 type Component = { long_name: string; short_name: string; types: string[] };
 type GeoResult = { formatted_address: string; partial_match?: boolean; address_components: Component[] };
@@ -91,9 +95,20 @@ Deno.serve(async request => {
     if (!url || !key) throw new DeliveryError('Serviço de entrega indisponível.', 503);
     const db = createClient(url, key);
     const { data: restaurant, error: restaurantError } = await db.from('restaurants')
-      .select('id,is_blocked,delivery_enabled').eq('id', input.restaurantId).maybeSingle();
+      .select('id,user_id,is_blocked,delivery_enabled').eq('id', input.restaurantId).maybeSingle();
     if (restaurantError) throw restaurantError;
     if (!restaurant || restaurant.is_blocked || restaurant.delivery_enabled === false) throw new DeliveryError('Esta loja não está disponível para entrega.');
+    if (input.action === 'manual_quote') {
+      const token = request.headers.get('Authorization')?.match(/^Bearer (.+)$/i)?.[1];
+      if (!token) throw new DeliveryError('Entre novamente para calcular a entrega.', 401);
+      const { data: { user } } = await db.auth.getUser(token);
+      if (!user) throw new DeliveryError('Entre novamente para calcular a entrega.', 401);
+      if (user.id !== restaurant.user_id) {
+        const { data: admin, error: adminError } = await db.rpc('is_super_admin', { check_user_id: user.id });
+        if (adminError) throw adminError;
+        if (!admin) throw new DeliveryError('Acesso negado.', 403);
+      }
+    }
     const { data: settings, error } = await db.from('delivery_distance_settings')
       .select('origin_address').eq('restaurant_id', input.restaurantId).eq('enabled', true).maybeSingle();
     if (error) throw error;
@@ -132,13 +147,24 @@ Deno.serve(async request => {
       const candidates = results.map(candidate).filter(item => input.action === 'cep' ? Boolean(item.city) : Boolean(item.street)).slice(0, 5);
       return respond({ candidates });
     }
-    const cep = input.cep.replace(/\D/g, '');
+    const cep = input.action === 'quote' ? input.cep.replace(/\D/g, '') : '';
     const formattedCep = cep ? `${cep.slice(0, 5)}-${cep.slice(5)}` : '';
-    const results = await geocode(`${input.street}, ${input.number} - ${input.neighborhood}, ${input.city} - ${input.state}${formattedCep ? `, ${formattedCep}` : ''}`);
+    const city = input.city || originData.city;
+    const state = input.state || originData.state;
+    if (!city || !state || Boolean(input.city) !== Boolean(input.state)) {
+      throw new DeliveryError('Informe a cidade e a UF do endereço.');
+    }
+    const streetAddress = `${input.street}, ${input.number}${input.neighborhood ? ` - ${input.neighborhood}` : ''}`;
+    const results = await geocode(`${streetAddress}, ${city} - ${state}${formattedCep ? `, ${formattedCep}` : ''}`);
     const destination = results[0];
     if (!destination || results.length !== 1 || destination.partial_match || !part(destination, 'route') ||
       part(destination, 'street_number')?.long_name.toLowerCase() !== input.number.toLowerCase()) {
       throw new DeliveryError('Não foi possível confirmar a rua e o número. Confira o endereço completo.');
+    }
+    const destinationData = candidate(destination);
+    const normalize = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+    if (input.action === 'manual_quote' && (normalize(destinationData.city) !== normalize(city) || destinationData.state !== state)) {
+      throw new DeliveryError('Confira a cidade e a UF do endereço de entrega.');
     }
     const result = await google('routes/directions/v2:computeRoutes', { method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Goog-FieldMask': 'routes.distanceMeters' },
@@ -151,8 +177,9 @@ Deno.serve(async request => {
     });
     if (feeError) throw feeError;
     if (fee === null) throw new DeliveryError('Este endereço está fora da área de entrega da loja.');
-    const address = `${input.street}, ${input.number}${input.complement ? ` - ${input.complement}` : ''}, ${input.neighborhood}, ${input.city} - ${input.state}${formattedCep ? `, CEP ${formattedCep}` : ''}`;
-    const details = { street: input.street, number: input.number, complement: input.complement, neighborhood: input.neighborhood, cep: formattedCep, city: input.city, state: input.state };
+    const neighborhood = input.neighborhood || destinationData.neighborhood;
+    const address = `${input.street}, ${input.number}${input.complement ? ` - ${input.complement}` : ''}${neighborhood ? `, ${neighborhood}` : ''}, ${city} - ${state}${formattedCep ? `, CEP ${formattedCep}` : ''}`;
+    const details = { street: input.street, number: input.number, complement: input.complement, neighborhood, cep: formattedCep, city, state };
     await db.from('delivery_distance_quotes').delete().lt('expires_at', new Date().toISOString());
     const { data: quote, error: quoteError } = await db.from('delivery_distance_quotes').insert({
       restaurant_id: input.restaurantId, destination_hash: await hash(destinationHashInput(address, details)),
