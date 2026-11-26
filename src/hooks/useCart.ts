@@ -1,3 +1,4 @@
+import { isOfflineCheckoutMethod } from "@/lib/payment-labels";
 import { useState } from "react";
 import { numberToCurrency } from "@/components/ui/currency-input";
 import { supabase } from "@/integrations/supabase/client";
@@ -211,17 +212,26 @@ export function useCart() {
         street: sanitizeString(address.street, 300), number: sanitizeString(address.number, 30),
         complement: sanitizeString(address.complement, 100) || '', neighborhood: sanitizeString(address.neighborhood, 100),
       } : null;
+      const checkoutOrder = {
+        _restaurant_id: restaurant.id,
+        _name: customerName || '',
+        _phone: customerPhone || '',
+        _details: details,
+        _items: orderItems,
+        _subtotal: subtotal,
+        _delivery_fee: deliveryFee || 0,
+        _total: total,
+        _address: fullAddress || '',
+      };
       const { data, error } = isPixOnline
-        ? await supabase.rpc('create_customer_order', {
-            _restaurant_id: restaurant.id, _name: customerName || '', _phone: customerPhone || '',
-            _details: details, _items: orderItems as any, _subtotal: subtotal,
-            _delivery_fee: deliveryFee || 0, _total: total, _address: fullAddress || '',
-          })
-        : await supabase.rpc('create_public_order', {
-            _restaurant_id: restaurant.id, _customer_name: customerName, _customer_phone: customerPhone,
-            _items: orderItems as any, _subtotal: subtotal, _delivery_fee: deliveryFee || 0, _total: total,
-            _address: fullAddress, _payment_method: paymentMethod, _status: 'new', _payment_status: 'not_required',
-          });
+        ? await supabase.rpc('create_customer_order', checkoutOrder)
+        : isOfflineCheckoutMethod(payment?.type)
+          ? await supabase.rpc('create_customer_offline_order', { ...checkoutOrder, _payment_method: payment.type })
+          : await supabase.rpc('create_public_order', {
+              _restaurant_id: restaurant.id, _customer_name: customerName, _customer_phone: customerPhone,
+              _items: orderItems, _subtotal: subtotal, _delivery_fee: deliveryFee || 0, _total: total,
+              _address: fullAddress, _payment_method: paymentMethod, _status: 'new', _payment_status: 'not_required',
+            });
 
       if (error) throw error;
       return (data as unknown as string) || null;

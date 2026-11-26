@@ -16,3 +16,17 @@ export function formatPaymentMethod(method?: string | null): string {
 export function isPixOnline(method?: string | null): boolean {
   return method === "pix_online";
 }
+
+
+export const OFFLINE_CHECKOUT_METHODS = [
+  { type: "credit_card", label: "Cartão de crédito" },
+  { type: "debit_card", label: "Cartão de débito" },
+  { type: "meal_voucher", label: "Vale-refeição (VR)" },
+  { type: "food_voucher", label: "Vale-alimentação (VA)" },
+] as const;
+
+export type OfflineCheckoutMethod = (typeof OFFLINE_CHECKOUT_METHODS)[number]["type"];
+
+export function isOfflineCheckoutMethod(method: string | undefined): method is OfflineCheckoutMethod {
+  return OFFLINE_CHECKOUT_METHODS.some(option => option.type === method);
+}
