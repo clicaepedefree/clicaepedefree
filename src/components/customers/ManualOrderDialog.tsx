@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { COUNTER_CUSTOMER_NAME, type Customer, maskCustomerPhone, money, normalizeCustomerPhone } from '@/lib/customers';
+import { queryDelivery } from '@/lib/delivery-api';
+import { isCurrentDeliveryQuote, type DeliveryDistanceQuote } from '@/lib/delivery-distance';
 import { CustomerDialog } from './CustomerDialog';
 
 const blankCustomer = { name: '', phone: '', address: '', number: '', complement: '', neighborhood: '' };
@@ -54,7 +56,10 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
   const [categoryId, setCategoryId] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [lines, setLines] = useState<OrderLine[]>([]);
-  const [fee, setFee] = useState('0');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [quoteAddressKey, setQuoteAddressKey] = useState('');
+  const [expiredQuoteId, setExpiredQuoteId] = useState<string>();
   const [payment, setPayment] = useState('cash');
   const [newCustomer, setNewCustomer] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -69,7 +74,10 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
     setCategoryId('');
     setSelectedProduct(null);
     setLines([]);
-    setFee('0');
+    setCity('');
+    setState('');
+    setQuoteAddressKey('');
+    setExpiredQuoteId(undefined);
     setPayment('cash');
     setNewCustomer(false);
   }, [open]);
@@ -102,6 +110,8 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
   });
 
   const chooseCustomer = (customer: Customer) => {
+    setCity('');
+    setState('');
     setCustomerId(customer.id);
     setCustomerTerm(customer.name);
     setForm({
@@ -142,9 +152,88 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
   };
 
   const subtotal = lines.reduce((total, line) => total + Math.round(line.unitPrice * 100) * line.quantity, 0) / 100;
-  const deliveryFee = type === 'delivery' ? Number(fee.trim().replace(',', '.')) : 0;
-  const validFee = Number.isFinite(deliveryFee) && deliveryFee >= 0 && deliveryFee <= 1000;
-  const shownFee = validFee ? Math.round(deliveryFee * 100) / 100 : 0;
+  const calculatingDelivery = open && type === 'delivery';
+  const deliveryMode = useQuery({
+    queryKey: ['delivery-distance-mode', restaurantId],
+    enabled: calculatingDelivery,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('delivery_uses_distance', { _restaurant_id: restaurantId });
+      if (error) throw error;
+      return data;
+    },
+  });
+  const usesDistance = deliveryMode.data === true;
+  const zones = useQuery({
+    queryKey: ['manual-delivery-zones', restaurantId],
+    enabled: calculatingDelivery && deliveryMode.data === false,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('delivery_zones').select('id,neighborhood,delivery_fee')
+        .eq('restaurant_id', restaurantId).eq('is_active', true).order('neighborhood').order('id');
+      if (error) throw error;
+      return data;
+    },
+  });
+  const details = {
+    street: form.address.trim(),
+    number: form.number.trim(),
+    complement: form.complement.trim(),
+    neighborhood: form.neighborhood.trim(),
+  };
+  const hasAddress = Boolean(details.street && details.number);
+  const neighborhood = normalizeSearch(details.neighborhood);
+  const zone = neighborhood
+    ? zones.data?.find(item => normalizeSearch(item.neighborhood) === neighborhood)
+    : undefined;
+  const manualQuoteAddress = { ...details, city: city.trim(), state: state.trim().toUpperCase() };
+  const validNumber = /^\d+[a-z]?(?:[-/]\d+[a-z]?)?$/i.test(details.number);
+  const validCity = Boolean(manualQuoteAddress.city) === Boolean(manualQuoteAddress.state)
+    && /^(?:[A-Z]{2})?$/.test(manualQuoteAddress.state);
+  const addressKey = calculatingDelivery && usesDistance && hasAddress && validNumber && validCity
+    ? JSON.stringify(manualQuoteAddress) : '';
+  useEffect(() => {
+    if (!addressKey) return;
+    const timer = window.setTimeout(() => setQuoteAddressKey(addressKey), 600);
+    return () => window.clearTimeout(timer);
+  }, [addressKey]);
+
+  const canQuote = Boolean(addressKey && addressKey === quoteAddressKey);
+  const quoteQuery = useQuery({
+    queryKey: ['manual-delivery-quote', restaurantId, canQuote ? quoteAddressKey : ''],
+    enabled: canQuote,
+    gcTime: 0,
+    staleTime: Infinity,
+    retry: false,
+    queryFn: async () => {
+      const result = await queryDelivery<DeliveryDistanceQuote>(restaurantId, { action: 'manual_quote', ...manualQuoteAddress });
+      if (!isCurrentDeliveryQuote(result)) throw new Error('Não foi possível obter uma cotação válida.');
+      return result;
+    },
+  });
+  const quote = canQuote ? quoteQuery.data : undefined;
+  useEffect(() => {
+    if (!quote) return;
+    const timer = window.setTimeout(() => setExpiredQuoteId(quote.id), Math.max(0, Date.parse(quote.expiresAt) - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [quote]);
+  const currentQuote = quote && quote.id !== expiredQuoteId && !quoteQuery.isFetching && isCurrentDeliveryQuote(quote)
+    ? quote : undefined;
+  const zoneFee = hasAddress && zone && zones.isSuccess && !zones.isFetching
+    ? Math.round(zone.delivery_fee * 100) / 100 : undefined;
+  const shownFee = type === 'counter' ? 0 : usesDistance ? currentQuote?.fee : zoneFee;
+  const feeReady = shownFee !== undefined && deliveryMode.isSuccess && !deliveryMode.isFetching;
+  const feeMessage = deliveryMode.isError || (!usesDistance && zones.isError) ? 'Não foi possível consultar as regras de entrega.'
+    : !hasAddress ? 'Informe rua e número para calcular.'
+    : deliveryMode.isFetching ? 'Consultando regras de entrega...'
+    : usesDistance && !validNumber ? 'Informe um número válido para calcular por distância.'
+    : usesDistance && !validCity ? 'Informe a cidade e a UF ou deixe os dois campos vazios.'
+    : usesDistance && canQuote && quoteQuery.isError ? quoteQuery.error.message
+    : usesDistance && quote && !quoteQuery.isFetching ? 'A cotação expirou.'
+    : !usesDistance && zones.isSuccess && !zones.isFetching ? (details.neighborhood
+      ? 'Este bairro está fora da área de entrega da loja.' : 'Informe o bairro para calcular.')
+    : 'Calculando a taxa...';
+  const retryFee = deliveryMode.isError ? () => void deliveryMode.refetch()
+    : usesDistance && canQuote && (quoteQuery.isError || (quote && expiredQuoteId === quote.id)) ? () => void quoteQuery.refetch()
+    : zones.isError ? () => void zones.refetch() : undefined;
 
   const submit = async () => {
     if (busy || lines.length === 0) return;
@@ -156,19 +245,16 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
       toast.error('Informe endereço e número para entrega.');
       return;
     }
-    if (!validFee) {
-      toast.error('Informe uma taxa de entrega entre R$ 0,00 e R$ 1.000,00.');
+    if (type === 'delivery' && (!feeReady || shownFee === undefined)) return;
+    if (type === 'delivery' && usesDistance && !isCurrentDeliveryQuote(quote)) {
+      void quoteQuery.refetch();
       return;
     }
-    const details = type === 'delivery' ? {
-      street: form.address.trim(),
-      number: form.number.trim(),
-      complement: form.complement.trim(),
-      neighborhood: form.neighborhood.trim(),
-    } : null;
-    const address = details
-      ? `${details.street}, ${details.number}${details.complement ? ` - ${details.complement}` : ''}${details.neighborhood ? `, ${details.neighborhood}` : ''}`
-      : '';
+    const orderDetails = quote
+      ? { ...quote.details, delivery_quote_id: quote.id }
+      : { ...details, neighborhood: zone?.neighborhood ?? details.neighborhood, delivery_zone_id: zone?.id };
+    const address = quote?.address
+      ?? `${details.street}, ${details.number}${details.complement ? ` - ${details.complement}` : ''}, ${orderDetails.neighborhood}`;
     const items = lines.map(({ key, ...line }) => ({
       ...line,
       addons: line.addons.map(({ option, group }) => ({ option: { ...option }, group: { ...group } })),
@@ -188,11 +274,18 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
             _customer_id: customerId as string,
             _name: form.name.trim(),
             _phone: form.phone,
-            _details: details,
-            _delivery_fee: shownFee,
+            _details: orderDetails,
+            _delivery_fee: shownFee ?? 0,
             _address: address,
           });
       if (error) {
+        if (type === 'delivery' && /cotação|área de entrega|taxa de entrega|disponível para entrega/i.test(error.message)) {
+          toast.error(error.message);
+          void deliveryMode.refetch();
+          if (usesDistance) void quoteQuery.refetch();
+          else void zones.refetch();
+          return;
+        }
         toast.error(error.message.includes('incompatível')
           ? 'O telefone difere do cadastro selecionado. Remova a seleção ou corrija o telefone.'
           : 'Não foi possível lançar o pedido.');
@@ -295,12 +388,12 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
                     </Button>
                   </div>
                   <div className="relative">
-                    <Input id="customer-search" placeholder="Buscar por nome ou telefone" value={customerTerm} maxLength={100}
+                    <Input id="customer-search" placeholder="Buscar por nome ou telefone" value={customerTerm} maxLength={100} disabled={busy}
                       onChange={event => { setCustomerTerm(event.target.value); setCustomerId(null); }} />
                     {!customerId && !!matches.data?.length && (
                       <div className="absolute z-10 mt-1 w-full rounded-md border bg-popover shadow-md">
                         {matches.data.map(customer => (
-                          <button type="button" key={customer.id} className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                          <button type="button" key={customer.id} className="block w-full px-3 py-2 text-left text-sm hover:bg-muted" disabled={busy}
                             onClick={() => chooseCustomer(customer)}>
                             {customer.name}
                             <span className="block text-xs text-muted-foreground">{customer.phone}</span>
@@ -313,7 +406,7 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
                     {customerFields.map(field => (
                       <div key={field} className={field === 'address' ? 'col-span-2 space-y-1' : 'space-y-1'}>
                         <Label htmlFor={`manual-${field}`}>{fields[field]}</Label>
-                        <Input id={`manual-${field}`} value={form[field]} maxLength={field === 'address' ? 300 : 100}
+                        <Input id={`manual-${field}`} value={form[field]} disabled={busy} maxLength={field === 'address' ? 300 : 100}
                           type={field === 'phone' ? 'tel' : 'text'}
                           onChange={event => setForm(previous => ({
                             ...previous,
@@ -321,6 +414,20 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
                           }))} />
                       </div>
                     ))}
+                    {usesDistance && (
+                      <>
+                        <div className="space-y-1">
+                          <Label htmlFor="manual-city">Cidade</Label>
+                          <Input id="manual-city" placeholder="Cidade da loja" value={city} maxLength={80} disabled={busy}
+                            onChange={event => setCity(event.target.value)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="manual-state">UF</Label>
+                          <Input id="manual-state" placeholder="UF da loja" value={state} maxLength={2} disabled={busy}
+                            onChange={event => setState(event.target.value.toUpperCase())} />
+                        </div>
+                      </>
+                    )}
                   </div>
                   </>}
                 </section>
@@ -382,24 +489,28 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
                     </Select>
                   </div>
                 </div>
-
-                {type === 'delivery' && (
-                  <div className="w-40 space-y-1">
-                    <Label htmlFor="manual-fee">Taxa de entrega</Label>
-                    <Input id="manual-fee" inputMode="decimal" value={fee} onChange={event => setFee(event.target.value)} />
-                  </div>
-                )}
               </div>
 
               <footer className="space-y-3 border-t bg-background p-4 sm:p-5">
                 <dl className="space-y-1 text-sm tabular-nums">
                   <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd>{money(subtotal)}</dd></div>
-                  {type === 'delivery' && <div className="flex justify-between"><dt className="text-muted-foreground">Entrega</dt><dd>{money(shownFee)}</dd></div>}
+                  {type === 'delivery' && (
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">Taxa de entrega</dt>
+                      <dd aria-live="polite">{feeReady && shownFee !== undefined ? money(shownFee) : '—'}</dd>
+                    </div>
+                  )}
                   <div className="flex justify-between border-t pt-2 text-lg font-semibold">
-                    <dt>Total</dt><dd aria-live="polite">{money(subtotal + shownFee)}</dd>
+                    <dt>Total</dt><dd aria-live="polite">{type === 'delivery' && !feeReady ? '—' : money(subtotal + (shownFee ?? 0))}</dd>
                   </div>
                 </dl>
-                <Button className="w-full" onClick={submit} disabled={busy || lines.length === 0}>
+                {type === 'delivery' && !feeReady && (
+                  <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+                    <p role="status">{feeMessage}</p>
+                    {retryFee && <Button type="button" variant="outline" size="sm" onClick={retryFee}>Recalcular</Button>}
+                  </div>
+                )}
+                <Button className="w-full" onClick={submit} disabled={busy || lines.length === 0 || (type === 'delivery' && !feeReady)}>
                   {busy ? 'Salvando pedido...' : 'Finalizar pedido'}
                 </Button>
               </footer>
