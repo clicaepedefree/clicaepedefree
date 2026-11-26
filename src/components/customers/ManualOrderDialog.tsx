@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { type Customer, maskCustomerPhone, money, normalizeCustomerPhone } from '@/lib/customers';
+import { COUNTER_CUSTOMER_NAME, type Customer, maskCustomerPhone, money, normalizeCustomerPhone } from '@/lib/customers';
 import { CustomerDialog } from './CustomerDialog';
 
 const blankCustomer = { name: '', phone: '', address: '', number: '', complement: '', neighborhood: '' };
@@ -49,7 +49,7 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
   const [customerTerm, setCustomerTerm] = useState('');
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [form, setForm] = useState(blankCustomer);
-  const [type, setType] = useState<'delivery' | 'pickup'>('delivery');
+  const [type, setType] = useState<'delivery' | 'counter'>('delivery');
   const [productTerm, setProductTerm] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -93,7 +93,7 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
   const customerSearch = customerTerm.trim();
   const matches = useQuery({
     queryKey: ['customer-search', restaurantId, customerSearch],
-    enabled: open && customerSearch.length >= 2 && !customerId,
+    enabled: open && type === 'delivery' && customerSearch.length >= 2 && !customerId,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('crm_customers', { _restaurant_id: restaurantId, _search: customerSearch });
       if (error) throw error;
@@ -148,7 +148,7 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
 
   const submit = async () => {
     if (busy || lines.length === 0) return;
-    if (!form.name.trim() || !normalizeCustomerPhone(form.phone)) {
+    if (type === 'delivery' && (!form.name.trim() || !normalizeCustomerPhone(form.phone))) {
       toast.error('Informe nome e telefone válidos.');
       return;
     }
@@ -176,24 +176,29 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
     }));
     setBusy(true);
     try {
-      const { error } = await supabase.rpc('create_manual_order', {
+      const order = {
         _restaurant_id: restaurantId,
-        _customer_id: customerId as string,
-        _name: form.name.trim(),
-        _phone: form.phone,
-        _details: details,
         _items: items,
-        _delivery_fee: shownFee,
-        _address: address,
         _payment_method: payment,
-      });
+      };
+      const { error } = type === 'counter'
+        ? await supabase.rpc('create_manual_counter_order', order)
+        : await supabase.rpc('create_manual_order', {
+            ...order,
+            _customer_id: customerId as string,
+            _name: form.name.trim(),
+            _phone: form.phone,
+            _details: details,
+            _delivery_fee: shownFee,
+            _address: address,
+          });
       if (error) {
         toast.error(error.message.includes('incompatível')
           ? 'O telefone difere do cadastro selecionado. Remova a seleção ou corrija o telefone.'
           : 'Não foi possível lançar o pedido.');
         return;
       }
-      toast.success('Pedido lançado e vinculado ao cliente');
+      toast.success(type === 'counter' ? 'Pedido de balcão lançado' : 'Pedido lançado e vinculado ao cliente');
       onCreated();
       onOpenChange(false);
     } catch {
@@ -268,6 +273,21 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
             <aside aria-label="Resumo do pedido" className="flex min-h-0 flex-col">
               <div className="min-h-0 space-y-5 p-4 sm:p-5 lg:flex-1 lg:overflow-y-auto">
                 <section className="space-y-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="manual-type">Modalidade</Label>
+                    <Select value={type} disabled={busy} onValueChange={(value: 'delivery' | 'counter') => setType(value)}>
+                      <SelectTrigger id="manual-type"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="delivery">Delivery</SelectItem>
+                        <SelectItem value="counter">PDV Balcão</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {type === 'counter' ? (
+                    <p className="rounded-lg bg-muted px-3 py-2 text-sm">
+                      Cliente da venda: <strong>{COUNTER_CUSTOMER_NAME}</strong>
+                    </p>
+                  ) : <>
                   <div className="flex items-center justify-between gap-2">
                     <Label htmlFor="customer-search">Cliente</Label>
                     <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setNewCustomer(true)}>
@@ -289,15 +309,8 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
                       </div>
                     )}
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="manual-type">Modalidade</Label>
-                    <Select value={type} onValueChange={(value: 'delivery' | 'pickup') => setType(value)}>
-                      <SelectTrigger id="manual-type"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="delivery">Entrega</SelectItem><SelectItem value="pickup">Retirada</SelectItem></SelectContent>
-                    </Select>
-                  </div>
                   <div className="grid grid-cols-2 gap-3">
-                    {customerFields.filter(field => type === 'delivery' || field === 'name' || field === 'phone').map(field => (
+                    {customerFields.map(field => (
                       <div key={field} className={field === 'address' ? 'col-span-2 space-y-1' : 'space-y-1'}>
                         <Label htmlFor={`manual-${field}`}>{fields[field]}</Label>
                         <Input id={`manual-${field}`} value={form[field]} maxLength={field === 'address' ? 300 : 100}
@@ -309,6 +322,7 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
                       </div>
                     ))}
                   </div>
+                  </>}
                 </section>
 
                 <section className="space-y-2" aria-labelledby="manual-order-items">
@@ -398,7 +412,7 @@ export function ManualOrderDialog({ open, onOpenChange, restaurantId, onCreated 
           product={{ ...selectedProduct, image_url: selectedProduct.image_url ?? undefined }}
           onOpenChange={value => { if (!value) setSelectedProduct(null); }} onAddToCart={addProduct} />
       )}
-      <CustomerDialog open={open && newCustomer} onOpenChange={setNewCustomer} restaurantId={restaurantId} onSaved={chooseCustomer} />
+      <CustomerDialog open={open && type === 'delivery' && newCustomer} onOpenChange={setNewCustomer} restaurantId={restaurantId} onSaved={chooseCustomer} />
     </>
   );
 }

@@ -41,6 +41,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatPaymentMethod } from "@/lib/payment-labels";
 import { toast } from "sonner";
+import { COUNTER_CUSTOMER_NAME } from "@/lib/customers";
 import { cn } from "@/lib/utils";
 
 interface Order {
@@ -84,6 +85,9 @@ const ORDER_COLUMNS: { status: string; title: string; icon: LucideIcon; tone: st
 ];
 const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const isDeliveryOrder = (order: Order) => Boolean(order.address?.trim()) || Number(order.delivery_fee) > 0;
+const isCounterOrder = (order: Order) =>
+  order.customer_name === COUNTER_CUSTOMER_NAME && !order.customer_phone && !isDeliveryOrder(order);
+
 
 interface OrdersKanbanProps {
   restaurant: any;
@@ -268,7 +272,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
   };
 
   const generateReceiptHTML = (order: Order) => {
-    const orderType = isDeliveryOrder(order) ? "ENTREGA" : "RETIRADA";
+    const orderType = isDeliveryOrder(order) ? "ENTREGA" : isCounterOrder(order) ? "PDV BALCÃO" : "RETIRADA";
     let itemsHTML = "";
     if (order.items && order.items.length > 0) {
       itemsHTML = order.items
@@ -410,7 +414,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                       <span className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="size-3" aria-hidden="true" />
                         {format(new Date(order.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                        <span aria-hidden="true">·</span> {isDeliveryOrder(order) ? "Entrega" : "Retirada"}
+                        <span aria-hidden="true">·</span> {isDeliveryOrder(order) ? "Entrega" : isCounterOrder(order) ? "PDV Balcão" : "Retirada"}
                       </span>
                     </button>
                   );
@@ -449,7 +453,7 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                       ) : (
                         <>
                           <Store className="h-4 w-4 text-primary" />
-                          <span>Retirada no local</span>
+                          <span>{isCounterOrder(selectedOrder) ? "PDV Balcão" : "Retirada no local"}</span>
                         </>
                       )}
                     </div>
@@ -459,10 +463,12 @@ export function OrdersKanban({ restaurant }: OrdersKanbanProps) {
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span>{selectedOrder.customer_name || "Não informado"}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{selectedOrder.customer_phone || "Não informado"}</span>
-                      </div>
+                      {!isCounterOrder(selectedOrder) && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span>{selectedOrder.customer_phone || "Não informado"}</span>
+                        </div>
+                      )}
                       {isDeliveryOrder(selectedOrder) && selectedOrder.address && (
                         <div className="flex items-start gap-2">
                           <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />

@@ -1479,6 +1479,10 @@ export type Database = {
         }
         Returns: string
       }
+      create_manual_counter_order: {
+        Args: { _restaurant_id: string; _items: Json; _payment_method: string }
+        Returns: string
+      }
       create_manual_order: {
         Args: {
           _address: string
