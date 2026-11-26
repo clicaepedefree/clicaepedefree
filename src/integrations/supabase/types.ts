@@ -1270,6 +1270,126 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_robot_contacts: {
+        Row: {
+          last_auto_reply_at: string | null
+          phone: string
+          profile_name: string
+          restaurant_id: string
+        }
+        Insert: {
+          last_auto_reply_at?: string | null
+          phone: string
+          profile_name?: string
+          restaurant_id: string
+        }
+        Update: {
+          last_auto_reply_at?: string | null
+          phone?: string
+          profile_name?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_robot_contacts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_robot_settings"
+            referencedColumns: ["restaurant_id"]
+          },
+        ]
+      }
+      whatsapp_robot_outbox: {
+        Row: {
+          attempts: number
+          available_at: string
+          created_at: string
+          customer_name: string | null
+          event_key: string | null
+          id: number
+          message: string | null
+          order_label: string | null
+          order_status: string | null
+          phone: string
+          restaurant_id: string
+          sent_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          available_at?: string
+          created_at?: string
+          customer_name?: string | null
+          event_key?: string | null
+          id?: never
+          message?: string | null
+          order_label?: string | null
+          order_status?: string | null
+          phone: string
+          restaurant_id: string
+          sent_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          available_at?: string
+          created_at?: string
+          customer_name?: string | null
+          event_key?: string | null
+          id?: never
+          message?: string | null
+          order_label?: string | null
+          order_status?: string | null
+          phone?: string
+          restaurant_id?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_robot_outbox_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_robot_settings"
+            referencedColumns: ["restaurant_id"]
+          },
+        ]
+      }
+      whatsapp_robot_settings: {
+        Row: {
+          bot_name: string
+          connected: boolean
+          keyword_rules: Json
+          notify_orders: boolean
+          reply_mode: string
+          restaurant_id: string
+          webhook_token: string
+        }
+        Insert: {
+          bot_name?: string
+          connected?: boolean
+          keyword_rules?: Json
+          notify_orders?: boolean
+          reply_mode?: string
+          restaurant_id: string
+          webhook_token?: string
+        }
+        Update: {
+          bot_name?: string
+          connected?: boolean
+          keyword_rules?: Json
+          notify_orders?: boolean
+          reply_mode?: string
+          restaurant_id?: string
+          webhook_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_robot_settings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       withdrawal_requests: {
         Row: {
           created_at: string
@@ -1465,6 +1585,29 @@ export type Database = {
         Args: { target_time?: string; tz?: string }
         Returns: number
       }
+      claim_whatsapp_outbox: {
+        Args: never
+        Returns: {
+          attempts: number
+          available_at: string
+          created_at: string
+          customer_name: string | null
+          event_key: string | null
+          id: number
+          message: string | null
+          order_label: string | null
+          order_status: string | null
+          phone: string
+          restaurant_id: string
+          sent_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "whatsapp_robot_outbox"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       create_customer_offline_order: {
         Args: {
           _address: string
@@ -1495,7 +1638,7 @@ export type Database = {
         Returns: string
       }
       create_manual_counter_order: {
-        Args: { _restaurant_id: string; _items: Json; _payment_method: string }
+        Args: { _items: Json; _payment_method: string; _restaurant_id: string }
         Returns: string
       }
       create_manual_order: {
@@ -1581,6 +1724,17 @@ export type Database = {
           settings: Database["public"]["Tables"]["delivery_distance_settings"]["Row"]
         }
         Returns: number
+      }
+      enqueue_whatsapp_reply: {
+        Args: {
+          _cooldown: boolean
+          _event_key: string
+          _message: string
+          _phone: string
+          _profile_name: string
+          _restaurant_id: string
+        }
+        Returns: boolean
       }
       generate_unique_slug: {
         Args: { restaurant_name: string }
