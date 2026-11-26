@@ -92,6 +92,13 @@
       "when": 1795722422275,
       "tag": "0012_whatsapp_robot",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795728970027,
+      "tag": "0013_grant_whatsapp_robot_service_access",
+      "breakpoints": true
     }
   ]
 }
