@@ -272,7 +272,13 @@ Deno.serve(async request => {
     if (path !== "whatsapp-robot") return reply({ error: "Rota inválida." }, 404);
     return await manage(request, body);
   } catch (error) {
-    console.error("Erro na integração WhatsApp", error instanceof EvolutionError ? error.status : "interno");
-    return reply({ error: "Não foi possível concluir a operação no WhatsApp." }, 502);
+    const detail = error instanceof EvolutionError ? `HTTP ${error.status}` : `${(error as Error)?.name}: ${(error as Error)?.message}`;
+    console.error("Erro na integração WhatsApp", detail);
+    let message = "Não foi possível concluir a operação no WhatsApp.";
+    if (error instanceof EvolutionError) message = error.status === 401 || error.status === 403 ? "O servidor do WhatsApp recusou a chave de acesso (EVOLUTION_API_KEY)." : `O servidor do WhatsApp respondeu com erro ${error.status}.`;
+    else if ((error as Error)?.message === "URL inválida" || error instanceof TypeError && /Invalid URL/i.test(error.message)) message = "O endereço do servidor do WhatsApp (EVOLUTION_API_URL) é inválido: use https:// sem parâmetros.";
+    else if ((error as Error)?.name === "TimeoutError") message = "O servidor do WhatsApp demorou demais para responder.";
+    else if (error instanceof TypeError) message = "Não foi possível conectar ao servidor do WhatsApp (endereço fora do ar ou certificado inválido).";
+    return reply({ error: message }, 502);
   }
 });
