@@ -78,6 +78,13 @@
       "when": 1795658827175,
       "tag": "0010_checkout_payment_methods",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795704915523,
+      "tag": "0011_manual_counter_orders",
+      "breakpoints": true
     }
   ]
 }
