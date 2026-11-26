@@ -249,7 +249,8 @@ async function dispatch(request: Request) {
       }).eq("id", task.id).eq("attempts", task.attempts);
       if (updated.error) throw updated.error;
       sent++;
-    } catch {
+    } catch (error) {
+      console.error("Falha ao enviar WhatsApp da fila", error instanceof EvolutionError ? `HTTP ${error.status}` : `${(error as Error)?.name}: ${(error as Error)?.message}`);
       failed++;
       const delay = Math.min(30, 2 ** task.attempts);
       await client.from("whatsapp_robot_outbox").update({ available_at: new Date(Date.now() + delay * 60_000).toISOString() })
