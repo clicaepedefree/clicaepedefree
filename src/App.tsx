@@ -18,6 +18,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Marketing = lazy(() => import("./pages/Marketing"));
+const CashOverview = lazy(() => import("./pages/CashOverview"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const Customers = lazy(() => import("./pages/Customers"));
 const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/admin/analytics" element={<Analytics />} />
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/admin/marketing" element={<Marketing />} />
+            <Route path="/admin/caixa" element={<CashOverview />} />
             <Route path="/admin/carteira" element={<Wallet />} />
             <Route path="/admin/clientes" element={<Customers />} />
             <Route path="/super-admin" element={<SuperAdmin />} />
